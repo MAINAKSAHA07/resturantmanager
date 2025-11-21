@@ -537,6 +537,7 @@ async function seed() {
         subtotal: firstItem.basePrice,
         taxCgst: Math.round(firstItem.basePrice * (firstItem.taxRate / 2 / 100)),
         taxSgst: Math.round(firstItem.basePrice * (firstItem.taxRate / 2 / 100)),
+        taxIgst: 0,
         total: Math.round(firstItem.basePrice * (1 + firstItem.taxRate / 100)),
       });
 
@@ -561,6 +562,7 @@ async function seed() {
         subtotal: firstItem.basePrice,
         taxCgst: Math.round(firstItem.basePrice * (firstItem.taxRate / 2 / 100)),
         taxSgst: Math.round(firstItem.basePrice * (firstItem.taxRate / 2 / 100)),
+        taxIgst: 0,
         total: Math.round(firstItem.basePrice * (1 + firstItem.taxRate / 100)),
       });
 
