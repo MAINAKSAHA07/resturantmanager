@@ -14,7 +14,8 @@
     "pb:migrate": "cd pocketbase && node migrations/run.js",
     "pb:create-collections": "node pocketbase/scripts/create-essential-collections.js",
     "pb:create-all-collections": "node pocketbase/scripts/create-essential-collections.js && node pocketbase/scripts/create-remaining-collections.js",
-    "pb:add-customer-address-fields": "node pocketbase/scripts/add-customer-address-fields.js"
+    "pb:add-customer-address-fields": "node pocketbase/scripts/add-customer-address-fields.js",
+    "pb:fix-order-values": "node pocketbase/scripts/fix-order-values.js"
   },
   "devDependencies": {
     "dotenv": "^17.2.3",

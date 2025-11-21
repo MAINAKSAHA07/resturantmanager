@@ -100,6 +100,16 @@ export default function Navbar() {
             >
               Menu
             </Link>
+            {isLoggedIn && (
+              <Link
+                href="/my-orders"
+                className={`text-gray-700 hover:text-blue-600 ${
+                  pathname === '/my-orders' ? 'font-semibold text-blue-600' : ''
+                }`}
+              >
+                My Orders
+              </Link>
+            )}
             <Link
               href="/reservations"
               className={`text-gray-700 hover:text-blue-600 ${

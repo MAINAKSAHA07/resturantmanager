@@ -149,8 +149,15 @@ export default function KDSPage() {
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <p className="font-semibold">Order #{ticket.orderId.slice(0, 8)}</p>
+                      <p className="font-semibold">
+                        Order #{Array.isArray(ticket.orderId) ? ticket.orderId[0]?.slice(0, 8) : ticket.orderId?.slice(0, 8) || 'N/A'}
+                      </p>
                       <p className="text-sm text-gray-600">{getTimeElapsed(ticket.created)}</p>
+                      {(ticket.ticketItems || ticket.items || [])?.length > 0 && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          {(ticket.ticketItems || ticket.items).length} item{(ticket.ticketItems || ticket.items).length !== 1 ? 's' : ''}
+                        </p>
+                      )}
                     </div>
                     <span
                       className={`px-2 py-1 rounded text-xs ${
@@ -165,12 +172,34 @@ export default function KDSPage() {
                     </span>
                   </div>
 
-                  <div className="mb-2">
-                    {(ticket.ticketItems || ticket.items)?.map((item: any, idx: number) => (
-                      <p key={idx} className="text-sm">
-                        {item.qty}x {item.name}
-                      </p>
-                    ))}
+                  <div className="mb-2 space-y-1">
+                    {(ticket.ticketItems || ticket.items || [])?.length > 0 ? (
+                      (ticket.ticketItems || ticket.items).map((item: any, idx: number) => (
+                        <div key={idx} className="text-sm border-b border-gray-100 pb-1 last:border-0">
+                          <div className="flex justify-between items-start">
+                            <span className="font-medium">
+                              {item.qty}x {item.name || item.nameSnapshot || 'Unknown Item'}
+                            </span>
+                            {item.unitPrice && (
+                              <span className="text-xs text-gray-500 ml-2">
+                                ₹{((item.unitPrice * item.qty) / 100).toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+                          {item.options && Array.isArray(item.options) && item.options.length > 0 && (
+                            <div className="text-xs text-gray-500 mt-0.5 ml-4">
+                              {item.options.map((opt: any, optIdx: number) => (
+                                <div key={optIdx}>
+                                  {opt.groupId || 'Option'}: {Array.isArray(opt.valueIds) ? opt.valueIds.join(', ') : opt.valueIds}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-400 italic">No items</p>
+                    )}
                   </div>
 
                   <div className="flex gap-2">

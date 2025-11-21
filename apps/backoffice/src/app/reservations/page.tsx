@@ -9,6 +9,17 @@ interface Reservation {
   status: string;
   notes: string;
   created: string;
+  expand?: {
+    customerId?: {
+      id: string;
+      name: string;
+      email: string;
+      phone: string;
+    };
+  };
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
 }
 
 export default function ReservationsPage() {
@@ -23,7 +34,19 @@ export default function ReservationsPage() {
     try {
       const response = await fetch('/api/reservations');
       const data = await response.json();
-      setReservations(data.reservations || []);
+      
+      // Process reservations to extract customer info
+      const processedReservations = (data.reservations || []).map((res: any) => {
+        const customer = res.expand?.customerId;
+        return {
+          ...res,
+          customerName: customer?.name || 'Guest',
+          customerEmail: customer?.email || '-',
+          customerPhone: customer?.phone || '-',
+        };
+      });
+      
+      setReservations(processedReservations);
     } catch (error) {
       console.error('Error fetching reservations:', error);
     } finally {
@@ -62,6 +85,8 @@ export default function ReservationsPage() {
           <table className="w-full">
             <thead className="bg-gray-100">
               <tr>
+                <th className="px-4 py-3 text-left">Customer</th>
+                <th className="px-4 py-3 text-left">Contact</th>
                 <th className="px-4 py-3 text-left">Party Size</th>
                 <th className="px-4 py-3 text-left">Date & Time</th>
                 <th className="px-4 py-3 text-left">Status</th>
@@ -72,6 +97,13 @@ export default function ReservationsPage() {
             <tbody>
               {reservations.map((reservation) => (
                 <tr key={reservation.id} className="border-t">
+                  <td className="px-4 py-3">
+                    <div className="font-medium">{reservation.customerName || 'Guest'}</div>
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <div>{reservation.customerEmail || '-'}</div>
+                    <div className="text-gray-500">{reservation.customerPhone || '-'}</div>
+                  </td>
                   <td className="px-4 py-3">{reservation.partySize}</td>
                   <td className="px-4 py-3">
                     {new Date(reservation.startTime).toLocaleString()}

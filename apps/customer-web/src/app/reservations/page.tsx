@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation';
 export default function ReservationsPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
     partySize: 2,
     startTime: '',
     notes: '',
@@ -17,9 +20,16 @@ export default function ReservationsPage() {
     setLoading(true);
 
     try {
+      // Get auth token if available
+      const token = localStorage.getItem('customer_auth_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch('/api/reservations/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(formData),
       });
 
@@ -47,7 +57,40 @@ export default function ReservationsPage() {
 
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
           <div className="mb-4">
-            <label className="block font-medium mb-2">Party Size</label>
+            <label className="block font-medium mb-2">Name *</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-4 py-2 border rounded-lg"
+              required
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block font-medium mb-2">Email *</label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="w-full px-4 py-2 border rounded-lg"
+              required
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block font-medium mb-2">Phone Number *</label>
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              className="w-full px-4 py-2 border rounded-lg"
+              required
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block font-medium mb-2">Party Size *</label>
             <input
               type="number"
               min="1"

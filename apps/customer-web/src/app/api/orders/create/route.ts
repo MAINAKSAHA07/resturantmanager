@@ -8,8 +8,25 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { items } = body;
 
+    console.log('Order creation request received:', {
+      itemsCount: items?.length || 0,
+      items: items,
+    });
+
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'Items are required' }, { status: 400 });
+    }
+
+    // Validate items structure
+    for (const item of items) {
+      if (!item.menuItemId) {
+        console.error('Invalid item structure:', item);
+        return NextResponse.json({ error: 'Each item must have a menuItemId' }, { status: 400 });
+      }
+      if (!item.quantity || item.quantity < 1) {
+        console.error('Invalid item quantity:', item);
+        return NextResponse.json({ error: 'Each item must have a quantity >= 1' }, { status: 400 });
+      }
     }
 
     // Get tenant from cookie or hostname
@@ -304,32 +321,62 @@ export async function POST(request: NextRequest) {
     }
 
     // Create order items
-    for (const item of items) {
-      const menuItem = await pb.collection('menuItem').getOne(item.menuItemId);
-      let unitPrice = menuItem.basePrice;
+    console.log(`Creating ${items.length} order items for order ${order.id}`);
+    
+    const createdItems = [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      try {
+        console.log(`Processing item ${i + 1}/${items.length}: menuItemId=${item.menuItemId}, quantity=${item.quantity}`);
+        
+        const menuItem = await pb.collection('menuItem').getOne(item.menuItemId);
+        let unitPrice = Number(menuItem.basePrice) || 0;
 
-      // Add option prices
-      if (item.options) {
-        for (const option of item.options) {
-          for (const valueId of option.valueIds) {
-            try {
-              const optionValue = await pb.collection('optionValue').getOne(valueId);
-              unitPrice += optionValue.priceDelta;
-            } catch (error) {
-              // Skip
+        // Add option prices
+        if (item.options && Array.isArray(item.options)) {
+          for (const option of item.options) {
+            if (option.valueIds && Array.isArray(option.valueIds)) {
+              for (const valueId of option.valueIds) {
+                try {
+                  const optionValue = await pb.collection('optionValue').getOne(valueId);
+                  unitPrice += Number(optionValue.priceDelta) || 0;
+                } catch (error) {
+                  console.warn(`Option value ${valueId} not found, skipping`);
+                }
+              }
             }
           }
         }
-      }
 
-      await pb.collection('orderItem').create({
-        orderId: order.id,
-        menuItemId: item.menuItemId,
-        nameSnapshot: menuItem.name,
-        qty: item.quantity,
-        unitPrice,
-        optionsSnapshot: item.options || [],
-      });
+        const orderItemData = {
+          orderId: order.id,
+          menuItemId: item.menuItemId,
+          nameSnapshot: menuItem.name,
+          qty: Number(item.quantity) || 1,
+          unitPrice: Math.round(unitPrice),
+          optionsSnapshot: item.options || [],
+        };
+
+        console.log(`Creating orderItem with data:`, JSON.stringify(orderItemData, null, 2));
+        
+        const createdItem = await pb.collection('orderItem').create(orderItemData);
+        createdItems.push(createdItem.id);
+        console.log(`✅ Created orderItem ${createdItem.id} for order ${order.id}`);
+      } catch (itemError: any) {
+        console.error(`❌ Error creating order item ${i + 1}:`, {
+          menuItemId: item.menuItemId,
+          error: itemError.message,
+          status: itemError.status,
+          response: itemError.response?.data,
+        });
+        // Continue with other items even if one fails
+      }
+    }
+    
+    console.log(`Created ${createdItems.length}/${items.length} order items for order ${order.id}`);
+    
+    if (createdItems.length === 0 && items.length > 0) {
+      console.error('⚠️  WARNING: No order items were created!');
     }
 
     return NextResponse.json({
