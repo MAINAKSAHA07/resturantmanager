@@ -7,7 +7,8 @@ interface KDSTicket {
   orderId: string;
   station: string;
   status: string;
-  items: any[];
+  items?: any[];
+  ticketItems?: any[];
   priority: boolean;
   created: string;
   expand?: {
@@ -153,9 +154,9 @@ export default function KDSPage() {
                         Order #{Array.isArray(ticket.orderId) ? ticket.orderId[0]?.slice(0, 8) : ticket.orderId?.slice(0, 8) || 'N/A'}
                       </p>
                       <p className="text-sm text-gray-600">{getTimeElapsed(ticket.created)}</p>
-                      {(ticket.ticketItems || ticket.items || [])?.length > 0 && (
+                      {((ticket.ticketItems || ticket.items || []).length > 0) && (
                         <p className="text-xs text-gray-500 mt-1">
-                          {(ticket.ticketItems || ticket.items).length} item{(ticket.ticketItems || ticket.items).length !== 1 ? 's' : ''}
+                          {(ticket.ticketItems || ticket.items || []).length} item{((ticket.ticketItems || ticket.items || []).length !== 1) ? 's' : ''}
                         </p>
                       )}
                     </div>
@@ -173,8 +174,8 @@ export default function KDSPage() {
                   </div>
 
                   <div className="mb-2 space-y-1">
-                    {(ticket.ticketItems || ticket.items || [])?.length > 0 ? (
-                      (ticket.ticketItems || ticket.items).map((item: any, idx: number) => (
+                    {((ticket.ticketItems || ticket.items || []).length > 0) ? (
+                      (ticket.ticketItems || ticket.items || []).map((item: any, idx: number) => (
                         <div key={idx} className="text-sm border-b border-gray-100 pb-1 last:border-0">
                           <div className="flex justify-between items-start">
                             <span className="font-medium">

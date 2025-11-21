@@ -1,5 +1,7 @@
 import { createPocketBaseAdminClient } from '@restaurant/lib';
 
+export const dynamic = 'force-dynamic';
+
 async function getGSTSummary() {
   const pb = await createPocketBaseAdminClient();
   

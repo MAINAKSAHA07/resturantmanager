@@ -24,7 +24,25 @@ Once PocketBase is deployed, you'll get a URL like:
 
 ## Step 1: Deploy PocketBase (Required First)
 
-### Option A: Railway (Recommended)
+**Choose one of the following options:**
+
+### Option A: AWS (Recommended for Production)
+
+See **[AWS_POCKETBASE_DEPLOYMENT.md](./AWS_POCKETBASE_DEPLOYMENT.md)** for detailed instructions.
+
+**Quick start:**
+1. Launch EC2 instance (Ubuntu 22.04)
+2. Run the setup script: `bash aws-ec2-setup.sh`
+3. Configure Nginx and SSL
+4. Access PocketBase at your domain
+
+**Benefits:**
+- Full control and customization
+- Cost-effective (t3.micro is free tier eligible)
+- Scalable and production-ready
+- Integrated with AWS ecosystem
+
+### Option B: Railway (Easy Setup)
 
 1. Go to [railway.app](https://railway.app) and sign up
 2. Click "New Project" → "Deploy from GitHub repo"
