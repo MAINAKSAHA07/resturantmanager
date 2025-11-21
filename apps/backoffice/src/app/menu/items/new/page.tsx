@@ -21,6 +21,9 @@ export default function NewMenuItemPage() {
     isActive: true,
     hsnSac: '',
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [duplicateWarning, setDuplicateWarning] = useState<string>('');
 
   useEffect(() => {
     fetchCategories();
@@ -45,9 +48,34 @@ export default function NewMenuItemPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image size should be less than 5MB');
+        return;
+      }
+      setImageFile(file);
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const checkDuplicate = async (name: string) => {
+    if (!name.trim()) {
+      setDuplicateWarning('');
+      return;
+    }
 
     try {
       const token = localStorage.getItem('pb_auth_token');
@@ -56,14 +84,58 @@ export default function NewMenuItemPage() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
+      const response = await fetch(`/api/menu/items/check-duplicate?name=${encodeURIComponent(name)}`, { headers });
+      const data = await response.json();
+
+      if (data.isDuplicate) {
+        setDuplicateWarning(`⚠️ A menu item with the name "${name}" already exists.`);
+      } else {
+        setDuplicateWarning('');
+      }
+    } catch (error) {
+      // Silently fail duplicate check
+      console.error('Error checking duplicate:', error);
+    }
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value;
+    setFormData({ ...formData, name: newName });
+    // Debounce duplicate check
+    setTimeout(() => checkDuplicate(newName), 500);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem('pb_auth_token');
+      
+      // Create FormData for file upload
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('description', formData.description || '');
+      formDataToSend.append('basePrice', parseFloat(formData.basePrice).toString());
+      formDataToSend.append('taxRate', parseFloat(formData.taxRate).toString());
+      formDataToSend.append('categoryId', formData.categoryId);
+      formDataToSend.append('isActive', formData.isActive.toString());
+      formDataToSend.append('hsnSac', formData.hsnSac || '');
+      
+      if (imageFile) {
+        formDataToSend.append('image', imageFile);
+      }
+
+      const headers: HeadersInit = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      // Don't set Content-Type header - browser will set it with boundary for FormData
+
       const response = await fetch('/api/menu/items', {
         method: 'POST',
         headers,
-        body: JSON.stringify({
-          ...formData,
-          basePrice: parseFloat(formData.basePrice),
-          taxRate: parseFloat(formData.taxRate),
-        }),
+        body: formDataToSend,
       });
 
       const data = await response.json();
@@ -92,10 +164,33 @@ export default function NewMenuItemPage() {
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2 border rounded-lg"
+              onChange={handleNameChange}
+              className={`w-full px-4 py-2 border rounded-lg ${duplicateWarning ? 'border-yellow-500' : ''}`}
               required
             />
+            {duplicateWarning && (
+              <p className="text-yellow-600 text-sm mt-1">{duplicateWarning}</p>
+            )}
+          </div>
+
+          <div className="mb-4">
+            <label className="block font-medium mb-2">Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="w-full px-4 py-2 border rounded-lg"
+            />
+            {imagePreview && (
+              <div className="mt-3">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-32 h-32 object-cover rounded-lg border border-gray-300"
+                />
+              </div>
+            )}
+            <p className="text-sm text-gray-500 mt-1">Max size: 5MB. Supported formats: JPG, PNG, WebP</p>
           </div>
 
           <div className="mb-4">

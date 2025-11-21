@@ -110,7 +110,7 @@ export default async function ItemPage({
           {item.image && (
             <div className="h-96 bg-gray-200">
               <img
-                src={`http://localhost:8090/api/files/menuItem/${item.id}/${item.image}`}
+                src={`${process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://localhost:8090'}/api/files/menuItem/${item.id}/${item.image}`}
                 alt={item.name}
                 className="w-full h-full object-cover"
               />

@@ -63,11 +63,30 @@ async function getMenu(brandKey: string) {
     });
     
     // Filter by tenant, location, and active status
-    const items = allItems.items.filter(item => {
-      const itemTenantId = Array.isArray(item.tenantId) ? item.tenantId[0] : item.tenantId;
-      const itemLocationId = Array.isArray(item.locationId) ? item.locationId[0] : item.locationId;
-      return itemTenantId === tenant.id && locationIds.includes(itemLocationId) && item.isActive === true;
-    });
+    // Also remove duplicates (same name in same category)
+    const seenItems = new Map<string, any>();
+    const items = allItems.items
+      .filter(item => {
+        const itemTenantId = Array.isArray(item.tenantId) ? item.tenantId[0] : item.tenantId;
+        const itemLocationId = Array.isArray(item.locationId) ? item.locationId[0] : item.locationId;
+        return itemTenantId === tenant.id && locationIds.includes(itemLocationId) && item.isActive === true;
+      })
+      .filter(item => {
+        // Check for duplicates: same name in same category
+        const itemCategoryId = Array.isArray(item.categoryId) ? item.categoryId[0] : item.categoryId;
+        const key = `${item.name.toLowerCase().trim()}_${itemCategoryId}`;
+        if (seenItems.has(key)) {
+          // Keep the one with the most recent created date
+          const existing = seenItems.get(key);
+          if (new Date(item.created) > new Date(existing.created)) {
+            seenItems.set(key, item);
+            return true;
+          }
+          return false;
+        }
+        seenItems.set(key, item);
+        return true;
+      });
 
     return { categories, items, location };
   } catch (error) {
@@ -196,7 +215,7 @@ export default async function HomePage({
                       {item.image && (
                         <div className="h-48 bg-gray-200 overflow-hidden">
                           <img
-                            src={`http://localhost:8090/api/files/menuItem/${item.id}/${item.image}`}
+                            src={`${process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://localhost:8090'}/api/files/menuItem/${item.id}/${item.image}`}
                             alt={item.name}
                             className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
                           />

@@ -3,6 +3,54 @@ import PocketBase from 'pocketbase';
 
 export async function GET(request: NextRequest) {
   try {
+    // Check for duplicate query parameter
+    const searchParams = request.nextUrl.searchParams;
+    const checkName = searchParams.get('name');
+    
+    if (checkName) {
+      // Check for duplicate
+      const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
+      const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
+      const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+      
+      const adminPb = new PocketBase(pbUrl);
+      await adminPb.admins.authWithPassword(adminEmail, adminPassword);
+
+      // Get selected tenant
+      const cookieStore = request.cookies;
+      const selectedTenantId = cookieStore.get('selected_tenant_id')?.value;
+      
+      if (!selectedTenantId) {
+        return NextResponse.json({ isDuplicate: false });
+      }
+
+      // Get location for tenant
+      const allLocations = await adminPb.collection('location').getList(1, 100);
+      const locations = allLocations.items.filter((loc: any) => {
+        const locTenantId = Array.isArray(loc.tenantId) ? loc.tenantId[0] : loc.tenantId;
+        return locTenantId === selectedTenantId;
+      });
+
+      if (locations.length === 0) {
+        return NextResponse.json({ isDuplicate: false });
+      }
+
+      const locationId = locations[0].id;
+
+      // Check for duplicate name in same tenant and location
+      const allItems = await adminPb.collection('menuItem').getList(1, 1000);
+      const duplicate = allItems.items.find((item: any) => {
+        const itemTenantId = Array.isArray(item.tenantId) ? item.tenantId[0] : item.tenantId;
+        const itemLocationId = Array.isArray(item.locationId) ? item.locationId[0] : item.locationId;
+        return item.name.toLowerCase().trim() === checkName.toLowerCase().trim() &&
+               itemTenantId === selectedTenantId &&
+               itemLocationId === locationId;
+      });
+
+      return NextResponse.json({ isDuplicate: !!duplicate });
+    }
+
+    // Regular GET - fetch all items
     // Get auth token from cookie or header
     const token = request.cookies.get('pb_auth_token')?.value || 
                   request.headers.get('authorization')?.replace('Bearer ', '');
@@ -17,7 +65,6 @@ export async function GET(request: NextRequest) {
     const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
     
     // Use admin client to ensure we have access to all collections
-    // Create admin client directly to avoid environment variable issues
     const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
     const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
     
@@ -152,8 +199,16 @@ export async function POST(request: NextRequest) {
     const adminPb = new PocketBase(pbUrl);
     await adminPb.admins.authWithPassword(adminEmail, adminPassword);
 
-    const body = await request.json();
-    const { name, description, basePrice, taxRate, categoryId, isActive, hsnSac } = body;
+    // Handle FormData for file upload
+    const formData = await request.formData();
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string || '';
+    const basePrice = parseFloat(formData.get('basePrice') as string);
+    const taxRate = parseFloat(formData.get('taxRate') as string) || 5;
+    const categoryId = formData.get('categoryId') as string;
+    const isActive = formData.get('isActive') === 'true';
+    const hsnSac = formData.get('hsnSac') as string || '';
+    const imageFile = formData.get('image') as File | null;
     
     // Get selected tenant from cookie, or fallback to first tenant
     const selectedTenantId = request.cookies.get('selected_tenant_id')?.value;
@@ -203,17 +258,41 @@ export async function POST(request: NextRequest) {
 
     const location = locations.items[0];
 
-    const item = await adminPb.collection('menuItem').create({
-      tenantId: tenant.id,
-      locationId: location.id,
-      categoryId,
-      name,
-      description: description || '',
-      basePrice: Math.round(basePrice * 100), // Convert to paise
-      taxRate: taxRate || 5,
-      hsnSac: hsnSac || '',
-      isActive: isActive !== false,
+    // Check for duplicate name in same tenant and location
+    const allItems = await adminPb.collection('menuItem').getList(1, 1000);
+    const duplicate = allItems.items.find((item: any) => {
+      const itemTenantId = Array.isArray(item.tenantId) ? item.tenantId[0] : item.tenantId;
+      const itemLocationId = Array.isArray(item.locationId) ? item.locationId[0] : item.locationId;
+      return item.name.toLowerCase().trim() === name.toLowerCase().trim() &&
+             itemTenantId === tenant.id &&
+             itemLocationId === location.id;
     });
+
+    if (duplicate) {
+      return NextResponse.json(
+        { error: `A menu item with the name "${name}" already exists in this location.` },
+        { status: 400 }
+      );
+    }
+
+    // Create FormData for PocketBase
+    const itemData = new FormData();
+    itemData.append('tenantId', tenant.id);
+    itemData.append('locationId', location.id);
+    itemData.append('categoryId', categoryId);
+    itemData.append('name', name);
+    itemData.append('description', description);
+    itemData.append('basePrice', Math.round(basePrice * 100).toString()); // Convert to paise
+    itemData.append('taxRate', (taxRate || 5).toString());
+    itemData.append('hsnSac', hsnSac);
+    itemData.append('isActive', (isActive !== false).toString());
+
+    // Add image if provided
+    if (imageFile && imageFile.size > 0) {
+      itemData.append('image', imageFile);
+    }
+
+    const item = await adminPb.collection('menuItem').create(itemData);
 
     return NextResponse.json({ item });
   } catch (error: any) {

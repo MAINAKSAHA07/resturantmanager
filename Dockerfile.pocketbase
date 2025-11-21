@@ -1,0 +1,8 @@
+FROM ghcr.io/muchobien/pocketbase:0.22.27
+
+# Expose the port PocketBase runs on
+EXPOSE 8090
+
+# Serve PocketBase on all interfaces (required for cloud deployments)
+CMD ["./pocketbase", "serve", "--http=0.0.0.0:8090"]
+

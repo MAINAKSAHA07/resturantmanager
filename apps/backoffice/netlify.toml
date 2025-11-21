@@ -1,0 +1,13 @@
+[build]
+  base = "apps/backoffice"
+  command = "cd ../.. && npm install && npm run build --filter=@restaurant/backoffice"
+  publish = "apps/backoffice/.next"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+# Next.js plugin handles routing automatically
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+

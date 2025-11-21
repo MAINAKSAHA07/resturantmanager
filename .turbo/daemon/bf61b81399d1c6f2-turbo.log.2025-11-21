@@ -1432,3 +1432,89 @@
 2025-11-21T05:23:08.196280Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/backoffice"), path: AnchoredSystemPathBuf("apps/backoffice") }, WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
 2025-11-21T05:23:08.198633Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
 2025-11-21T05:23:08.198680Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-21T05:24:41.296520Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/src/app/api/my-orders/route.ts")}
+2025-11-21T05:24:41.296800Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T05:24:49.996558Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/src/app/api/orders/[id]/route.ts")}
+2025-11-21T05:24:49.996589Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T05:25:01.603788Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/src/app/api/orders/[id]/route.ts"), AnchoredSystemPathBuf("apps/customer-web/src/app/api/my-orders/route.ts")}
+2025-11-21T05:25:01.603819Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T05:25:01.674361Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-21T05:25:01.707405Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/src/app/api/my-orders/route.ts")}
+2025-11-21T05:25:01.707473Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T05:25:01.707502Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-21T05:25:41.897462Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/src/app/my-orders/page.tsx")}
+2025-11-21T05:25:41.897486Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T05:25:48.397315Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/src/app/my-orders/page.tsx")}
+2025-11-21T05:25:48.397337Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T05:26:01.696771Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/src/app/my-orders/page.tsx")}
+2025-11-21T05:26:01.696784Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T05:26:01.702390Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-21T05:27:44.697710Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backoffice/src/app/menu/items/new/page.tsx")}
+2025-11-21T05:27:44.697755Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/backoffice"), path: AnchoredSystemPathBuf("apps/backoffice") }}))
+2025-11-21T05:27:57.597542Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backoffice/src/app/menu/items/new/page.tsx")}
+2025-11-21T05:27:57.597578Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/backoffice"), path: AnchoredSystemPathBuf("apps/backoffice") }}))
+2025-11-21T05:28:03.197566Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backoffice/src/app/menu/items/new/page.tsx")}
+2025-11-21T05:28:03.197590Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/backoffice"), path: AnchoredSystemPathBuf("apps/backoffice") }}))
+2025-11-21T05:28:14.896867Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backoffice/src/app/api/menu/items/route.ts")}
+2025-11-21T05:28:14.896888Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/backoffice"), path: AnchoredSystemPathBuf("apps/backoffice") }}))
+2025-11-21T05:28:20.996433Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backoffice/src/app/api/menu/items/route.ts")}
+2025-11-21T05:28:20.996445Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/backoffice"), path: AnchoredSystemPathBuf("apps/backoffice") }}))
+2025-11-21T05:29:10.298258Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backoffice/src/app/api/menu/items/route.ts")}
+2025-11-21T05:29:10.298320Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/backoffice"), path: AnchoredSystemPathBuf("apps/backoffice") }}))
+2025-11-21T05:29:29.997928Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/scripts/add-image-to-menuitem.js")}
+2025-11-21T05:29:29.997978Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T05:29:30.198631Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/scripts/add-image-to-menuitem.js")}
+2025-11-21T05:29:30.198651Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T05:29:44.698156Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/src/app/page.tsx")}
+2025-11-21T05:29:44.698182Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T05:29:58.597779Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/src/app/page.tsx"), AnchoredSystemPathBuf("pocketbase/scripts/add-image-to-menuitem.js")}
+2025-11-21T05:29:58.597797Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }, WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T05:29:58.597858Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-21T05:29:59.307857Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/scripts/add-image-to-menuitem.js"), AnchoredSystemPathBuf("apps/customer-web/src/app/page.tsx")}
+2025-11-21T05:29:59.307868Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }, WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T05:29:59.313468Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-21T05:36:24.112472Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/netlify.toml")}
+2025-11-21T05:36:24.113322Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T05:36:24.500679Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/netlify.toml")}
+2025-11-21T05:36:24.500701Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T05:36:33.403972Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backoffice/netlify.toml")}
+2025-11-21T05:36:33.404012Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/backoffice"), path: AnchoredSystemPathBuf("apps/backoffice") }}))
+2025-11-21T05:36:33.799959Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backoffice/netlify.toml")}
+2025-11-21T05:36:33.799971Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/backoffice"), path: AnchoredSystemPathBuf("apps/backoffice") }}))
+2025-11-21T05:36:42.508913Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/next.config.js")}
+2025-11-21T05:36:42.508957Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T05:36:42.600585Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/next.config.js")}
+2025-11-21T05:36:42.600653Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T05:36:42.600704Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-21T05:36:45.802334Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backoffice/next.config.js")}
+2025-11-21T05:36:45.802344Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/backoffice"), path: AnchoredSystemPathBuf("apps/backoffice") }}))
+2025-11-21T05:36:47.600820Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/src/app/page.tsx")}
+2025-11-21T05:36:47.600853Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T05:36:49.200263Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/src/app/item/[id]/page.tsx")}
+2025-11-21T05:36:49.200277Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T05:36:53.000017Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/netlify.toml")}
+2025-11-21T05:36:53.000037Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T05:36:55.901964Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backoffice/netlify.toml")}
+2025-11-21T05:36:55.901984Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/backoffice"), path: AnchoredSystemPathBuf("apps/backoffice") }}))
+2025-11-21T05:37:28.301901Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("NETLIFY_DEPLOYMENT.md")}
+2025-11-21T05:37:28.301953Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T05:37:28.501737Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("NETLIFY_DEPLOYMENT.md")}
+2025-11-21T05:37:28.501757Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T05:37:31.600781Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("Dockerfile.pocketbase")}
+2025-11-21T05:37:31.600803Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T05:37:31.801241Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("Dockerfile.pocketbase")}
+2025-11-21T05:37:31.801261Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T05:37:42.001097Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".netlifyrc")}
+2025-11-21T05:37:42.001152Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T05:37:42.200935Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".netlifyrc")}
+2025-11-21T05:37:42.200952Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T05:37:53.701714Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/netlify.toml")}
+2025-11-21T05:37:53.701791Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T05:37:57.301544Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backoffice/netlify.toml")}
+2025-11-21T05:37:57.301566Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/backoffice"), path: AnchoredSystemPathBuf("apps/backoffice") }}))
+2025-11-21T05:38:08.601632Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("NETLIFY_DEPLOYMENT.md")}
+2025-11-21T05:38:08.601654Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T05:38:23.201290Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".netlifyrc"), AnchoredSystemPathBuf("apps/customer-web/src/app/item/[id]/page.tsx"), AnchoredSystemPathBuf("apps/backoffice/next.config.js"), AnchoredSystemPathBuf("apps/customer-web/src/app/page.tsx"), AnchoredSystemPathBuf("apps/customer-web/netlify.toml"), AnchoredSystemPathBuf("apps/customer-web/next.config.js"), AnchoredSystemPathBuf("NETLIFY_DEPLOYMENT.md"), AnchoredSystemPathBuf("apps/backoffice/netlify.toml"), AnchoredSystemPathBuf("Dockerfile.pocketbase")}
+2025-11-21T05:38:23.201313Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }, WorkspacePackage { name: Other("@restaurant/backoffice"), path: AnchoredSystemPathBuf("apps/backoffice") }, WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T05:38:23.201371Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-21T05:38:23.201441Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun

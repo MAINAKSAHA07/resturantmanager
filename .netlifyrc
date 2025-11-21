@@ -1,0 +1,12 @@
+# Netlify configuration for monorepo
+# This file helps Netlify understand the monorepo structure
+
+# For customer-web deployment
+[build]
+  base = "apps/customer-web"
+  command = "cd ../.. && npm install && npm run build --filter=@restaurant/customer-web"
+  publish = "apps/customer-web/.next"
+
+# For backoffice deployment
+# Use separate Netlify sites for each app, or configure in netlify.toml files
+

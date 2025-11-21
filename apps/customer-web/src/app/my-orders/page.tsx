@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getCustomerSession } from '@/lib/auth';
+import { generateOrderSummaryPDF } from '@/lib/pdf-generator';
 
 interface Order {
   id: string;
@@ -198,7 +199,31 @@ export default function MyOrdersPage() {
                       <p className="text-sm text-gray-500 italic">No items found</p>
                     )}
                   </div>
-                  <div className="flex justify-end">
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={() => {
+                        // Fetch full order details for PDF generation
+                        fetch(`/api/orders/${order.id}`)
+                          .then(res => res.json())
+                          .then(data => {
+                            if (data.order) {
+                              generateOrderSummaryPDF(data.order);
+                            } else {
+                              alert('Failed to load order details for PDF');
+                            }
+                          })
+                          .catch(err => {
+                            console.error('Error fetching order for PDF:', err);
+                            alert('Failed to generate PDF');
+                          });
+                      }}
+                      className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Download PDF
+                    </button>
                     <Link
                       href={`/order/${order.id}`}
                       className="text-blue-600 hover:text-blue-800 font-medium text-sm"

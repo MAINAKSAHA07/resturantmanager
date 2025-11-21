@@ -1,0 +1,13 @@
+[build]
+  base = "apps/customer-web"
+  command = "cd ../.. && npm install && npm run build --filter=@restaurant/customer-web"
+  publish = "apps/customer-web/.next"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+# Next.js plugin handles routing automatically
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
