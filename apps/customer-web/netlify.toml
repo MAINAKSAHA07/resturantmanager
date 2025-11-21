@@ -1,6 +1,6 @@
 [build]
   base = "apps/customer-web"
-  command = "cd ../.. && npm install && npx turbo run build --filter=@restaurant/customer-web && cd apps/customer-web && ln -sf ../../node_modules node_modules 2>/dev/null || true"
+  command = "cd ../.. && NPM_CONFIG_PRODUCTION=false npm install --include=dev && npx turbo run build --filter=@restaurant/customer-web && cd apps/customer-web && ln -sf ../../node_modules node_modules 2>/dev/null || true"
   publish = ".next"
 
 [build.environment]

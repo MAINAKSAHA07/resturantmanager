@@ -1829,3 +1829,432 @@
 2025-11-21T06:10:45.104063Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
 2025-11-21T06:10:45.302277Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("EC2_SETUP_INSTRUCTIONS.md")}
 2025-11-21T06:10:45.302296Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:20:09.715614Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("NETLIFY_DEPLOYMENT_STEPS.md")}
+2025-11-21T06:20:09.717602Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:20:10.003524Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("NETLIFY_DEPLOYMENT.md")}
+2025-11-21T06:20:10.003543Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:20:39.907493Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("EC2_SETUP_INSTRUCTIONS.md")}
+2025-11-21T06:20:39.907549Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:27:11.412951Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("DEPLOYMENT_STATUS.md")}
+2025-11-21T06:27:11.439499Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:27:11.604525Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("DEPLOYMENT_STATUS.md")}
+2025-11-21T06:27:11.604545Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:27:34.504302Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("DEPLOYMENT_STATUS.md")}
+2025-11-21T06:27:34.504385Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:27:48.605869Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:27:48.605953Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:27:48.718377Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:27:48.718384Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:27:49.605112Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:27:49.605123Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:27:49.706553Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:27:49.706564Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:27:49.812838Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:27:49.812850Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:27:49.913841Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:27:49.913856Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:27:50.208450Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:27:50.208462Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:27:50.306558Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:27:50.306570Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:27:50.412981Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:27:50.412992Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:27:50.509762Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:27:50.509774Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:27:50.712594Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:27:50.712606Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:27:50.910807Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:27:50.910819Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:27:51.417359Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:27:51.417371Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:27:51.534968Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:27:51.534980Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:27:51.626801Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:27:51.626812Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:27:51.706890Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:27:51.706899Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:27:51.809157Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:27:51.809174Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:27:52.107947Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package-lock.json")}
+2025-11-21T06:27:52.107960Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:27:57.703917Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backoffice/.next")}
+2025-11-21T06:27:57.703959Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/backoffice"), path: AnchoredSystemPathBuf("apps/backoffice") }}))
+2025-11-21T06:27:57.710888Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-21T06:28:12.403720Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backoffice/.next")}
+2025-11-21T06:28:12.403748Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/backoffice"), path: AnchoredSystemPathBuf("apps/backoffice") }}))
+2025-11-21T06:28:12.414100Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-21T06:29:24.908714Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:29:24.908749Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:29:25.032365Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:29:25.032374Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:29:26.807223Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:29:26.807299Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:29:26.876402Z  WARN turborepo_filewatch::package_watcher: lagged behind 32 processing file watching events
+2025-11-21T06:29:26.876400Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:29:26.947980Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:29:26.982709Z  WARN turborepo_filewatch::globwatcher: encountered filewatching error, flushing all globs: channel lagged by 259
+2025-11-21T06:29:26.982715Z  WARN turborepo_filewatch::globwatcher: encountered filewatching error, flushing all globs: channel lagged by 72
+2025-11-21T06:29:27.375007Z  WARN turborepo_filewatch::package_watcher: lagged behind 464 processing file watching events
+2025-11-21T06:29:27.375000Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:29:27.385500Z  WARN turborepo_filewatch::package_watcher: lagged behind 125 processing file watching events
+2025-11-21T06:29:29.109240Z  WARN turborepo_filewatch::package_watcher: lagged behind 2 processing file watching events
+2025-11-21T06:29:29.119360Z  WARN turborepo_filewatch::package_watcher: lagged behind 444 processing file watching events
+2025-11-21T06:29:29.129421Z  WARN turborepo_filewatch::package_watcher: lagged behind 439 processing file watching events
+2025-11-21T06:29:29.137898Z  WARN turborepo_filewatch::package_watcher: lagged behind 124 processing file watching events
+2025-11-21T06:29:29.139784Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:29:29.208658Z  WARN turborepo_filewatch::package_watcher: lagged behind 24 processing file watching events
+2025-11-21T06:29:29.218752Z  WARN turborepo_filewatch::package_watcher: lagged behind 400 processing file watching events
+2025-11-21T06:29:29.228992Z  WARN turborepo_filewatch::package_watcher: lagged behind 451 processing file watching events
+2025-11-21T06:29:29.240038Z  WARN turborepo_filewatch::package_watcher: lagged behind 30 processing file watching events
+2025-11-21T06:29:29.250204Z  WARN turborepo_filewatch::package_watcher: lagged behind 523 processing file watching events
+2025-11-21T06:29:29.278549Z  WARN turborepo_filewatch::globwatcher: encountered filewatching error, flushing all globs: channel lagged by 10
+2025-11-21T06:29:29.288675Z  WARN turborepo_filewatch::globwatcher: encountered filewatching error, flushing all globs: channel lagged by 403
+2025-11-21T06:29:29.291160Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:29:29.321022Z  WARN turborepo_filewatch::package_watcher: lagged behind 185 processing file watching events
+2025-11-21T06:29:29.331102Z  WARN turborepo_filewatch::package_watcher: lagged behind 426 processing file watching events
+2025-11-21T06:29:32.415114Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package-lock.json")}
+2025-11-21T06:29:32.415129Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:29:34.203382Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/ui/.turbo"), AnchoredSystemPathBuf("packages/lib/.turbo")}
+2025-11-21T06:29:34.203395Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/lib"), path: AnchoredSystemPathBuf("packages/lib") }, WorkspacePackage { name: Other("@restaurant/ui"), path: AnchoredSystemPathBuf("packages/ui") }}))
+2025-11-21T06:29:34.203441Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-21T06:29:34.203480Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-21T06:29:34.907956Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:29:34.907967Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:29:35.006908Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:29:35.006921Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:30:13.804219Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/.next")}
+2025-11-21T06:30:13.804267Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T06:30:13.805467Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-21T06:30:48.003584Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/.next")}
+2025-11-21T06:30:48.003714Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T06:30:48.032378Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-21T06:39:40.046146Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:39:40.046812Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:39:40.940018Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:39:40.940031Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:39:41.040678Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:39:41.040735Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:39:41.140881Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:39:41.140893Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:39:41.545126Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:39:41.545136Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:39:41.642782Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:39:41.642792Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:39:41.740815Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:39:41.740826Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:39:41.841125Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:39:41.841136Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:39:41.949434Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:39:41.949445Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:39:42.047614Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:39:42.047627Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:39:42.142219Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:39:42.142231Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:39:42.251558Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:39:42.251568Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:39:42.341345Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:39:42.341356Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:39:42.441326Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:39:42.441334Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:39:42.542307Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:39:42.542320Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:39:42.647981Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:39:42.647992Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:39:42.763987Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:39:42.764000Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:39:42.849245Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:39:42.849256Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:39:43.140364Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package-lock.json")}
+2025-11-21T06:39:43.140373Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:39:49.439138Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/.next")}
+2025-11-21T06:39:49.439170Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T06:39:49.439455Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-21T06:40:02.940368Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/.next")}
+2025-11-21T06:40:02.940403Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T06:40:02.940570Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-21T06:41:39.362857Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:41:39.442296Z  WARN turborepo_filewatch::package_watcher: lagged behind 60 processing file watching events
+2025-11-21T06:41:39.448319Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:41:39.448325Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:41:39.572891Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:41:39.572889Z  WARN turborepo_filewatch::package_watcher: lagged behind 44 processing file watching events
+2025-11-21T06:41:39.572900Z  WARN turborepo_filewatch::globwatcher: encountered filewatching error, flushing all globs: channel lagged by 41
+2025-11-21T06:41:39.582948Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:41:39.780864Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:41:39.780901Z  WARN turborepo_filewatch::package_watcher: lagged behind 21 processing file watching events
+2025-11-21T06:41:39.831263Z  WARN turborepo_filewatch::package_watcher: lagged behind 98 processing file watching events
+2025-11-21T06:41:39.832431Z  WARN turborepo_filewatch::globwatcher: encountered filewatching error, flushing all globs: channel lagged by 94
+2025-11-21T06:41:39.915513Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:41:40.029352Z  WARN turborepo_filewatch::package_watcher: lagged behind 269 processing file watching events
+2025-11-21T06:41:40.081600Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:41:40.082795Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:41:40.123710Z  WARN turborepo_filewatch::package_watcher: lagged behind 214 processing file watching events
+2025-11-21T06:41:40.134110Z  WARN turborepo_filewatch::package_watcher: lagged behind 265 processing file watching events
+2025-11-21T06:41:40.318463Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:41:40.378242Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:41:40.609177Z  WARN turborepo_filewatch::globwatcher: encountered filewatching error, flushing all globs: channel lagged by 313
+2025-11-21T06:41:40.609187Z  WARN turborepo_filewatch::globwatcher: encountered filewatching error, flushing all globs: channel lagged by 37
+2025-11-21T06:41:40.609189Z  WARN turborepo_filewatch::globwatcher: encountered filewatching error, flushing all globs: channel lagged by 8
+2025-11-21T06:41:40.609191Z  WARN turborepo_filewatch::globwatcher: encountered filewatching error, flushing all globs: channel lagged by 7
+2025-11-21T06:41:40.619220Z  WARN turborepo_filewatch::globwatcher: encountered filewatching error, flushing all globs: channel lagged by 14
+2025-11-21T06:41:44.484660Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package-lock.json")}
+2025-11-21T06:41:44.484671Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:41:52.146544Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:41:52.146570Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:42:07.344893Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:42:07.344915Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:42:08.147266Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:42:08.147278Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:42:08.243440Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:42:08.243450Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:42:08.343223Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:42:08.343234Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:42:08.444030Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:42:08.444040Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:42:08.561503Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:42:08.561514Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:42:08.643381Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:42:08.643391Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:42:08.742819Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:42:08.742829Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:42:08.849955Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:42:08.849966Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:42:08.943579Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:42:08.943590Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:42:09.044139Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:42:09.044149Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:42:09.144036Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:42:09.144048Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:42:09.243707Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:42:09.243718Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:42:09.342859Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:42:09.342869Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:42:09.444187Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:42:09.444197Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:42:09.542619Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(""), AnchoredSystemPathBuf("package-lock.json")}
+2025-11-21T06:42:09.542633Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:42:41.842117Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package.json")}
+2025-11-21T06:42:41.842142Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(All)
+2025-11-21T06:43:10.257364Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:43:10.257387Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:43:10.290034Z  WARN turborepo_filewatch::package_watcher: lagged behind 321 processing file watching events
+2025-11-21T06:43:10.348789Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:43:10.348797Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:43:10.584922Z  WARN turborepo_filewatch::globwatcher: encountered filewatching error, flushing all globs: channel lagged by 96
+2025-11-21T06:43:10.607187Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:43:10.607186Z  WARN turborepo_filewatch::package_watcher: lagged behind 256 processing file watching events
+2025-11-21T06:43:10.628796Z  WARN turborepo_filewatch::package_watcher: lagged behind 521 processing file watching events
+2025-11-21T06:43:10.639207Z  WARN turborepo_filewatch::package_watcher: lagged behind 79 processing file watching events
+2025-11-21T06:43:10.649303Z  WARN turborepo_filewatch::package_watcher: lagged behind 589 processing file watching events
+2025-11-21T06:43:10.703960Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:43:10.952613Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:43:10.953051Z  WARN turborepo_filewatch::package_watcher: lagged behind 116 processing file watching events
+2025-11-21T06:43:10.953325Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:43:11.043575Z  WARN turborepo_filewatch::globwatcher: encountered filewatching error, flushing all globs: channel lagged by 65
+2025-11-21T06:43:11.748839Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:43:11.748852Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:43:17.341547Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package-lock.json")}
+2025-11-21T06:43:17.341594Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:43:37.050181Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:43:37.050211Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:43:37.145640Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:43:37.145651Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:43:37.243936Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:43:37.243951Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:43:37.344749Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:43:37.344763Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:43:37.452539Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:43:37.452628Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:43:37.746529Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:43:37.746540Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:43:37.846062Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:43:37.846074Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:43:37.946082Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:43:37.946093Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:43:38.044958Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:43:38.044971Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:43:38.164574Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:43:38.164587Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:43:38.345882Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:43:38.345897Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:43:38.547751Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:43:38.547767Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:43:38.748262Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:43:38.748276Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:43:38.847804Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:43:38.847816Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:43:38.956763Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:43:38.956783Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:43:39.342443Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package-lock.json")}
+2025-11-21T06:43:39.342453Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:43:40.642092Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo/cache")}
+2025-11-21T06:43:40.642105Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:43:49.044505Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("turbo.json")}
+2025-11-21T06:43:49.044631Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(All)
+2025-11-21T06:43:58.033398Z  WARN turborepo_filewatch::package_watcher: lagged behind 190 processing file watching events
+2025-11-21T06:43:58.046910Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:43:58.046917Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:43:58.112849Z  WARN turborepo_filewatch::package_watcher: lagged behind 300 processing file watching events
+2025-11-21T06:43:58.166387Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:43:58.166395Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:43:58.189999Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:43:58.189998Z  WARN turborepo_filewatch::package_watcher: lagged behind 607 processing file watching events
+2025-11-21T06:43:58.673248Z  WARN turborepo_filewatch::package_watcher: lagged behind 145 processing file watching events
+2025-11-21T06:43:58.683597Z  WARN turborepo_filewatch::package_watcher: lagged behind 197 processing file watching events
+2025-11-21T06:43:58.890140Z  WARN turborepo_filewatch::package_watcher: lagged behind 275 processing file watching events
+2025-11-21T06:43:58.900597Z  WARN turborepo_filewatch::package_watcher: lagged behind 46 processing file watching events
+2025-11-21T06:43:58.910799Z  WARN turborepo_filewatch::package_watcher: lagged behind 52 processing file watching events
+2025-11-21T06:43:59.041723Z  WARN turborepo_filewatch::globwatcher: encountered filewatching error, flushing all globs: channel lagged by 30
+2025-11-21T06:43:59.046985Z  WARN turborepo_filewatch::globwatcher: encountered filewatching error, flushing all globs: channel lagged by 16
+2025-11-21T06:43:59.057207Z  WARN turborepo_filewatch::globwatcher: encountered filewatching error, flushing all globs: channel lagged by 140
+2025-11-21T06:44:03.341984Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package-lock.json")}
+2025-11-21T06:44:03.342007Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:44:16.647091Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:44:16.647107Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:44:16.744872Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:44:16.744883Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:44:16.844721Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:44:16.844732Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:44:16.952475Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:44:16.952486Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:44:17.045205Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:44:17.045216Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:44:17.145008Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:44:17.145019Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:44:17.245451Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:44:17.245463Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:44:17.345466Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:44:17.345476Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:44:17.449314Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:44:17.449325Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:44:17.546636Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:44:17.546647Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:44:17.645669Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:44:17.645681Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:44:17.746498Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:44:17.746510Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:44:17.856331Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:44:17.856342Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:44:17.945649Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:44:17.945666Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:44:18.045958Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:44:18.045969Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:44:18.153868Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:44:18.153879Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:44:18.247428Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(""), AnchoredSystemPathBuf("package-lock.json")}
+2025-11-21T06:44:18.247439Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:45:04.042983Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/netlify.toml")}
+2025-11-21T06:45:04.043008Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T06:45:26.344377Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backoffice/netlify.toml")}
+2025-11-21T06:45:26.344424Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/backoffice"), path: AnchoredSystemPathBuf("apps/backoffice") }}))
+2025-11-21T06:45:34.958234Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:45:34.958260Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:45:35.046149Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:45:35.046156Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:45:35.124929Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:45:35.124936Z  WARN turborepo_filewatch::package_watcher: lagged behind 277 processing file watching events
+2025-11-21T06:45:35.131881Z  WARN turborepo_filewatch::globwatcher: encountered filewatching error, flushing all globs: channel lagged by 204
+2025-11-21T06:45:35.136590Z  WARN turborepo_filewatch::package_watcher: lagged behind 43 processing file watching events
+2025-11-21T06:45:35.199308Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:45:35.749772Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:45:35.749783Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:45:36.081511Z  WARN turborepo_filewatch::package_watcher: lagged behind 15 processing file watching events
+2025-11-21T06:45:36.081641Z  WARN turborepo_filewatch::package_watcher: lagged behind 48 processing file watching events
+2025-11-21T06:45:40.143736Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package-lock.json")}
+2025-11-21T06:45:40.143765Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:45:53.054019Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:45:53.054043Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:45:53.246819Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:45:53.246841Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:45:53.345606Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:45:53.345618Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:45:53.446503Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:45:53.446515Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:45:53.547356Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:45:53.547367Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:45:53.649988Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:45:53.650000Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:45:53.755356Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:45:53.755369Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:45:53.846379Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:45:53.846390Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:45:53.947085Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:45:53.947096Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:45:54.044934Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:45:54.044947Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:45:54.146231Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:45:54.146245Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:45:54.447655Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:45:54.447666Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:45:54.564325Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:45:54.564365Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:45:54.745930Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:45:54.745956Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:45:55.047849Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:45:55.047861Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:45:55.149947Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:45:55.149958Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:45:55.248509Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:45:55.248520Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:45:55.344811Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package-lock.json")}
+2025-11-21T06:45:55.344825Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:46:08.344931Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/netlify.toml")}
+2025-11-21T06:46:08.344966Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-21T06:46:17.644521Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backoffice/netlify.toml")}
+2025-11-21T06:46:17.644535Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/backoffice"), path: AnchoredSystemPathBuf("apps/backoffice") }}))
+2025-11-21T06:46:25.047347Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:25.047376Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:25.076036Z  WARN turborepo_filewatch::package_watcher: lagged behind 516 processing file watching events
+2025-11-21T06:46:25.146032Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:25.146041Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:25.259158Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:25.259169Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:25.292019Z  WARN turborepo_filewatch::package_watcher: lagged behind 10 processing file watching events
+2025-11-21T06:46:25.734800Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:46:26.908133Z  WARN turborepo_filewatch::package_watcher: lagged behind 66 processing file watching events
+2025-11-21T06:46:26.918644Z  WARN turborepo_filewatch::package_watcher: lagged behind 155 processing file watching events
+2025-11-21T06:46:26.947477Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:46:26.947625Z  WARN turborepo_filewatch::globwatcher: encountered filewatching error, flushing all globs: channel lagged by 236
+2025-11-21T06:46:26.947888Z  WARN turborepo_lib::package_changes_watcher: file event lagged
+2025-11-21T06:46:31.144537Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package-lock.json")}
+2025-11-21T06:46:31.144580Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:46:42.665814Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:42.665854Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:42.748677Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:42.748688Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:42.847419Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:42.847435Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:42.947344Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:42.947355Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:43.048008Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:43.048020Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:43.146244Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:43.146256Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:43.245694Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:43.245706Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:43.355073Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:43.355082Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:43.455363Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:43.455374Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:43.551903Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:43.551914Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:43.656463Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:43.656473Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:43.747893Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:43.747903Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:43.847879Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:43.847891Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:43.949944Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:43.949959Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:44.049855Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:44.049868Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:44.146854Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:44.146868Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:44.256728Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:44.256741Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:44.349190Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-21T06:46:44.349202Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-21T06:46:44.543726Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package-lock.json")}
+2025-11-21T06:46:44.543739Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-21T06:47:08.045516Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backoffice/netlify.toml"), AnchoredSystemPathBuf("apps/customer-web/netlify.toml"), AnchoredSystemPathBuf("turbo.json"), AnchoredSystemPathBuf("package.json")}
+2025-11-21T06:47:08.045550Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(All)
