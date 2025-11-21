@@ -1,0 +1,24 @@
+{
+  "name": "restaurant-manager",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "seed": "node pocketbase/scripts/seed.js",
+    "pb:migrate": "cd pocketbase && node migrations/run.js",
+    "pb:create-collections": "node pocketbase/scripts/create-essential-collections.js",
+    "pb:create-all-collections": "node pocketbase/scripts/create-essential-collections.js && node pocketbase/scripts/create-remaining-collections.js",
+    "pb:add-customer-address-fields": "node pocketbase/scripts/add-customer-address-fields.js"
+  },
+  "devDependencies": {
+    "dotenv": "^17.2.3",
+    "turbo": "^1.10.0",
+    "typescript": "^5.3.0"
+  }
+}

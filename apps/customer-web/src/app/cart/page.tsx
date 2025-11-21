@@ -1,0 +1,255 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { calculateGSTForItems } from '@restaurant/lib';
+
+interface CartItem {
+  menuItemId: string;
+  quantity: number;
+  options?: Array<{ groupId: string; valueIds: string[] }>;
+}
+
+interface MenuItem {
+  id: string;
+  name: string;
+  basePrice: number;
+  taxRate: number;
+  image?: string;
+}
+
+export default function CartPage() {
+  const router = useRouter();
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<Record<string, MenuItem>>({});
+  const [loading, setLoading] = useState(true);
+  const [locationStateCode, setLocationStateCode] = useState('MH');
+
+  useEffect(() => {
+    const cartData = JSON.parse(localStorage.getItem('cart') || '[]');
+    setCart(cartData);
+
+    // Fetch menu items
+    const fetchItems = async () => {
+      try {
+        const itemIds = cartData.map((item: CartItem) => item.menuItemId);
+        const response = await fetch(`/api/menu-items?ids=${itemIds.join(',')}`);
+        const data = await response.json();
+        
+        const fetchedItems: Record<string, MenuItem> = {};
+        (data.items || []).forEach((item: MenuItem) => {
+          fetchedItems[item.id] = item;
+        });
+
+        setItems(fetchedItems);
+
+        // Get location state code (simplified - should come from location)
+        // For now, using default
+      } catch (error) {
+        console.error('Error fetching items:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (cartData.length > 0) {
+      fetchItems();
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
+  const calculateItemTotal = (item: CartItem): number => {
+    const menuItem = items[item.menuItemId];
+    if (!menuItem) return 0;
+
+    let itemPrice = menuItem.basePrice;
+    // Add option prices (simplified - would need to fetch option values)
+    // For now, just use base price
+
+    return itemPrice * item.quantity;
+  };
+
+  const calculateTotals = () => {
+    const itemTotals = cart.map((item) => ({
+      subtotal: calculateItemTotal(item),
+      taxRate: items[item.menuItemId]?.taxRate || 5,
+    }));
+
+    const subtotal = itemTotals.reduce((sum, item) => sum + item.subtotal, 0);
+    const gst = calculateGSTForItems(itemTotals, locationStateCode);
+    const total = subtotal + gst.totalTax;
+
+    return { subtotal, gst, total };
+  };
+
+  const { subtotal, gst, total } = calculateTotals();
+
+  const updateQuantity = (index: number, delta: number) => {
+    const newCart = [...cart];
+    newCart[index].quantity = Math.max(1, newCart[index].quantity + delta);
+    setCart(newCart);
+    localStorage.setItem('cart', JSON.stringify(newCart));
+    window.dispatchEvent(new Event('cartUpdated'));
+  };
+
+  const removeItem = (index: number) => {
+    const newCart = cart.filter((_, i) => i !== index);
+    setCart(newCart);
+    localStorage.setItem('cart', JSON.stringify(newCart));
+    window.dispatchEvent(new Event('cartUpdated'));
+  };
+
+  const handleCheckout = () => {
+    // Check if user is logged in
+    const token = localStorage.getItem('customer_auth_token');
+    if (!token) {
+      router.push('/login?redirect=/checkout');
+      return;
+    }
+    router.push('/checkout');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading cart...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (cart.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <svg
+            className="mx-auto h-24 w-24 text-gray-400 mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+            />
+          </svg>
+          <h1 className="text-3xl font-bold mb-4 text-gray-900">Your cart is empty</h1>
+          <p className="text-gray-600 mb-6">Add some delicious items to get started!</p>
+          <Link
+            href="/"
+            className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Continue Shopping
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <h1 className="text-4xl font-bold mb-8 text-gray-900">Shopping Cart</h1>
+
+        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+          {cart.map((item, index) => {
+            const menuItem = items[item.menuItemId];
+            if (!menuItem) return null;
+
+            return (
+              <div key={index} className="flex items-center space-x-4 py-4 border-b last:border-b-0">
+                {menuItem.image && (
+                  <img
+                    src={`http://localhost:8090/api/files/menuItem/${menuItem.id}/${menuItem.image}`}
+                    alt={menuItem.name}
+                    className="w-24 h-24 object-cover rounded-lg"
+                  />
+                )}
+                <div className="flex-1">
+                  <h3 className="font-semibold text-lg text-gray-900 mb-1">{menuItem.name}</h3>
+                  <div className="flex items-center space-x-4 mt-2">
+                    <div className="flex items-center space-x-2 border rounded-lg">
+                      <button
+                        onClick={() => updateQuantity(index, -1)}
+                        className="px-3 py-1 hover:bg-gray-100 rounded-l-lg"
+                      >
+                        -
+                      </button>
+                      <span className="px-3 py-1">{item.quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(index, 1)}
+                        className="px-3 py-1 hover:bg-gray-100 rounded-r-lg"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => removeItem(index)}
+                      className="text-red-600 hover:text-red-700 text-sm"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-lg text-gray-900">
+                    ₹{(calculateItemTotal(item) / 100).toFixed(2)}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    ₹{((calculateItemTotal(item) / item.quantity) / 100).toFixed(2)} each
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="space-y-2 mb-4">
+            <div className="flex justify-between">
+              <span>Subtotal:</span>
+              <span>₹{(subtotal / 100).toFixed(2)}</span>
+            </div>
+            {gst.cgst > 0 && (
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>CGST:</span>
+                <span>₹{(gst.cgst / 100).toFixed(2)}</span>
+              </div>
+            )}
+            {gst.sgst > 0 && (
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>SGST:</span>
+                <span>₹{(gst.sgst / 100).toFixed(2)}</span>
+              </div>
+            )}
+            {gst.igst > 0 && (
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>IGST:</span>
+                <span>₹{(gst.igst / 100).toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-xl font-bold pt-2 border-t">
+              <span>Total:</span>
+              <span>₹{(total / 100).toFixed(2)}</span>
+            </div>
+          </div>
+          <button
+            onClick={handleCheckout}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 mt-4"
+          >
+            Proceed to Checkout
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+

@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  pocketbase:
+    image: ghcr.io/muchobien/pocketbase:0.22.27
+    container_name: restaurant-pb
+    volumes:
+      - ./pocketbase/pb_data:/pb/pb_data
+      - ./pocketbase/pb_migrations:/pb/pb_migrations
+    ports:
+      - "8090:8090"
+    environment:
+      - PB_ENCRYPTION_KEY=${PB_ENCRYPTION_KEY:-changeme}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  customer-web:
+    build:
+      context: .
+      dockerfile: apps/customer-web/Dockerfile
+    container_name: restaurant-customer-web
+    ports:
+      - "3000:3000"
+    environment:
+      - POCKETBASE_URL=http://pocketbase:8090
+      - NODE_ENV=production
+    depends_on:
+      - pocketbase
+    restart: unless-stopped
+
+  backoffice:
+    build:
+      context: .
+      dockerfile: apps/backoffice/Dockerfile
+    container_name: restaurant-backoffice
+    ports:
+      - "3001:3001"
+    environment:
+      - POCKETBASE_URL=http://pocketbase:8090
+      - NODE_ENV=production
+    depends_on:
+      - pocketbase
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: restaurant-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./ops/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ops/nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - customer-web
+      - backoffice
+    restart: unless-stopped
+
+  backup:
+    image: alpine:latest
+    container_name: restaurant-backup
+    volumes:
+      - ./pocketbase/pb_data:/data/pb_data:ro
+      - ./backups:/backups
+    command: >
+      sh -c "
+        apk add --no-cache tar gzip &&
+        mkdir -p /backups &&
+        tar -czf /backups/pb_backup_$$(date +%Y%m%d_%H%M%S).tar.gz -C /data pb_data &&
+        find /backups -name 'pb_backup_*.tar.gz' -mtime +7 -delete
+      "
+    restart: "no"
+    profiles:
+      - backup
+
+volumes:
+  pb_data:
+  backups:
+
+
+

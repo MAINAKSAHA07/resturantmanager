@@ -1,0 +1,186 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Script from 'next/script';
+import Link from 'next/link';
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
+export default function CheckoutPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    // Check authentication
+    const token = localStorage.getItem('customer_auth_token');
+    if (!token) {
+      router.push(`/login?redirect=${encodeURIComponent('/checkout')}`);
+      return;
+    }
+    setIsAuthenticated(true);
+    setCheckingAuth(false);
+
+    // Check if Razorpay script is loaded
+    if (typeof window !== 'undefined' && window.Razorpay) {
+      setRazorpayLoaded(true);
+    }
+  }, [router]);
+
+  const handleCheckout = async () => {
+    setLoading(true);
+    try {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      
+      // Get auth token
+      const token = localStorage.getItem('customer_auth_token');
+      if (!token) {
+        router.push(`/login?redirect=${encodeURIComponent('/checkout')}`);
+        return;
+      }
+
+      // Create order
+      const orderResponse = await fetch('/api/orders/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ items: cart }),
+      });
+
+      if (!orderResponse.ok) {
+        throw new Error('Failed to create order');
+      }
+
+      const orderData = await orderResponse.json();
+      
+      if (!orderData.orderId || !orderData.amount) {
+        const errorMsg = orderData.error || 'Failed to create order';
+        throw new Error(errorMsg);
+      }
+      
+      const { orderId, amount } = orderData;
+
+      // Create Razorpay order
+      const paymentResponse = await fetch('/api/payments/razorpay/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, orderId }),
+      });
+
+      if (!paymentResponse.ok) {
+        throw new Error('Failed to create payment order');
+      }
+
+      const { razorpay_order_id, key } = await paymentResponse.json();
+
+      // Initialize Razorpay
+      if (!window.Razorpay) {
+        throw new Error('Razorpay SDK not loaded');
+      }
+
+      const options = {
+        key,
+        amount,
+        currency: 'INR',
+        name: 'Restaurant',
+        description: 'Order Payment',
+        order_id: razorpay_order_id,
+        handler: async function (response: any) {
+          try {
+            // Capture payment
+            const captureResponse = await fetch('/api/payments/razorpay/capture', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                orderId,
+              }),
+            });
+
+            if (captureResponse.ok) {
+              localStorage.removeItem('cart');
+              router.push(`/order/${orderId}`);
+            } else {
+              throw new Error('Payment capture failed');
+            }
+          } catch (error) {
+            console.error('Payment error:', error);
+            alert('Payment failed. Please try again.');
+          }
+        },
+        prefill: {
+          email: '',
+          contact: '',
+        },
+        theme: {
+          color: '#3399cc',
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Checkout failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null; // Will redirect
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <Script
+        src="https://checkout.razorpay.com/v1/checkout.js"
+        onLoad={() => setRazorpayLoaded(true)}
+      />
+      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
+        <h1 className="text-2xl font-bold mb-4">Checkout</h1>
+        <p className="text-gray-600 mb-6">
+          Review your order and proceed to payment
+        </p>
+        <button
+          onClick={handleCheckout}
+          disabled={loading || !razorpayLoaded}
+          className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+        >
+          {loading ? 'Processing...' : 'Pay with Razorpay'}
+        </button>
+        <Link
+          href="/"
+          className="block text-center text-sm text-gray-600 hover:text-gray-900 mt-4"
+        >
+          Continue Shopping
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+
+

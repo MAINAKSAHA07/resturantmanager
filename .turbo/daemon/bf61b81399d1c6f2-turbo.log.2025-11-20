@@ -1,0 +1,105 @@
+2025-11-20T23:45:09.911096Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo/cookies/1.cookie"), AnchoredSystemPathBuf(".turbo/cookies/.turbo-cookie")}
+2025-11-20T23:45:09.911106Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:45:11.121230Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/ui/dist")}
+2025-11-20T23:45:11.121244Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/ui"), path: AnchoredSystemPathBuf("packages/ui") }}))
+2025-11-20T23:45:11.318605Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/lib/dist")}
+2025-11-20T23:45:11.318614Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/lib"), path: AnchoredSystemPathBuf("packages/lib") }}))
+2025-11-20T23:45:11.611073Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/next-env.d.ts"), AnchoredSystemPathBuf("apps/backoffice/next-env.d.ts")}
+2025-11-20T23:45:11.611089Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/backoffice"), path: AnchoredSystemPathBuf("apps/backoffice") }, WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }}))
+2025-11-20T23:45:11.909830Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/customer-web/.next"), AnchoredSystemPathBuf("apps/backoffice/.next")}
+2025-11-20T23:45:11.909848Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/customer-web"), path: AnchoredSystemPathBuf("apps/customer-web") }, WorkspacePackage { name: Other("@restaurant/backoffice"), path: AnchoredSystemPathBuf("apps/backoffice") }}))
+2025-11-20T23:45:11.909888Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-20T23:45:11.909913Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-20T23:46:15.511180Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/ui/tsconfig.json")}
+2025-11-20T23:46:15.511200Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/ui"), path: AnchoredSystemPathBuf("packages/ui") }}))
+2025-11-20T23:46:49.715912Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/apply.js")}
+2025-11-20T23:46:49.715950Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:46:50.015618Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/apply.js")}
+2025-11-20T23:46:50.015626Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:47:59.017167Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/lib/package.json")}
+2025-11-20T23:47:59.017272Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/lib"), path: AnchoredSystemPathBuf("packages/lib") }}))
+2025-11-20T23:48:01.516073Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/lib/node_modules")}
+2025-11-20T23:48:01.516082Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/lib"), path: AnchoredSystemPathBuf("packages/lib") }}))
+2025-11-20T23:48:01.516095Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-20T23:48:02.117725Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package-lock.json")}
+2025-11-20T23:48:02.117768Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:48:11.916803Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/apply.js")}
+2025-11-20T23:48:11.916818Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:48:14.016395Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/scripts/seed.js")}
+2025-11-20T23:48:14.016405Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:48:48.817309Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/lib/package.json")}
+2025-11-20T23:48:48.817326Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/lib"), path: AnchoredSystemPathBuf("packages/lib") }}))
+2025-11-20T23:48:53.017695Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/apply.js")}
+2025-11-20T23:48:53.017711Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:48:55.017554Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/scripts/seed.js")}
+2025-11-20T23:48:55.017574Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:48:57.124008Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("docker-compose.yml")}
+2025-11-20T23:48:57.124016Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:49:12.017865Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/pb_data")}
+2025-11-20T23:49:12.017889Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:49:17.021557Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/pb_data")}
+2025-11-20T23:49:17.021585Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:50:05.319087Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/apply.js")}
+2025-11-20T23:50:05.319129Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:50:24.719776Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package-lock.json")}
+2025-11-20T23:50:24.719790Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:50:43.740095Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package-lock.json")}
+2025-11-20T23:50:43.740139Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:50:45.018148Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package-lock.json")}
+2025-11-20T23:50:45.018156Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:51:06.819743Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package-lock.json")}
+2025-11-20T23:51:06.819752Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:51:07.619559Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo/cookies/2.cookie")}
+2025-11-20T23:51:07.619569Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:51:11.019563Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package-lock.json")}
+2025-11-20T23:51:11.019579Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:51:11.118777Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package-lock.json")}
+2025-11-20T23:51:11.118785Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:51:35.421252Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("node_modules"), AnchoredSystemPathBuf("packages/lib/node_modules")}
+2025-11-20T23:51:35.421289Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@restaurant/lib"), path: AnchoredSystemPathBuf("packages/lib") }, WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:51:35.421304Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-20T23:51:36.122200Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("node_modules"), AnchoredSystemPathBuf("packages/lib/node_modules")}
+2025-11-20T23:51:36.122210Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }, WorkspacePackage { name: Other("@restaurant/lib"), path: AnchoredSystemPathBuf("packages/lib") }}))
+2025-11-20T23:51:36.124143Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-20T23:51:37.024398Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-20T23:51:37.024413Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-20T23:51:51.919713Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("package-lock.json")}
+2025-11-20T23:51:51.919746Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:52:09.519663Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/test_minimal.js")}
+2025-11-20T23:52:09.519679Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:52:09.621213Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/test_minimal.js")}
+2025-11-20T23:52:09.621221Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:52:24.720012Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/test_minimal.js")}
+2025-11-20T23:52:24.720021Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:52:35.020673Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/test_minimal.js")}
+2025-11-20T23:52:35.020691Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:52:45.520887Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/test_minimal.js")}
+2025-11-20T23:52:45.520894Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:52:51.721447Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/test_minimal.js")}
+2025-11-20T23:52:51.721455Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:53:13.922067Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/001_create_collections.js")}
+2025-11-20T23:53:13.922090Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:53:33.122604Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/test_minimal.js")}
+2025-11-20T23:53:33.122625Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:53:42.922361Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/test_minimal.js")}
+2025-11-20T23:53:42.922370Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:53:55.821689Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/001_create_collections.js")}
+2025-11-20T23:53:55.821707Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:54:06.721985Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/test_minimal.js")}
+2025-11-20T23:54:06.721996Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:54:26.721401Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/test_minimal.js")}
+2025-11-20T23:54:26.721428Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:54:37.524628Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/test_minimal.js")}
+2025-11-20T23:54:37.524647Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:54:37.621901Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/test_minimal.js")}
+2025-11-20T23:54:37.621910Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:54:48.422271Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/test_minimal.js")}
+2025-11-20T23:54:48.422278Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:55:01.122876Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/test_minimal.js")}
+2025-11-20T23:55:01.122883Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:55:30.923956Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/apply.js")}
+2025-11-20T23:55:30.923977Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:57:06.824527Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/001_create_collections.js")}
+2025-11-20T23:57:06.824543Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-20T23:57:11.023637Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("pocketbase/migrations/apply.js")}
+2025-11-20T23:57:11.023647Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
