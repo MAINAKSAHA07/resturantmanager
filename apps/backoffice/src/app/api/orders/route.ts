@@ -8,45 +8,45 @@ export async function GET(request: NextRequest) {
     const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
     const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
     const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
-    
+
     const pb = new PocketBase(pbUrl);
     await pb.admins.authWithPassword(adminEmail, adminPassword);
-    
+
     const searchParams = request.nextUrl.searchParams;
     const filterStatus = searchParams.get('status') || 'all';
-    
+
     // Get selected tenant from cookies
     const cookieStore = cookies();
     const tenantId = cookieStore.get('selected_tenant_id')?.value;
-    
+
     if (!tenantId) {
       return NextResponse.json(
         { error: 'No tenant selected. Please select a tenant first.' },
         { status: 400 }
       );
     }
-    
+
     console.log('Selected tenant ID:', tenantId);
     console.log('Filter status:', filterStatus);
-    
+
     // Fetch all orders and filter client-side because PocketBase relation filters don't work reliably
     const allOrders = await pb.collection('orders').getList(1, 100, {
       sort: '-created',
     });
-    
+
     console.log(`Fetched ${allOrders.items.length} total orders from database`);
-    
+
     // Filter client-side by tenant and status
     const filteredOrders = allOrders.items.filter((order: any) => {
       // Handle tenantId - it might be a string or an array (relation field)
       const orderTenantId = Array.isArray(order.tenantId) ? order.tenantId[0] : order.tenantId;
       const matchesTenant = orderTenantId === tenantId;
       const matchesStatus = filterStatus === 'all' || order.status === filterStatus;
-      
+
       if (!matchesTenant) {
         console.log(`Order ${order.id.slice(0, 8)}: tenant mismatch - order has ${orderTenantId}, looking for ${tenantId}`);
       }
-      
+
       return matchesTenant && matchesStatus;
     });
 
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
     // Attach items to each order
     const ordersWithItems = filteredOrders.map((order: any) => {
       const orderItems = orderItemsMap.get(order.id) || [];
-      
+
       console.log(`Order ${order.id.slice(0, 8)}: Found ${orderItems.length} items`);
 
       return {
@@ -119,7 +119,7 @@ export async function GET(request: NextRequest) {
       response: error.response?.data,
     });
     return NextResponse.json(
-      { 
+      {
         error: error.message || 'Failed to fetch orders',
         details: process.env.NODE_ENV === 'development' ? error.stack : undefined
       },
@@ -134,10 +134,10 @@ export async function PATCH(request: NextRequest) {
     const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
     const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
     const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
-    
+
     const pb = new PocketBase(pbUrl);
     await pb.admins.authWithPassword(adminEmail, adminPassword);
-    
+
     const body = await request.json();
     const { orderId, status } = body;
 
@@ -149,7 +149,7 @@ export async function PATCH(request: NextRequest) {
 
     // Update order status and timestamps
     const updateData: any = { status };
-    
+
     // Update timestamps based on status
     const now = new Date().toISOString();
     if (status === 'accepted' && oldStatus !== 'accepted') {
@@ -163,18 +163,18 @@ export async function PATCH(request: NextRequest) {
     } else if (status === 'completed' && oldStatus !== 'completed') {
       updateData.timestamps = { ...currentOrder.timestamps, completedAt: now };
     }
-    
+
     await pb.collection('orders').update(orderId, updateData);
     console.log(`✅ Order ${orderId} updated to status: ${status}`);
 
     // Create KDS ticket when order is accepted or moved to in_kitchen
     // Check if a ticket should be created (when order is accepted or moved to kitchen)
-    const shouldCreateTicket = 
+    const shouldCreateTicket =
       (status === 'accepted' && oldStatus !== 'accepted') ||
       (status === 'in_kitchen' && oldStatus !== 'in_kitchen');
-    
+
     console.log(`Checking KDS ticket creation: shouldCreateTicket=${shouldCreateTicket}, oldStatus=${oldStatus}, newStatus=${status}`);
-    
+
     if (shouldCreateTicket) {
       console.log(`Order ${orderId} status changed to ${status}, checking for KDS ticket...`);
       try {
@@ -185,10 +185,10 @@ export async function PATCH(request: NextRequest) {
 
         if (existingTickets.items.length === 0) {
           console.log(`Creating KDS ticket for order ${orderId}...`);
-          
+
           // Fetch order items - fetch all and filter client-side (PocketBase filters don't work reliably for relation fields)
           const allOrderItems = await pb.collection('orderItem').getList(1, 1000);
-          
+
           // Filter by orderId client-side
           const orderItems = allOrderItems.items.filter((item: any) => {
             const itemOrderId = Array.isArray(item.orderId) ? item.orderId[0] : item.orderId;
@@ -212,14 +212,14 @@ export async function PATCH(request: NextRequest) {
           // Determine station based on menu item categories
           let station = 'default';
           const categoryStations: Record<string, string> = {};
-          
+
           // Fetch menu items and their categories to determine station
           for (const orderItem of orderItems) {
             try {
               const menuItem = await pb.collection('menuItem').getOne(orderItem.menuItemId, {
                 expand: 'categoryId',
               });
-              
+
               // Get category name
               let categoryName = '';
               if (menuItem.categoryId) {
@@ -231,17 +231,17 @@ export async function PATCH(request: NextRequest) {
                   // Category not found, skip
                 }
               }
-              
+
               // Map category to station based on category name
               let itemStation = 'default';
-              if (categoryName.includes('beverage') || categoryName.includes('drink') || categoryName.includes('bar') || categoryName.includes('juice') || categoryName.includes('coffee') || categoryName.includes('tea')) {
+              if (categoryName.includes('beverage') || categoryName.includes('drink') || categoryName.includes('bar') || categoryName.includes('juice') || categoryName.includes('coffee') || categoryName.includes('tea') || categoryName.includes('cocktail') || categoryName.includes('mocktail') || categoryName.includes('shake') || categoryName.includes('smoothie')) {
                 itemStation = 'bar';
-              } else if (categoryName.includes('salad') || categoryName.includes('cold') || categoryName.includes('appetizer') && categoryName.includes('cold')) {
+              } else if (categoryName.includes('salad') || categoryName.includes('cold') || (categoryName.includes('appetizer') && categoryName.includes('cold')) || categoryName.includes('ice cream')) {
                 itemStation = 'cold';
-              } else if (categoryName.includes('main') || categoryName.includes('entree') || categoryName.includes('hot') || categoryName.includes('appetizer') || categoryName.includes('dessert')) {
+              } else if (categoryName.includes('main') || categoryName.includes('entree') || categoryName.includes('hot') || categoryName.includes('appetizer') || categoryName.includes('dessert') || categoryName.includes('starter') || categoryName.includes('bread') || categoryName.includes('rice') || categoryName.includes('soup') || categoryName.includes('curry') || categoryName.includes('tandoor') || categoryName.includes('pizza') || categoryName.includes('burger') || categoryName.includes('pasta')) {
                 itemStation = 'hot';
               }
-              
+
               // Count stations by frequency
               categoryStations[itemStation] = (categoryStations[itemStation] || 0) + orderItem.qty;
             } catch (e) {
@@ -249,14 +249,14 @@ export async function PATCH(request: NextRequest) {
               categoryStations['default'] = (categoryStations['default'] || 0) + orderItem.qty;
             }
           }
-          
+
           // Determine the most common station (by quantity)
           if (Object.keys(categoryStations).length > 0) {
-            station = Object.entries(categoryStations).reduce((a, b) => 
+            station = Object.entries(categoryStations).reduce((a, b) =>
               categoryStations[a[0]] > categoryStations[b[0]] ? a : b
             )[0];
           }
-          
+
           console.log(`Determined station "${station}" for order ${orderId} based on categories:`, categoryStations);
 
           // Handle tenantId and locationId (they might be arrays)
