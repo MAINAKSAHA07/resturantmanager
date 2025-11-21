@@ -1,7 +1,7 @@
 [build]
   base = "apps/backoffice"
   command = "cd ../.. && npm install && npm run build --filter=@restaurant/backoffice"
-  publish = "apps/backoffice/.next"
+  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20"

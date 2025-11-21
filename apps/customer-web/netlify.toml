@@ -1,7 +1,7 @@
 [build]
   base = "apps/customer-web"
   command = "cd ../.. && npm install && npm run build --filter=@restaurant/customer-web"
-  publish = "apps/customer-web/.next"
+  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20"
