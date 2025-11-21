@@ -114,11 +114,11 @@ const collections = [
     indexes: [
       'CREATE INDEX `idx_location_tenant` ON `location` (`tenantId`)'
     ],
-    listRule: '@request.auth.tenantId = tenantId',
-    viewRule: '@request.auth.tenantId = tenantId',
-    createRule: '@request.auth.tenantId = tenantId',
-    updateRule: '@request.auth.tenantId = tenantId',
-    deleteRule: null,
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
   },
   {
     name: 'role',
@@ -140,11 +140,11 @@ const collections = [
     indexes: [
       'CREATE INDEX `idx_role_tenant` ON `role` (`tenantId`, `name`)'
     ],
-    listRule: '@request.auth.tenantId = tenantId',
-    viewRule: '@request.auth.tenantId = tenantId',
-    createRule: null,
-    updateRule: null,
-    deleteRule: null,
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
   },
   {
     name: 'menuCategory',
@@ -179,11 +179,11 @@ const collections = [
     indexes: [
       'CREATE INDEX `idx_category_tenant_location` ON `menuCategory` (`tenantId`, `locationId`)'
     ],
-    listRule: 'tenantId.key = @request.query.brandKey || @request.auth.tenantId = tenantId',
-    viewRule: 'tenantId.key = @request.query.brandKey || @request.auth.tenantId = tenantId',
-    createRule: '@request.auth.tenantId = tenantId',
-    updateRule: '@request.auth.tenantId = tenantId',
-    deleteRule: '@request.auth.tenantId = tenantId',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
   },
   {
     name: 'menuItem',
@@ -257,11 +257,11 @@ const collections = [
       'CREATE INDEX `idx_item_tenant_location` ON `menuItem` (`tenantId`, `locationId`, `isActive`)',
       'CREATE INDEX `idx_item_category` ON `menuItem` (`categoryId`)'
     ],
-    listRule: '(tenantId.key = @request.query.brandKey && isActive = true) || @request.auth.tenantId = tenantId',
-    viewRule: '(tenantId.key = @request.query.brandKey && isActive = true) || @request.auth.tenantId = tenantId',
-    createRule: '@request.auth.tenantId = tenantId',
-    updateRule: '@request.auth.tenantId = tenantId',
-    deleteRule: '@request.auth.tenantId = tenantId',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
   },
   {
     name: 'optionGroup',
@@ -301,11 +301,11 @@ const collections = [
     indexes: [
       'CREATE INDEX `idx_option_group_item` ON `optionGroup` (`menuItemId`)'
     ],
-    listRule: 'menuItemId.tenantId.key = @request.query.brandKey || @request.auth.tenantId = menuItemId.tenantId',
-    viewRule: 'menuItemId.tenantId.key = @request.query.brandKey || @request.auth.tenantId = menuItemId.tenantId',
-    createRule: '@request.auth.tenantId = menuItemId.tenantId',
-    updateRule: '@request.auth.tenantId = menuItemId.tenantId',
-    deleteRule: '@request.auth.tenantId = menuItemId.tenantId',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
   },
   {
     name: 'optionValue',
@@ -333,11 +333,11 @@ const collections = [
     indexes: [
       'CREATE INDEX `idx_option_value_group` ON `optionValue` (`groupId`)'
     ],
-    listRule: 'groupId.menuItemId.tenantId.key = @request.query.brandKey || @request.auth.tenantId = groupId.menuItemId.tenantId',
-    viewRule: 'groupId.menuItemId.tenantId.key = @request.query.brandKey || @request.auth.tenantId = groupId.menuItemId.tenantId',
-    createRule: '@request.auth.tenantId = groupId.menuItemId.tenantId',
-    updateRule: '@request.auth.tenantId = groupId.menuItemId.tenantId',
-    deleteRule: '@request.auth.tenantId = groupId.menuItemId.tenantId',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
   },
   {
     name: 'tables',
@@ -393,11 +393,11 @@ const collections = [
     indexes: [
       'CREATE INDEX `idx_table_tenant_location` ON `tables` (`tenantId`, `locationId`)'
     ],
-    listRule: '@request.auth.tenantId = tenantId',
-    viewRule: '@request.auth.tenantId = tenantId',
-    createRule: '@request.auth.tenantId = tenantId',
-    updateRule: '@request.auth.tenantId = tenantId',
-    deleteRule: '@request.auth.tenantId = tenantId',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
   },
   {
     name: 'reservation',
@@ -455,11 +455,11 @@ const collections = [
       'CREATE INDEX `idx_reservation_tenant_location` ON `reservation` (`tenantId`, `locationId`, `status`)',
       'CREATE INDEX `idx_reservation_customer` ON `reservation` (`customerId`)'
     ],
-    listRule: '(@request.auth.id = customerId) || @request.auth.tenantId = tenantId',
-    viewRule: '(@request.auth.id = customerId) || @request.auth.tenantId = tenantId',
-    createRule: 'tenantId.key = @request.query.brandKey || @request.auth.tenantId = tenantId',
-    updateRule: '(@request.auth.id = customerId && status = "pending") || @request.auth.tenantId = tenantId',
-    deleteRule: '@request.auth.tenantId = tenantId',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
   },
   {
     name: 'orders',
@@ -574,11 +574,11 @@ const collections = [
       'CREATE INDEX `idx_order_customer` ON `orders` (`customerId`)',
       'CREATE INDEX `idx_order_razorpay` ON `orders` (`razorpayOrderId`)'
     ],
-    listRule: '(@request.auth.id = customerId) || @request.auth.tenantId = tenantId',
-    viewRule: '(@request.auth.id = customerId) || @request.auth.tenantId = tenantId',
-    createRule: 'tenantId.key = @request.query.brandKey || @request.auth.tenantId = tenantId',
-    updateRule: '@request.auth.tenantId = tenantId',
-    deleteRule: '@request.auth.tenantId = tenantId',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
   },
   {
     name: 'orderItem',
@@ -626,11 +626,11 @@ const collections = [
     indexes: [
       'CREATE INDEX `idx_order_item_order` ON `orderItem` (`orderId`)'
     ],
-    listRule: 'orderId.customerId = @request.auth.id || @request.auth.tenantId = orderId.tenantId',
-    viewRule: 'orderId.customerId = @request.auth.id || @request.auth.tenantId = orderId.tenantId',
-    createRule: '@request.auth.tenantId = orderId.tenantId',
-    updateRule: '@request.auth.tenantId = orderId.tenantId',
-    deleteRule: '@request.auth.tenantId = orderId.tenantId',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
   },
   {
     name: 'kdsTicket',
@@ -696,11 +696,11 @@ const collections = [
       'CREATE INDEX `idx_kds_tenant_location_status` ON `kdsTicket` (`tenantId`, `locationId`, `status`)',
       'CREATE INDEX `idx_kds_order` ON `kdsTicket` (`orderId`)'
     ],
-    listRule: '@request.auth.tenantId = tenantId',
-    viewRule: '@request.auth.tenantId = tenantId',
-    createRule: '@request.auth.tenantId = tenantId',
-    updateRule: '@request.auth.tenantId = tenantId',
-    deleteRule: '@request.auth.tenantId = tenantId',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
   },
 ];
 

@@ -51,3 +51,4 @@ backups/
 
 # Local Netlify folder
 .netlify
+*.pem

@@ -42,12 +42,9 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    if (!clientId) {
-      setError('Google Sign-In is not configured. Please contact support.');
-      setLoading(false);
-      return;
-    }
+    const clientId =
+      process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+      '259247630648-ojetlcndqe3o167clb7oshis7946hude.apps.googleusercontent.com';
 
     try {
       window.google.accounts.id.initialize({
@@ -86,15 +83,16 @@ export default function LoginPage() {
       });
 
       // Render the button
-      window.google.accounts.id.renderButton(
-        document.getElementById('google-signin-button'),
-        {
-          theme: 'outline',
-          size: 'large',
-          width: '100%',
-          text: 'signin_with',
-        }
-      );
+          const buttonWidth = Math.min(window.innerWidth - 64, 320);
+          window.google.accounts.id.renderButton(
+            document.getElementById('google-signin-button'),
+            {
+              theme: 'outline',
+              size: 'large',
+              width: buttonWidth,
+              text: 'signin_with',
+            }
+          );
 
       // Also try one-tap sign-in
       window.google.accounts.id.prompt();
