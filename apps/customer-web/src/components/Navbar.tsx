@@ -80,7 +80,6 @@ export default function Navbar() {
     
     // Redirect to home
     router.push('/');
-    router.refresh();
   };
 
   return (

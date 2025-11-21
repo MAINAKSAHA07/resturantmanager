@@ -5,6 +5,7 @@ A production-ready, multi-brand restaurant management system built with PocketBa
 ## Features
 
 ### v1 Scope
+
 - ✅ Multi-brand, multi-location support with subdomain routing
 - ✅ Customer web app: menu browsing, cart, checkout, order tracking
 - ✅ Razorpay payment integration with webhook verification
@@ -16,6 +17,7 @@ A production-ready, multi-brand restaurant management system built with PocketBa
 - ✅ Seed data for quick demo
 
 ### Non-goals (v1)
+
 - Printers (planned for v2)
 - Delivery management
 - Loyalty programs
@@ -36,7 +38,7 @@ A production-ready, multi-brand restaurant management system built with PocketBa
 .
 ├── apps/
 │   ├── customer-web/     # Customer-facing Next.js app
-│   └── backoffice/        # Admin/KDS Next.js app
+│   └── backoffice/       # Admin/KDS Next.js app
 ├── packages/
 │   ├── lib/              # Shared utilities (PB client, money, GST, etc.)
 │   └── ui/               # Shared UI components
@@ -47,7 +49,6 @@ A production-ready, multi-brand restaurant management system built with PocketBa
 ├── ops/
 │   └── nginx/            # Nginx configuration
 └── docker-compose.yml    # Docker services
-
 ```
 
 ## Prerequisites
@@ -69,6 +70,7 @@ npm install
 ### 2. Create PocketBase Admin Account
 
 **First time setup:**
+
 1. Start PocketBase: `docker-compose up -d pocketbase`
 2. Open http://localhost:8090/_/ in your browser
 3. Create an admin account (remember the email and password!)
@@ -93,15 +95,18 @@ RAZORPAY_WEBHOOK_SECRET=your-webhook-secret
 DEFAULT_BRAND_KEY=saffron
 ```
 
-**Important:** `PB_ADMIN_EMAIL` and `PB_ADMIN_PASSWORD` must match the admin account you created in PocketBase!
+> [!IMPORTANT]
+> `PB_ADMIN_EMAIL` and `PB_ADMIN_PASSWORD` must match the admin account you created in PocketBase! These are required for server-side operations.
 
 **apps/customer-web/.env.local:**
+
 ```env
 NEXT_PUBLIC_POCKETBASE_URL=http://localhost:8090
 NEXT_PUBLIC_RAZORPAY_KEY_ID=your-razorpay-key-id
 ```
 
 **apps/backoffice/.env.local:**
+
 ```env
 NEXT_PUBLIC_POCKETBASE_URL=http://localhost:8090
 ```
@@ -119,6 +124,7 @@ Wait for PocketBase to start (check http://localhost:8090/_/).
 PocketBase collections need to be created manually via the Admin UI or API. The schema definitions are in `pocketbase/migrations/001_create_collections.js`.
 
 **Via Admin UI:**
+
 1. Go to http://localhost:8090/_/
 2. Create admin account
 3. Navigate to Collections
@@ -134,11 +140,13 @@ make seed
 ```
 
 Or manually:
+
 ```bash
 node pocketbase/scripts/seed.js
 ```
 
 This creates:
+
 - Two demo brands: `saffron` and `ember`
 - Locations with GSTIN
 - Menu categories and items
@@ -152,6 +160,9 @@ make dev
 ```
 
 Or manually:
+
+npx turbo run dev
+
 ```bash
 # Terminal 1: Customer web
 cd apps/customer-web
@@ -162,7 +173,7 @@ cd apps/backoffice
 npm run dev
 ```
 
-### 7. Access Applications
+### 8. Access Applications
 
 - **Customer Web**: http://localhost:3000 (or via subdomain: http://saffron.localhost:3000)
 - **Back Office**: http://localhost:3001
@@ -195,6 +206,7 @@ make backup
 ```
 
 Or schedule via cron:
+
 ```bash
 0 2 * * * cd /path/to/project && make backup
 ```
@@ -249,6 +261,7 @@ All collections have tenant-scoped access rules. See `pocketbase/migrations/001_
 ## GST Calculation
 
 GST is calculated based on:
+
 - **Same state** (customer state = location state): CGST + SGST (split equally)
 - **Different state**: IGST (full amount)
 
@@ -261,6 +274,7 @@ Tax rates are per menu item. See `packages/lib/src/gst.ts` for implementation.
 - API: `api.example.com` → PocketBase
 
 For local development, use `/etc/hosts`:
+
 ```
 127.0.0.1 saffron.localhost
 127.0.0.1 saffron-admin.localhost
@@ -315,15 +329,15 @@ npm run test:e2e
 If you see "Admin authentication failed" errors:
 
 1. **Verify admin account exists:**
+
    - Go to http://localhost:8090/_/
    - Try logging in with your credentials
    - If login fails, create a new admin account or reset password
-
 2. **Check environment variables:**
+
    - Ensure `.env` file exists in root directory
    - Verify `PB_ADMIN_EMAIL` and `PB_ADMIN_PASSWORD` match your PocketBase admin account
    - Restart Next.js dev server after changing `.env`
-
 3. **See SETUP.md for detailed troubleshooting**
 
 ### PocketBase not starting
@@ -351,6 +365,3 @@ If you see "Admin authentication failed" errors:
 ## Support
 
 [Your Support Information Here]
-
-
-

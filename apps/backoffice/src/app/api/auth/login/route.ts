@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
+    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
     console.log('Login attempt:', { email, pbUrl });
     
     // Create PocketBase client directly to ensure correct URL

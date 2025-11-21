@@ -52,7 +52,6 @@ export default function SelectTenantPage() {
 
       if (response.ok) {
         router.push('/dashboard');
-        router.refresh();
       } else {
         setError(data.error || 'Failed to select tenant');
         setSelecting(false);

@@ -28,12 +28,10 @@ export default function LoginPage() {
         // Store auth token
         if (data.token) {
           localStorage.setItem('pb_auth_token', data.token);
-          // Also set as cookie for server-side access
-          document.cookie = `pb_auth_token=${data.token}; path=/; max-age=86400`;
+          // Cookie is already set by the server response
         }
         // Redirect to tenant selection instead of dashboard
         router.push('/select-tenant');
-        router.refresh();
       } else {
         // Show more specific error message
         const errorMessage = data.error || data.message || 'Login failed. Please check your credentials.';

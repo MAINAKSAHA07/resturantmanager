@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
+    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
     
     // Use admin client to ensure we have access to all collections
     // Create admin client directly to avoid environment variable issues
@@ -88,13 +88,30 @@ export async function GET(request: NextRequest) {
       });
       
       // Filter by tenant only (show categories from all locations for this tenant)
+      const filteredCategories = allCategories.items.filter(cat => {
+        const catTenantId = Array.isArray(cat.tenantId) ? cat.tenantId[0] : cat.tenantId;
+        const catLocationId = Array.isArray(cat.locationId) ? cat.locationId[0] : cat.locationId;
+        // Match tenant AND ensure location belongs to this tenant
+        return catTenantId === tenant.id && locationIds.includes(catLocationId);
+      });
+
+      // Deduplicate categories by name (keep the one with the lowest sort order, or first created)
+      const categoryMap = new Map<string, any>();
+      filteredCategories.forEach(cat => {
+        const nameKey = cat.name.toLowerCase().trim();
+        if (!categoryMap.has(nameKey)) {
+          categoryMap.set(nameKey, cat);
+        } else {
+          // If duplicate found, keep the one with lower sort order, or if same sort, keep the one with earlier ID (created first)
+          const existing = categoryMap.get(nameKey);
+          if (cat.sort < existing.sort || (cat.sort === existing.sort && cat.id < existing.id)) {
+            categoryMap.set(nameKey, cat);
+          }
+        }
+      });
+
       categories = {
-        items: allCategories.items.filter(cat => {
-          const catTenantId = Array.isArray(cat.tenantId) ? cat.tenantId[0] : cat.tenantId;
-          const catLocationId = Array.isArray(cat.locationId) ? cat.locationId[0] : cat.locationId;
-          // Match tenant AND ensure location belongs to this tenant
-          return catTenantId === tenant.id && locationIds.includes(catLocationId);
-        })
+        items: Array.from(categoryMap.values())
       };
     } catch (error: any) {
       // Collection doesn't exist yet
@@ -104,7 +121,10 @@ export async function GET(request: NextRequest) {
       throw error;
     }
 
-    return NextResponse.json({ categories: categories.items });
+    // Sort by sort order
+    const sortedCategories = categories.items.sort((a, b) => a.sort - b.sort);
+
+    return NextResponse.json({ categories: sortedCategories });
   } catch (error: any) {
     console.error('Error fetching categories:', {
       message: error.message,
@@ -135,7 +155,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
+    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
     
     // Use admin client to ensure we have access to all collections
     // Create admin client directly to avoid environment variable issues

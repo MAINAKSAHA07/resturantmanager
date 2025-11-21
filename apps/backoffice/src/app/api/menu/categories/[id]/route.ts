@@ -13,7 +13,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
+    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
     const pb = new PocketBase(pbUrl);
     pb.authStore.save(token, null);
     
@@ -48,7 +48,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
+    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
     const pb = new PocketBase(pbUrl);
     pb.authStore.save(token, null);
     

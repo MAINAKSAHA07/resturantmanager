@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     
     if (checkName) {
       // Check for duplicate
-      const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
+      const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
       const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
       const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
       
@@ -128,19 +128,126 @@ export async function GET(request: NextRequest) {
     // Check if menuItem collection exists
     let items;
     try {
-      // Get all items and filter client-side to handle relation fields properly
-      const allItems = await adminPb.collection('menuItem').getList(1, 500, {
-        expand: 'categoryId,tenantId,locationId',
+      // Get all items - don't use expand as it might cause duplication issues
+      // We'll handle relations manually
+      const allItems = await adminPb.collection('menuItem').getList(1, 1000);
+      
+      // Filter by tenant and deduplicate by ID immediately (most important step)
+      const initialFilteredMap = new Map<string, any>();
+      const initialSeenIds = new Set<string>();
+      
+      allItems.items.forEach(item => {
+        // Skip if we've already seen this ID
+        if (initialSeenIds.has(item.id)) {
+          return;
+        }
+        initialSeenIds.add(item.id);
+        
+        const itemTenantId = Array.isArray(item.tenantId) ? item.tenantId[0] : item.tenantId;
+        const itemLocationId = Array.isArray(item.locationId) ? item.locationId[0] : item.locationId;
+        
+        // Match tenant AND ensure location belongs to this tenant
+        if (itemTenantId === tenant.id && locationIds.includes(itemLocationId)) {
+          // Only add if not already in map (extra safety)
+          if (!initialFilteredMap.has(item.id)) {
+            initialFilteredMap.set(item.id, item);
+          }
+        }
       });
       
-      // Filter by tenant only (show items from all locations for this tenant)
+      const filteredItems = Array.from(initialFilteredMap.values());
+      console.log(`[API] After initial filter: ${allItems.items.length} -> ${filteredItems.length} items`);
+
+      // Get all categories to map IDs to names
+      const allCategories = await adminPb.collection('menuCategory').getList(1, 500);
+      const categoryMap = new Map<string, string>();
+      allCategories.items.forEach(cat => {
+        categoryMap.set(cat.id, cat.name);
+      });
+
+      // Map items and normalize categoryId, then deduplicate by item ID and name+category
+      const itemIdMap = new Map<string, any>();
+      const normalizedItems = filteredItems.map(item => {
+        // Normalize categoryId to always be a string
+        const categoryId = Array.isArray(item.categoryId) ? item.categoryId[0] : item.categoryId;
+        const categoryName = categoryId ? categoryMap.get(categoryId) : null;
+        
+        // Normalize availability to lowercase for consistency
+        let normalizedAvailability = item.availability || (item.isActive !== false ? 'available' : 'not available');
+        normalizedAvailability = String(normalizedAvailability).toLowerCase().trim();
+        if (normalizedAvailability !== 'available' && normalizedAvailability !== 'not available') {
+          normalizedAvailability = normalizedAvailability === 'notavailable' ? 'not available' : 'available';
+        }
+        
+        return {
+          ...item,
+          categoryId: categoryId || '',
+          categoryName: categoryName || null,
+          // Ensure availability is always included and normalized to lowercase
+          availability: normalizedAvailability,
+        };
+      });
+
+      // First deduplicate by item ID (most important - same ID = same item)
+      normalizedItems.forEach(item => {
+        if (!itemIdMap.has(item.id)) {
+          itemIdMap.set(item.id, item);
+        } else {
+          // If duplicate ID found, keep the one with more complete data or most recent
+          const existing = itemIdMap.get(item.id);
+          const itemTime = new Date(item.created || item.updated || 0).getTime();
+          const existingTime = new Date(existing.created || existing.updated || 0).getTime();
+          if (itemTime > existingTime) {
+            itemIdMap.set(item.id, item);
+          }
+        }
+      });
+
+      // Then deduplicate by name+category combination (in case same item appears with different IDs)
+      const nameCategoryMap = new Map<string, any>();
+      Array.from(itemIdMap.values()).forEach(item => {
+        const key = `${item.name.toLowerCase().trim()}_${item.categoryId || 'nocategory'}`;
+        if (!nameCategoryMap.has(key)) {
+          nameCategoryMap.set(key, item);
+        } else {
+          const existing = nameCategoryMap.get(key);
+          
+          // Normalize availability for comparison
+          const itemAvailability = String(item.availability || (item.isActive !== false ? 'available' : 'not available')).toLowerCase();
+          const existingAvailability = String(existing.availability || (existing.isActive !== false ? 'available' : 'not available')).toLowerCase();
+          
+          // Priority: prefer "not available" items (they're more restrictive/accurate)
+          // If both have same availability, prefer the most recent
+          if (itemAvailability === 'not available' && existingAvailability === 'available') {
+            nameCategoryMap.set(key, item);
+          } else if (itemAvailability === 'available' && existingAvailability === 'not available') {
+            // Keep existing (not available)
+          } else {
+            // Same availability - keep the most recent
+            const itemTime = new Date(item.created || item.updated || 0).getTime();
+            const existingTime = new Date(existing.created || existing.updated || 0).getTime();
+            if (itemTime > existingTime) {
+              nameCategoryMap.set(key, item);
+            }
+          }
+        }
+      });
+
+      // Final deduplication pass using Set to ensure absolute uniqueness by ID
+      const finalUniqueItems: any[] = [];
+      const finalSeenIds = new Set<string>();
+      
+      Array.from(nameCategoryMap.values()).forEach((item: any) => {
+        if (!finalSeenIds.has(item.id)) {
+          finalSeenIds.add(item.id);
+          finalUniqueItems.push(item);
+        }
+      });
+
+      console.log(`[API] Deduplication: ${normalizedItems.length} items -> ${finalUniqueItems.length} unique items`);
+
       items = {
-        items: allItems.items.filter(item => {
-          const itemTenantId = Array.isArray(item.tenantId) ? item.tenantId[0] : item.tenantId;
-          const itemLocationId = Array.isArray(item.locationId) ? item.locationId[0] : item.locationId;
-          // Match tenant AND ensure location belongs to this tenant
-          return itemTenantId === tenant.id && locationIds.includes(itemLocationId);
-        })
+        items: finalUniqueItems
       };
     } catch (error: any) {
       // Collection doesn't exist yet
@@ -206,7 +313,22 @@ export async function POST(request: NextRequest) {
     const basePrice = parseFloat(formData.get('basePrice') as string);
     const taxRate = parseFloat(formData.get('taxRate') as string) || 5;
     const categoryId = formData.get('categoryId') as string;
-    const isActive = formData.get('isActive') === 'true';
+    // Handle availability: 'available' or 'not available'
+    // Support legacy boolean values for backward compatibility
+    const availabilityValue = formData.get('availability') || formData.get('isActive');
+    let availability: string;
+    if (availabilityValue === null || availabilityValue === undefined || availabilityValue === '') {
+      availability = 'available'; // Default
+    } else {
+      const strValue = String(availabilityValue).toLowerCase().trim();
+      if (strValue === 'true' || strValue === '1' || strValue === 'available') {
+        availability = 'available';
+      } else if (strValue === 'false' || strValue === '0' || strValue === 'not available') {
+        availability = 'not available';
+      } else {
+        availability = 'available'; // Default
+      }
+    }
     const hsnSac = formData.get('hsnSac') as string || '';
     const imageFile = formData.get('image') as File | null;
     
@@ -285,7 +407,7 @@ export async function POST(request: NextRequest) {
     itemData.append('basePrice', Math.round(basePrice * 100).toString()); // Convert to paise
     itemData.append('taxRate', (taxRate || 5).toString());
     itemData.append('hsnSac', hsnSac);
-    itemData.append('isActive', (isActive !== false).toString());
+    itemData.append('availability', availability); // 'available' or 'not available'
 
     // Add image if provided
     if (imageFile && imageFile.size > 0) {

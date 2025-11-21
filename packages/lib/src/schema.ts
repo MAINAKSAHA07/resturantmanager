@@ -12,6 +12,7 @@ export const MenuItemSchema = z.object({
   hsnSac: z.string().optional(),
   taxRate: z.number(),
   isActive: z.boolean(),
+  availability: z.enum(['available', 'not available']).optional(),
 });
 
 export const OptionGroupSchema = z.object({

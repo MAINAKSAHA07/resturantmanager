@@ -1,17 +1,34 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 
 interface Category {
   id: string;
   name: string;
 }
 
-export default function NewMenuItemPage() {
+interface MenuItem {
+  id: string;
+  name: string;
+  description: string;
+  basePrice: number;
+  taxRate: number;
+  categoryId: string;
+  isActive: boolean;
+  availability?: 'available' | 'not available';
+  hsnSac: string;
+  image?: string;
+}
+
+export default function EditMenuItemPage() {
   const router = useRouter();
+  const params = useParams();
+  const itemId = params.id as string;
+
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -23,11 +40,16 @@ export default function NewMenuItemPage() {
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState<string>('');
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+    fetchItem();
+  }, [itemId]);
 
   const fetchCategories = async () => {
     try {
@@ -40,11 +62,62 @@ export default function NewMenuItemPage() {
       const response = await fetch('/api/menu/categories', { headers });
       const data = await response.json();
       setCategories(data.categories || []);
-      if (data.categories && data.categories.length > 0) {
-        setFormData(prev => ({ ...prev, categoryId: data.categories[0].id }));
-      }
     } catch (error) {
       console.error('Error fetching categories:', error);
+    }
+  };
+
+  const fetchItem = async () => {
+    try {
+      const token = localStorage.getItem('pb_auth_token');
+      const headers: HeadersInit = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      // Add cache-busting to ensure fresh data
+      const response = await fetch(`/api/menu/items/${itemId}?t=${Date.now()}`, {
+        headers,
+        cache: 'no-store'
+      });
+      const data = await response.json();
+
+      if (response.ok && data.item) {
+        const item = data.item;
+        // Handle both new 'availability' field and legacy 'isActive' boolean
+        let availability: 'available' | 'not available' = 'available';
+        if (item.availability) {
+          availability = item.availability === 'not available' ? 'not available' : 'available';
+        } else if (item.isActive !== undefined) {
+          // Legacy support: convert boolean to availability
+          availability = item.isActive !== false ? 'available' : 'not available';
+        }
+
+        setFormData({
+          name: item.name || '',
+          description: item.description || '',
+          basePrice: ((item.basePrice || 0) / 100).toFixed(2),
+          taxRate: (item.taxRate || 5).toString(),
+          categoryId: Array.isArray(item.categoryId) ? item.categoryId[0] : item.categoryId,
+          availability: availability,
+          hsnSac: item.hsnSac || '',
+        });
+
+        // Set existing image if available
+        if (item.image) {
+          const pbUrl = process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://localhost:8090';
+          setExistingImageUrl(`${pbUrl}/api/files/menuItem/${item.id}/${item.image}`);
+        }
+      } else {
+        alert(`Error: ${data.error || 'Failed to load item'}`);
+        router.push('/menu');
+      }
+    } catch (error: any) {
+      console.error('Error fetching item:', error);
+      alert(`Error: ${error.message || 'Failed to load item'}`);
+      router.push('/menu');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -62,6 +135,7 @@ export default function NewMenuItemPage() {
         return;
       }
       setImageFile(file);
+      setRemoveImage(false);
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -107,11 +181,11 @@ export default function NewMenuItemPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSaving(true);
 
     try {
       const token = localStorage.getItem('pb_auth_token');
-      
+
       // Create FormData for file upload
       const formDataToSend = new FormData();
       formDataToSend.append('name', formData.name);
@@ -119,9 +193,12 @@ export default function NewMenuItemPage() {
       formDataToSend.append('basePrice', parseFloat(formData.basePrice).toString());
       formDataToSend.append('taxRate', parseFloat(formData.taxRate).toString());
       formDataToSend.append('categoryId', formData.categoryId);
+      // Send availability as 'available' or 'not available'
       formDataToSend.append('availability', formData.availability);
+      console.log('[Frontend] Sending availability:', formData.availability);
       formDataToSend.append('hsnSac', formData.hsnSac || '');
-      
+      formDataToSend.append('removeImage', removeImage.toString());
+
       if (imageFile) {
         formDataToSend.append('image', imageFile);
       }
@@ -132,8 +209,8 @@ export default function NewMenuItemPage() {
       }
       // Don't set Content-Type header - browser will set it with boundary for FormData
 
-      const response = await fetch('/api/menu/items', {
-        method: 'POST',
+      const response = await fetch(`/api/menu/items/${itemId}`, {
+        method: 'PUT',
         headers,
         body: formDataToSend,
       });
@@ -141,24 +218,77 @@ export default function NewMenuItemPage() {
       const data = await response.json();
 
       if (response.ok) {
-        console.log('✅ Item created successfully, navigating to menu...');
+        console.log('✅ Item updated successfully, navigating to menu...');
         // Force a hard refresh by using window.location to bypass Next.js cache
         window.location.href = '/menu?refresh=' + Date.now();
       } else {
-        alert(`Error: ${data.error || 'Failed to create item'}`);
+        alert(`Error: ${data.error || 'Failed to update item'}`);
       }
     } catch (error: any) {
-      console.error('Error creating item:', error);
-      alert(`Error: ${error.message || 'Failed to create item'}`);
+      console.error('Error updating item:', error);
+      alert(`Error: ${error.message || 'Failed to update item'}`);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
+
+  const handleDelete = async () => {
+    if (!showDeleteConfirm) {
+      setShowDeleteConfirm(true);
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const token = localStorage.getItem('pb_auth_token');
+
+      const headers: HeadersInit = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`/api/menu/items/${itemId}`, {
+        method: 'DELETE',
+        headers,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Navigate to menu and force refresh to show updated status
+        router.push('/menu?refresh=' + Date.now());
+        // Small delay to ensure navigation completes before refresh
+        setTimeout(() => {
+          router.refresh();
+        }, 100);
+      } else {
+        alert(`Error: ${data.error || 'Failed to delete item'}`);
+        setShowDeleteConfirm(false);
+      }
+    } catch (error: any) {
+      console.error('Error deleting item:', error);
+      alert(`Error: ${error.message || 'Failed to delete item'}`);
+      setShowDeleteConfirm(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading menu item...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Add Menu Item</h1>
+        <h1 className="text-3xl font-bold mb-6">Edit Menu Item</h1>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
           <div className="mb-4">
@@ -177,11 +307,36 @@ export default function NewMenuItemPage() {
 
           <div className="mb-4">
             <label className="block font-medium mb-2">Image</label>
+            {existingImageUrl && !imagePreview && !removeImage && (
+              <div className="mb-3">
+                <img
+                  src={existingImageUrl}
+                  alt="Current"
+                  className="w-32 h-32 object-cover rounded-lg border border-gray-300 mb-2"
+                />
+                <label className="flex items-center text-sm text-gray-600">
+                  <input
+                    type="checkbox"
+                    checked={removeImage}
+                    onChange={(e) => {
+                      setRemoveImage(e.target.checked);
+                      if (e.target.checked) {
+                        setImagePreview(null);
+                        setImageFile(null);
+                      }
+                    }}
+                    className="mr-2"
+                  />
+                  Remove current image
+                </label>
+              </div>
+            )}
             <input
               type="file"
               accept="image/*"
               onChange={handleImageChange}
               className="w-full px-4 py-2 border rounded-lg"
+              disabled={removeImage}
             />
             {imagePreview && (
               <div className="mt-3">
@@ -273,8 +428,8 @@ export default function NewMenuItemPage() {
               <option value="not available">Not Available</option>
             </select>
             <p className="text-sm text-gray-500 mt-1">
-              {formData.availability === 'available' 
-                ? 'This item will be visible to customers' 
+              {formData.availability === 'available'
+                ? 'This item will be visible to customers'
                 : 'This item will be hidden from customers'}
             </p>
           </div>
@@ -282,18 +437,59 @@ export default function NewMenuItemPage() {
           <div className="flex gap-4">
             <button
               type="submit"
-              disabled={loading}
+              disabled={saving || deleting}
               className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading ? 'Creating...' : 'Create Item'}
+              {saving ? 'Saving...' : 'Save Changes'}
             </button>
             <button
               type="button"
               onClick={() => router.back()}
-              className="flex-1 bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700"
+              disabled={saving || deleting}
+              className="flex-1 bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 disabled:opacity-50"
             >
               Cancel
             </button>
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-red-600 mb-2">Danger Zone</h3>
+              {!showDeleteConfirm ? (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={saving || deleting}
+                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50"
+                >
+                  Delete Item
+                </button>
+              ) : (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p className="text-red-800 mb-3 font-medium">
+                    Are you sure you want to delete this menu item? This action cannot be undone.
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50"
+                    >
+                      {deleting ? 'Deleting...' : 'Yes, Delete'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteConfirm(false)}
+                      disabled={deleting}
+                      className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </form>
       </div>

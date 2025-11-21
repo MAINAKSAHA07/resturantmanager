@@ -7,7 +7,7 @@ import TenantSelector from '@/components/TenantSelector';
 async function getMenu(brandKey: string) {
   try {
     // Direct PocketBase connection with explicit environment variable reading
-    const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
+    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
     const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
     const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
     
@@ -51,42 +51,86 @@ async function getMenu(brandKey: string) {
     });
     
     // Filter by tenant and location (handle relation fields)
-    const categories = allCategories.items.filter(cat => {
+    const filteredCategories = allCategories.items.filter(cat => {
       const catTenantId = Array.isArray(cat.tenantId) ? cat.tenantId[0] : cat.tenantId;
       const catLocationId = Array.isArray(cat.locationId) ? cat.locationId[0] : cat.locationId;
       return catTenantId === tenant.id && locationIds.includes(catLocationId);
     });
+
+    // Deduplicate categories by name (keep the one with the lowest sort order, or first created)
+    const categoryMap = new Map<string, any>();
+    filteredCategories.forEach(cat => {
+      const nameKey = cat.name.toLowerCase().trim();
+      if (!categoryMap.has(nameKey)) {
+        categoryMap.set(nameKey, cat);
+      } else {
+        // If duplicate found, keep the one with lower sort order, or if same sort, keep the one with earlier ID (created first)
+        const existing = categoryMap.get(nameKey);
+        if (cat.sort < existing.sort || (cat.sort === existing.sort && cat.id < existing.id)) {
+          categoryMap.set(nameKey, cat);
+        }
+      }
+    });
+
+    // Also deduplicate by ID to ensure no duplicate IDs
+    const categoryIdMap = new Map<string, any>();
+    Array.from(categoryMap.values()).forEach(cat => {
+      if (!categoryIdMap.has(cat.id)) {
+        categoryIdMap.set(cat.id, cat);
+      }
+    });
+
+    const categories = Array.from(categoryIdMap.values()).sort((a, b) => a.sort - b.sort);
 
     // Get all items and filter client-side
     const allItems = await pb.collection('menuItem').getList(1, 500, {
       expand: 'categoryId,tenantId,locationId',
     });
     
-    // Filter by tenant, location, and active status
-    // Also remove duplicates (same name in same category)
+    // Filter by tenant, location, and availability status
+    // Only show items that are "available" to customers
+    // Also remove duplicates by ID first, then by name+category
+    const itemIdMap = new Map<string, any>();
+    const filteredItems = allItems.items.filter(item => {
+      const itemTenantId = Array.isArray(item.tenantId) ? item.tenantId[0] : item.tenantId;
+      const itemLocationId = Array.isArray(item.locationId) ? item.locationId[0] : item.locationId;
+      
+      // Check availability: prioritize availability field, fallback to isActive only if availability is undefined
+      let isAvailable = false;
+      if (item.availability !== undefined) {
+        isAvailable = item.availability === 'available';
+      } else {
+        // Fallback to isActive only if availability is not set
+        isAvailable = item.isActive !== false;
+      }
+      
+      return itemTenantId === tenant.id && locationIds.includes(itemLocationId) && isAvailable;
+    });
+
+    // First deduplicate by item ID
+    filteredItems.forEach(item => {
+      if (!itemIdMap.has(item.id)) {
+        itemIdMap.set(item.id, item);
+      }
+    });
+
+    // Then deduplicate by name+category (keep the most recent)
     const seenItems = new Map<string, any>();
-    const items = allItems.items
-      .filter(item => {
-        const itemTenantId = Array.isArray(item.tenantId) ? item.tenantId[0] : item.tenantId;
-        const itemLocationId = Array.isArray(item.locationId) ? item.locationId[0] : item.locationId;
-        return itemTenantId === tenant.id && locationIds.includes(itemLocationId) && item.isActive === true;
-      })
-      .filter(item => {
-        // Check for duplicates: same name in same category
-        const itemCategoryId = Array.isArray(item.categoryId) ? item.categoryId[0] : item.categoryId;
-        const key = `${item.name.toLowerCase().trim()}_${itemCategoryId}`;
-        if (seenItems.has(key)) {
-          // Keep the one with the most recent created date
-          const existing = seenItems.get(key);
-          if (new Date(item.created) > new Date(existing.created)) {
-            seenItems.set(key, item);
-            return true;
-          }
-          return false;
+    const items = Array.from(itemIdMap.values()).filter(item => {
+      const itemCategoryId = Array.isArray(item.categoryId) ? item.categoryId[0] : item.categoryId;
+      const key = `${item.name.toLowerCase().trim()}_${itemCategoryId}`;
+      if (seenItems.has(key)) {
+        // Keep the one with the most recent created date
+        const existing = seenItems.get(key);
+        if (new Date(item.created) > new Date(existing.created)) {
+          seenItems.set(key, item);
+          return true;
         }
-        seenItems.set(key, item);
-        return true;
-      });
+        return false;
+      }
+      seenItems.set(key, item);
+      return true;
+    });
 
     return { categories, items, location };
   } catch (error) {
@@ -98,7 +142,7 @@ async function getMenu(brandKey: string) {
 async function getTenants() {
   try {
     // Direct PocketBase connection
-    const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
+    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
     const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
     const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
     

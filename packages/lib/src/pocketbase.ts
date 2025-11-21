@@ -2,7 +2,8 @@ import PocketBase from 'pocketbase';
 
 function getPocketBaseUrl(): string {
   // Read dynamically each time to ensure Next.js env vars are available
-  return process.env.POCKETBASE_URL || 'http://localhost:8090';
+  // Priority: AWS_POCKETBASE_URL (for production/AWS) > POCKETBASE_URL (for local/other) > localhost default
+  return process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
 }
 
 export function createPocketBaseClient(token?: string): PocketBase {
@@ -25,18 +26,24 @@ export async function createPocketBaseAdminClient(): Promise<PocketBase> {
   // Read dynamically each time to ensure Next.js env vars are available
   const pbUrl = getPocketBaseUrl();
   const pb = new PocketBase(pbUrl);
-  
+
   // Use environment variables with fallback to known working credentials
   // Read dynamically to ensure Next.js env vars are loaded
-  const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-  const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
-  
+  const adminEmail = process.env.PB_ADMIN_EMAIL;
+  const adminPassword = process.env.PB_ADMIN_PASSWORD;
+
+  if (!adminEmail || !adminPassword) {
+    throw new Error(
+      'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD environment variables are required for admin access.'
+    );
+  }
+
   try {
     await pb.admins.authWithPassword(adminEmail, adminPassword);
   } catch (error: any) {
     const status = error?.response?.status || error?.status;
     const errorData = error?.response?.data || error?.response;
-    
+
     console.error('Failed to authenticate as admin:', {
       email: adminEmail,
       url: pbUrl,
@@ -47,7 +54,7 @@ export async function createPocketBaseAdminClient(): Promise<PocketBase> {
       envPassword: process.env.PB_ADMIN_PASSWORD ? 'set' : 'not set',
       pbUrlEnv: process.env.POCKETBASE_URL ? 'set' : 'not set',
     });
-    
+
     // Provide more helpful error message based on status code
     if (status === 400 || status === 401) {
       throw new Error(
@@ -60,7 +67,7 @@ export async function createPocketBaseAdminClient(): Promise<PocketBase> {
         `4. Restart your Next.js dev server after updating .env.local`
       );
     }
-    
+
     if (status === 404) {
       // 404 could mean server not found OR admin endpoint/auth issue
       // Check if it's actually a server connectivity issue
@@ -84,13 +91,13 @@ export async function createPocketBaseAdminClient(): Promise<PocketBase> {
         );
       }
     }
-    
+
     if (status === 403) {
       throw new Error(
         `Access denied. The account exists but may not have admin privileges.`
       );
     }
-    
+
     throw new Error(
       `Admin authentication failed: ${error?.message || 'Unknown error'}\n\n` +
       `Check that:\n` +
@@ -100,7 +107,7 @@ export async function createPocketBaseAdminClient(): Promise<PocketBase> {
       `- Next.js dev server has been restarted after updating .env.local`
     );
   }
-  
+
   return pb;
 }
 

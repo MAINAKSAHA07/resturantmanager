@@ -65,7 +65,6 @@ export default function Navbar() {
 
       if (response.ok) {
         setShowTenantSelector(false);
-        router.refresh();
         window.location.reload(); // Reload to refresh all data
       }
     } catch (err) {

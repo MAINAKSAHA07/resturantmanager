@@ -1,6 +1,6 @@
 const PocketBase = require('pocketbase/cjs');
 
-const PB_URL = process.env.POCKETBASE_URL || 'http://localhost:8090';
+const PB_URL = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
 const ADMIN_EMAIL = process.env.PB_ADMIN_EMAIL || 'admin@example.com';
 const ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD || 'admin123456';
 

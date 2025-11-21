@@ -5,7 +5,7 @@ async function getTenants() {
   try {
     // Direct PocketBase connection with explicit environment variable reading
     const PocketBase = (await import('pocketbase')).default;
-    const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
+    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
     const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
     const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
     

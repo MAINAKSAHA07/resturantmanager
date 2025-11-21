@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     console.log('Brand key:', brandKey);
 
     // Direct PocketBase connection (initialize early so it can be used for customer lookup)
-    const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
+    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
     const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
     const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
     

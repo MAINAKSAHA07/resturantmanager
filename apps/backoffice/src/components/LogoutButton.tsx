@@ -15,7 +15,6 @@ export default function LogoutButton() {
       clearAuthToken();
       document.cookie = 'pb_auth_token=; path=/; max-age=0';
       router.push('/login');
-      router.refresh();
     }
   };
 

@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Connect to PocketBase
-    const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
+    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
     const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
     const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
     
