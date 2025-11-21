@@ -51,20 +51,15 @@ export async function GET(
     }
 
     // Fetch order items separately - use client-side filtering (PocketBase filters don't work reliably for relation fields)
-    let orderItems = [];
-    try {
-      const allOrderItems = await pb.collection('orderItem').getList(1, 1000);
-      
-      // Filter by orderId client-side
-      orderItems = allOrderItems.items.filter((item: any) => {
-        const itemOrderId = Array.isArray(item.orderId) ? item.orderId[0] : item.orderId;
-        return itemOrderId === id;
-      });
-      
-      console.log(`Order ${id.slice(0, 8)}: Found ${orderItems.length} items`);
-    } catch (e) {
-      console.error('Error fetching order items:', e);
-    }
+    const allOrderItems = await pb.collection('orderItem').getList(1, 1000);
+    
+    // Filter by orderId client-side
+    const orderItems: any[] = allOrderItems.items.filter((item: any) => {
+      const itemOrderId = Array.isArray(item.orderId) ? item.orderId[0] : item.orderId;
+      return itemOrderId === id;
+    });
+    
+    console.log(`Order ${id.slice(0, 8)}: Found ${orderItems.length} items`);
 
     // Fetch location separately if needed
     let location = null;

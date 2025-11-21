@@ -138,9 +138,9 @@ export default async function HomePage({
   }
   
   // Use the selected tenant (query param takes precedence, then cookie, then subdomain)
-  const selectedTenant = brandKey;
+  const selectedTenant = brandKey || 'saffron';
 
-  const { categories, items, location } = await getMenu(brandKey);
+  const { categories, items, location } = await getMenu(selectedTenant);
   const tenants = await getTenants();
 
   return (

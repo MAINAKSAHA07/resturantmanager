@@ -86,18 +86,13 @@ export async function GET(request: NextRequest) {
     
     const ordersWithItems = await Promise.all(
       orders.items.map(async (order) => {
-        let orderItems = [];
-        try {
-          // Filter by orderId client-side
-          orderItems = allOrderItems.items.filter((item: any) => {
-            const itemOrderId = Array.isArray(item.orderId) ? item.orderId[0] : item.orderId;
-            return itemOrderId === order.id;
-          });
-          
-          console.log(`Order ${order.id.slice(0, 8)}: Found ${orderItems.length} items`);
-        } catch (e) {
-          console.error(`Error fetching items for order ${order.id}:`, e);
-        }
+        // Filter by orderId client-side
+        const orderItems: any[] = allOrderItems.items.filter((item: any) => {
+          const itemOrderId = Array.isArray(item.orderId) ? item.orderId[0] : item.orderId;
+          return itemOrderId === order.id;
+        });
+        
+        console.log(`Order ${order.id.slice(0, 8)}: Found ${orderItems.length} items`);
 
         return {
           id: order.id,

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 
 interface OptionGroup {
   id: string;
+  name?: string;
   minSelect: number;
   maxSelect: number;
   required: boolean;
@@ -43,7 +44,7 @@ export default function AddToCartButton({
       if (group.required) {
         const selected = selectedOptions[group.id] || [];
         if (selected.length < group.minSelect) {
-          alert(`Please select at least ${group.minSelect} option(s) for ${group.name}`);
+          alert(`Please select at least ${group.minSelect} option(s)${group.name ? ` for ${group.name}` : ''}`);
           return;
         }
       }

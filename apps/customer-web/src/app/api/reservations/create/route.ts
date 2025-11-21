@@ -16,6 +16,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get tenant from cookie or hostname
+    const cookies = request.cookies;
+    const tenantCookie = cookies.get('selected_tenant')?.value;
+    const hostname = request.headers.get('host') || '';
+    const extractedBrandKey = extractBrandKey(hostname);
+    const brandKey = tenantCookie || extractedBrandKey || 'saffron';
+    console.log('Brand key:', brandKey);
+
+    // Direct PocketBase connection (initialize early so it can be used for customer lookup)
+    const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
+    const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
+    const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+    
+    const pb = new PocketBase(pbUrl);
+    await pb.admins.authWithPassword(adminEmail, adminPassword);
+
     // Get customer ID from session if available, otherwise create/find customer
     let customerId: string | undefined;
     const authHeader = request.headers.get('authorization');
@@ -62,22 +78,6 @@ export async function POST(request: NextRequest) {
         // Continue without customerId if customer creation fails
       }
     }
-
-    // Get tenant from cookie or hostname
-    const cookies = request.cookies;
-    const tenantCookie = cookies.get('selected_tenant')?.value;
-    const hostname = request.headers.get('host') || '';
-    const extractedBrandKey = extractBrandKey(hostname);
-    const brandKey = tenantCookie || extractedBrandKey || 'saffron';
-    console.log('Brand key:', brandKey);
-
-    // Direct PocketBase connection
-    const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-    const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
-    
-    const pb = new PocketBase(pbUrl);
-    await pb.admins.authWithPassword(adminEmail, adminPassword);
 
     // Get tenant
     const tenants = await pb.collection('tenant').getList(1, 1, {

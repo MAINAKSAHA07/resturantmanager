@@ -3,10 +3,20 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import PocketBase from 'pocketbase';
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || '',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-});
+// Lazy initialization to avoid errors during build time
+function getRazorpayInstance() {
+  const keyId = process.env.RAZORPAY_KEY_ID || '';
+  const keySecret = process.env.RAZORPAY_KEY_SECRET || '';
+  
+  if (!keyId || !keySecret) {
+    throw new Error('Razorpay credentials not configured');
+  }
+  
+  return new Razorpay({
+    key_id: keyId,
+    key_secret: keySecret,
+  });
+}
 
 const WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || '';
 
@@ -51,11 +61,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Capture payment (amount is optional - will capture full amount if not specified)
+    const razorpay = getRazorpayInstance();
     let payment;
     try {
       payment = await razorpay.payments.capture(
         razorpay_payment_id,
-        amount || undefined
+        amount || undefined,
+        'INR' // Currency code (required as 3rd argument)
       );
     } catch (error: any) {
       // Payment might already be captured

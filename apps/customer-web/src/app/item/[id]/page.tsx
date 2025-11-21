@@ -135,7 +135,7 @@ export default async function ItemPage({
                       {group.required && <span className="text-red-500">*</span>}
                     </label>
                     <div className="space-y-2">
-                      {group.values.map((value) => (
+                      {group.values.map((value: any) => (
                         <label
                           key={value.id}
                           className="flex items-center space-x-2 cursor-pointer"
