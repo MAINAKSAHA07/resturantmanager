@@ -520,13 +520,13 @@ const collections = [
       {
         name: 'taxCgst',
         type: 'number',
-        required: true,
+        required: false,
         defaultValue: 0,
       },
       {
         name: 'taxSgst',
         type: 'number',
-        required: true,
+        required: false,
         defaultValue: 0,
       },
       {
