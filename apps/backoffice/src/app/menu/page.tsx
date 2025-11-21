@@ -193,27 +193,6 @@ export default function MenuPage() {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold">Menu Management</h1>
-            <p className="text-gray-600 mt-1">
-              {(() => {
-                const categoryIds = new Set(categories.map(cat => cat.id));
-                const categorizedItems = items.filter(item => {
-                  const itemCategoryId = Array.isArray(item.categoryId) ? item.categoryId[0] : item.categoryId;
-                  return itemCategoryId && categoryIds.has(itemCategoryId);
-                });
-                
-                if (selectedCategory === 'all') {
-                  return `Total Items: ${categorizedItems.length}`;
-                } else if (selectedCategory === 'uncategorized') {
-                  const uncategorizedCount = items.filter(item => {
-                    const itemCategoryId = Array.isArray(item.categoryId) ? item.categoryId[0] : item.categoryId;
-                    return !itemCategoryId || !categoryIds.has(itemCategoryId);
-                  }).length;
-                  return `Uncategorized Items: ${uncategorizedCount}`;
-                } else {
-                  return `Showing ${filteredItems.length} of ${categorizedItems.length} items`;
-                }
-              })()}
-            </p>
           </div>
           <div className="flex gap-2">
             <Link
