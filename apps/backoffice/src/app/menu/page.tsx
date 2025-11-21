@@ -84,7 +84,7 @@ export default function MenuPage() {
 
       // Deduplicate by item ID first (most important - same ID = same item)
       const itemIdMap = new Map<string, any>();
-      normalizedItems.forEach(item => {
+      normalizedItems.forEach((item: any) => {
         if (!itemIdMap.has(item.id)) {
           itemIdMap.set(item.id, item);
         } else {
@@ -100,7 +100,7 @@ export default function MenuPage() {
 
       // Then deduplicate by name+category combination (in case same item appears with different IDs)
       const nameCategoryMap = new Map<string, any>();
-      Array.from(itemIdMap.values()).forEach(item => {
+      Array.from(itemIdMap.values()).forEach((item: any) => {
         const key = `${item.name.toLowerCase().trim()}_${item.categoryId || 'nocategory'}`;
         if (!nameCategoryMap.has(key)) {
           nameCategoryMap.set(key, item);
@@ -130,7 +130,7 @@ export default function MenuPage() {
       
       // Debug: Log availability status for first few items
       if (finalUniqueItems.length > 0) {
-        console.log('Sample items availability:', finalUniqueItems.slice(0, 3).map(item => ({
+        console.log('Sample items availability:', finalUniqueItems.slice(0, 3).map((item: any) => ({
           name: item.name,
           availability: item.availability,
           isActive: item.isActive
@@ -175,7 +175,7 @@ export default function MenuPage() {
   }
 
   // Final deduplication of filtered items by ID
-  itemsToFilter.forEach(item => {
+  itemsToFilter.forEach((item: MenuItem) => {
     if (!filteredItemsMap.has(item.id)) {
       filteredItemsMap.set(item.id, item);
     }

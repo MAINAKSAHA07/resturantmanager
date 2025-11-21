@@ -16,13 +16,14 @@ export default function DashboardPage() {
     completedOrders: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState<'1d' | '7d' | '30d'>('1d');
 
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/dashboard/stats');
+      const response = await fetch(`/api/dashboard/stats?range=${timeRange}`);
       const data = await response.json();
-      
+
       if (response.ok) {
         setStats(data);
       } else {
@@ -40,7 +41,7 @@ export default function DashboardPage() {
     // Refresh every 10 seconds
     const interval = setInterval(fetchStats, 10000);
     return () => clearInterval(interval);
-  }, []);
+  }, [timeRange]);
 
   if (loading) {
     return (
@@ -56,19 +57,55 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          <button
-            onClick={fetchStats}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
-          >
-            Refresh
-          </button>
+
+          <div className="flex items-center gap-4">
+            <div className="bg-white rounded-lg shadow-sm p-1 flex">
+              <button
+                onClick={() => setTimeRange('1d')}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${timeRange === '1d'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+              >
+                Today
+              </button>
+              <button
+                onClick={() => setTimeRange('7d')}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${timeRange === '7d'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+              >
+                7 Days
+              </button>
+              <button
+                onClick={() => setTimeRange('30d')}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${timeRange === '30d'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+              >
+                30 Days
+              </button>
+            </div>
+
+            <button
+              onClick={fetchStats}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+            >
+              Refresh
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-semibold text-gray-600 mb-2">Today's Orders</h2>
+            <h2 className="text-lg font-semibold text-gray-600 mb-2">
+              {timeRange === '1d' ? "Today's Orders" :
+                timeRange === '7d' ? "Last 7 Days Orders" : "Last 30 Days Orders"}
+            </h2>
             <p className="text-3xl font-bold">{stats.todayOrders}</p>
           </div>
 
