@@ -17,6 +17,7 @@ export default function CheckoutPage() {
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'cod'>('cod');
 
   useEffect(() => {
     // Check authentication
@@ -62,12 +63,25 @@ export default function CheckoutPage() {
 
       const orderData = await orderResponse.json();
       
-      if (!orderData.orderId || !orderData.amount) {
+      if (!orderData.orderId) {
         const errorMsg = orderData.error || 'Failed to create order';
         throw new Error(errorMsg);
       }
       
       const { orderId, amount } = orderData;
+
+      // If Cash on Delivery, skip payment and redirect
+      if (paymentMethod === 'cod') {
+        localStorage.removeItem('cart');
+        window.dispatchEvent(new Event('cartUpdated'));
+        router.push(`/order/${orderId}`);
+        return;
+      }
+
+      // Razorpay payment flow
+      if (!amount) {
+        throw new Error('Order amount is required for payment');
+      }
 
       // Create Razorpay order
       const paymentResponse = await fetch('/api/payments/razorpay/order', {
@@ -77,7 +91,16 @@ export default function CheckoutPage() {
       });
 
       if (!paymentResponse.ok) {
-        throw new Error('Failed to create payment order');
+        const errorData = await paymentResponse.json().catch(() => ({}));
+        if (paymentResponse.status === 503) {
+          // Razorpay not configured, fallback to COD
+          alert('Online payment is not available. Placing order without payment.');
+          localStorage.removeItem('cart');
+          window.dispatchEvent(new Event('cartUpdated'));
+          router.push(`/order/${orderId}`);
+          return;
+        }
+        throw new Error(errorData.error || 'Failed to create payment order');
       }
 
       const { razorpay_order_id, key } = await paymentResponse.json();
@@ -110,6 +133,7 @@ export default function CheckoutPage() {
 
             if (captureResponse.ok) {
               localStorage.removeItem('cart');
+              window.dispatchEvent(new Event('cartUpdated'));
               router.push(`/order/${orderId}`);
             } else {
               throw new Error('Payment capture failed');
@@ -154,22 +178,62 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <Script
-        src="https://checkout.razorpay.com/v1/checkout.js"
-        onLoad={() => setRazorpayLoaded(true)}
-      />
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12">
+      {paymentMethod === 'razorpay' && (
+        <Script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          onLoad={() => setRazorpayLoaded(true)}
+        />
+      )}
       <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
         <h1 className="text-2xl font-bold mb-4">Checkout</h1>
         <p className="text-gray-600 mb-6">
-          Review your order and proceed to payment
+          Choose your payment method
         </p>
+
+        {/* Payment Method Selection */}
+        <div className="mb-6 space-y-3">
+          <label className="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="cod"
+              checked={paymentMethod === 'cod'}
+              onChange={(e) => setPaymentMethod(e.target.value as 'cod')}
+              className="mr-3"
+            />
+            <div className="flex-1">
+              <div className="font-semibold">Place Order</div>
+              <div className="text-sm text-gray-600">Pay at restaurant or on delivery</div>
+            </div>
+          </label>
+
+          <label className="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="razorpay"
+              checked={paymentMethod === 'razorpay'}
+              onChange={(e) => setPaymentMethod(e.target.value as 'razorpay')}
+              className="mr-3"
+            />
+            <div className="flex-1">
+              <div className="font-semibold">Pay Online</div>
+              <div className="text-sm text-gray-600">Pay securely with Razorpay</div>
+            </div>
+          </label>
+        </div>
+
         <button
           onClick={handleCheckout}
-          disabled={loading || !razorpayLoaded}
-          className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          disabled={loading || (paymentMethod === 'razorpay' && !razorpayLoaded)}
+          className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
         >
-          {loading ? 'Processing...' : 'Pay with Razorpay'}
+          {loading 
+            ? 'Processing...' 
+            : paymentMethod === 'razorpay' 
+              ? 'Pay with Razorpay' 
+              : 'Place Order'}
         </button>
         <Link
           href="/"

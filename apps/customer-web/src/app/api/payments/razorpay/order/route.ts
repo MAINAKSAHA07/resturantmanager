@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || '',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-});
-
 export async function POST(request: NextRequest) {
   try {
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!keyId || !keySecret) {
+      return NextResponse.json(
+        { error: 'Razorpay is not configured. Please use Place Order option instead.' },
+        { status: 503 }
+      );
+    }
+
+    const razorpay = new Razorpay({
+      key_id: keyId,
+      key_secret: keySecret,
+    });
+
     const body = await request.json();
     const { amount, orderId } = body;
 
@@ -22,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       razorpay_order_id: razorpayOrder.id,
-      key: process.env.RAZORPAY_KEY_ID,
+      key: keyId,
     });
   } catch (error: any) {
     console.error('Razorpay order creation error:', error);
