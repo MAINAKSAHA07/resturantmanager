@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import LogoutButton from './LogoutButton';
+import { isMasterUser, type User } from '../lib/user-utils';
 
 interface Tenant {
   id: string;
@@ -16,11 +17,61 @@ export default function Navbar() {
   const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
   const [showTenantSelector, setShowTenantSelector] = useState(false);
   const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [userRole, setUserRole] = useState<string>('');
+  const [userTenants, setUserTenants] = useState<string[]>([]);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    fetchCurrentTenant();
-    fetchTenants();
+    // Fetch user role first, then fetch tenant info
+    fetchUserRole();
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showTenantSelector && !(event.target as Element).closest('.relative')) {
+        setShowTenantSelector(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showTenantSelector]);
+
+  const fetchUserRole = async () => {
+    try {
+      const response = await fetch('/api/auth/me');
+      const data = await response.json();
+      if (response.ok && data.user) {
+        const role = data.user.role || 'staff';
+        const userTenantIds = data.user.tenants || [];
+        const isMaster = data.user.isMaster === true || role === 'admin';
+        
+        setUserRole(role);
+        setUserTenants(userTenantIds);
+        setUser(data.user);
+
+        // Fetch tenants after we know user's access
+        await fetchTenants(role, userTenantIds, isMaster);
+        
+        // Fetch current tenant after we have tenant list
+        await fetchCurrentTenant();
+      } else {
+        console.error('Failed to fetch user:', data.error);
+        // If token is invalid, redirect to login
+        if (response.status === 401) {
+          // Clear any stale tokens
+          document.cookie = 'pb_auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+          // Redirect to login after a short delay
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 1000);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching user role:', err);
+    }
+  };
 
   const fetchCurrentTenant = async () => {
     try {
@@ -35,6 +86,10 @@ export default function Navbar() {
           const tenant = data.tenants.find((t: Tenant) => t.id === tenantId);
           if (tenant) {
             setCurrentTenant(tenant);
+          } else {
+            // If current tenant not found in available tenants, clear it
+            // This can happen if tenant was deleted or user lost access
+            setCurrentTenant(null);
           }
         }
       }
@@ -43,12 +98,21 @@ export default function Navbar() {
     }
   };
 
-  const fetchTenants = async () => {
+  const fetchTenants = async (role: string, userTenantIds: string[], isMaster?: boolean) => {
     try {
       const response = await fetch('/api/tenants');
       const data = await response.json();
       if (response.ok) {
-        setTenants(data.tenants || []);
+        let filteredTenants = data.tenants || [];
+
+        // If not master user, filter to only show user's assigned tenants
+        if (!isMaster && role !== 'admin' && userTenantIds.length > 0) {
+          filteredTenants = filteredTenants.filter((t: Tenant) =>
+            userTenantIds.includes(t.id)
+          );
+        }
+
+        setTenants(filteredTenants);
       }
     } catch (err) {
       console.error('Error fetching tenants:', err);
@@ -95,35 +159,98 @@ export default function Navbar() {
             <Link href="/floorplan" className="text-gray-700 hover:text-blue-600 font-medium">
               Floor Plan
             </Link>
+            <Link href="/users" className="text-gray-700 hover:text-blue-600 font-medium">
+              Users
+            </Link>
           </div>
           <div className="flex items-center gap-4">
-            {currentTenant && (
-              <div className="relative">
-                <button
-                  onClick={() => setShowTenantSelector(!showTenantSelector)}
-                  className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 font-medium text-sm"
-                >
-                  {currentTenant.name} ▼
-                </button>
-                {showTenantSelector && tenants.length > 1 && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                    <div className="py-2">
-                      {tenants.map((tenant) => (
-                        <button
-                          key={tenant.id}
-                          onClick={() => handleSwitchTenant(tenant.id)}
-                          className={`w-full text-left px-4 py-2 hover:bg-gray-100 ${
-                            tenant.id === currentTenant.id ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
-                          }`}
-                        >
-                          {tenant.name}
-                        </button>
-                      ))}
-                    </div>
+            {/* Show tenant selector based on user role and tenant availability */}
+            {(() => {
+              // Check if user is master - use both user object and userRole as fallback
+              const isMaster = isMasterUser(user) || userRole === 'admin';
+              
+              // For master users: always show selector (even if tenants are still loading)
+              if (isMaster) {
+                return (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowTenantSelector(!showTenantSelector)}
+                      className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 font-medium text-sm"
+                    >
+                      {currentTenant 
+                        ? `${currentTenant.name} ▼` 
+                        : tenants.length > 0 
+                          ? `Select Restaurant (${tenants.length}) ▼` 
+                          : 'Select Restaurant ▼'}
+                    </button>
+                    {showTenantSelector && tenants.length > 0 && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                        <div className="py-2">
+                          {tenants.map((tenant) => (
+                            <button
+                              key={tenant.id}
+                              onClick={() => handleSwitchTenant(tenant.id)}
+                              className={`w-full text-left px-4 py-2 hover:bg-gray-100 ${tenant.id === currentTenant?.id ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                                }`}
+                            >
+                              {tenant.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {showTenantSelector && tenants.length === 0 && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                        <div className="py-2 px-4 text-sm text-gray-500">
+                          Loading restaurants...
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            )}
+                );
+              }
+              
+              // For non-master users: show selector only if they have multiple tenants
+              if (!isMaster && tenants.length > 1 && currentTenant) {
+                return (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowTenantSelector(!showTenantSelector)}
+                      className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 font-medium text-sm"
+                    >
+                      {currentTenant.name} ▼
+                    </button>
+                    {showTenantSelector && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                        <div className="py-2">
+                          {tenants.map((tenant) => (
+                            <button
+                              key={tenant.id}
+                              onClick={() => handleSwitchTenant(tenant.id)}
+                              className={`w-full text-left px-4 py-2 hover:bg-gray-100 ${tenant.id === currentTenant?.id ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                                }`}
+                            >
+                              {tenant.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+              
+              // Show static badge if user has only one tenant
+              if (currentTenant) {
+                return (
+                  <div className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg font-medium text-sm">
+                    {currentTenant.name}
+                  </div>
+                );
+              }
+              
+              return null;
+            })()}
             <LogoutButton />
           </div>
         </div>

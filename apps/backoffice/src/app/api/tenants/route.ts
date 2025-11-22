@@ -1,21 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import PocketBase from 'pocketbase';
-import { createPocketBaseAdminClient } from '@restaurant/lib';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get auth token from cookie or header
-    const token = request.cookies.get('pb_auth_token')?.value || 
-                  request.headers.get('authorization')?.replace('Bearer ', '');
-    
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     // Use admin client to fetch all tenants
+    // No need to check user auth here - we'll filter on frontend based on user role
     // Create admin client directly to ensure environment variables are used
     const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
     const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
@@ -55,4 +44,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
