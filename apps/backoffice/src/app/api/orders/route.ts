@@ -168,6 +168,34 @@ export async function PATCH(request: NextRequest) {
     await pb.collection('orders').update(orderId, updateData);
     console.log(`✅ Order ${orderId} updated to status: ${status}`);
 
+    // If order is completed, mark all KDS tickets for this order as bumped (removed from KDS)
+    if (status === 'completed' && oldStatus !== 'completed') {
+      try {
+        const allTickets = await pb.collection('kdsTicket').getList(1, 100, {
+          filter: `orderId = "${orderId}"`,
+        });
+
+        if (allTickets.items.length > 0) {
+          console.log(`Marking ${allTickets.items.length} KDS ticket(s) as bumped for completed order ${orderId}`);
+          
+          // Mark all tickets as bumped
+          await Promise.all(
+            allTickets.items.map((ticket: any) =>
+              pb.collection('kdsTicket').update(ticket.id, { status: 'bumped' })
+            )
+          );
+          
+          console.log(`✅ All KDS tickets for order ${orderId} have been marked as bumped`);
+        }
+      } catch (bumpError: any) {
+        console.error('❌ Error bumping KDS tickets for completed order:', {
+          message: bumpError.message,
+          status: bumpError.status,
+        });
+        // Don't fail the order update if ticket bumping fails
+      }
+    }
+
     // Create KDS ticket when order is accepted or moved to in_kitchen
     // Check if a ticket should be created (when order is accepted or moved to kitchen)
     const shouldCreateTicket =
@@ -179,13 +207,13 @@ export async function PATCH(request: NextRequest) {
     if (shouldCreateTicket) {
       console.log(`Order ${orderId} status changed to ${status}, checking for KDS ticket...`);
       try {
-        // Check if KDS ticket already exists
-        const existingTickets = await pb.collection('kdsTicket').getList(1, 1, {
+        // Check if KDS tickets already exist for this order
+        const allExistingTickets = await pb.collection('kdsTicket').getList(1, 100, {
           filter: `orderId = "${orderId}"`,
         });
 
-        if (existingTickets.items.length === 0) {
-          console.log(`Creating KDS ticket for order ${orderId}...`);
+        if (allExistingTickets.items.length === 0) {
+          console.log(`Creating KDS tickets for order ${orderId}...`);
 
           // Fetch order items - fetch all and filter client-side (PocketBase filters don't work reliably for relation fields)
           const allOrderItems = await pb.collection('orderItem').getList(1, 1000);
@@ -202,19 +230,19 @@ export async function PATCH(request: NextRequest) {
             console.warn(`⚠️  Order ${orderId} has no items. Creating KDS ticket with empty items array.`);
           }
 
-          const items = orderItems.map((item: any) => ({
-            menuItemId: item.menuItemId,
-            name: item.nameSnapshot,
-            qty: item.qty,
-            options: item.optionsSnapshot || [],
-            unitPrice: item.unitPrice,
-          }));
+          // Handle tenantId and locationId (they might be arrays)
+          const tenantId = Array.isArray(currentOrder.tenantId) ? currentOrder.tenantId[0] : currentOrder.tenantId;
+          const locationId = Array.isArray(currentOrder.locationId) ? currentOrder.locationId[0] : currentOrder.locationId;
 
-          // Determine station based on menu item categories
-          let station = 'default';
-          const categoryStations: Record<string, string> = {};
+          // Group order items by station
+          const itemsByStation: Record<string, any[]> = {
+            hot: [],
+            cold: [],
+            bar: [],
+            default: [],
+          };
 
-          // Fetch menu items and their categories to determine station
+          // Fetch menu items and their categories to determine station for each item
           for (const orderItem of orderItems) {
             try {
               const menuItem = await pb.collection('menuItem').getOne(orderItem.menuItemId, {
@@ -243,42 +271,65 @@ export async function PATCH(request: NextRequest) {
                 itemStation = 'hot';
               }
 
-              // Count stations by frequency
-              categoryStations[itemStation] = (categoryStations[itemStation] || 0) + orderItem.qty;
+              // Add item to the appropriate station group
+              itemsByStation[itemStation].push({
+                menuItemId: orderItem.menuItemId,
+                name: orderItem.nameSnapshot,
+                qty: orderItem.qty,
+                options: orderItem.optionsSnapshot || [],
+                unitPrice: orderItem.unitPrice,
+              });
             } catch (e) {
               // Menu item not found, use default
-              categoryStations['default'] = (categoryStations['default'] || 0) + orderItem.qty;
+              itemsByStation['default'].push({
+                menuItemId: orderItem.menuItemId,
+                name: orderItem.nameSnapshot,
+                qty: orderItem.qty,
+                options: orderItem.optionsSnapshot || [],
+                unitPrice: orderItem.unitPrice,
+              });
             }
           }
 
-          // Determine the most common station (by quantity)
-          if (Object.keys(categoryStations).length > 0) {
-            station = Object.entries(categoryStations).reduce((a, b) =>
-              categoryStations[a[0]] > categoryStations[b[0]] ? a : b
-            )[0];
+          console.log(`Grouped items by station for order ${orderId}:`, {
+            hot: itemsByStation.hot.length,
+            cold: itemsByStation.cold.length,
+            bar: itemsByStation.bar.length,
+            default: itemsByStation.default.length,
+          });
+
+          // Create separate KDS ticket for each station that has items
+          const createdTickets = [];
+          for (const [station, items] of Object.entries(itemsByStation)) {
+            if (items.length > 0) {
+              try {
+                const kdsTicket = await pb.collection('kdsTicket').create({
+                  tenantId: tenantId,
+                  locationId: locationId,
+                  orderId: orderId,
+                  station: station,
+                  status: 'queued',
+                  ticketItems: items,
+                  priority: false,
+                });
+                createdTickets.push({ station, ticketId: kdsTicket.id });
+                console.log(`✅ Created KDS ticket ${kdsTicket.id} for order ${orderId} at ${station} station with ${items.length} items`);
+              } catch (ticketError: any) {
+                console.error(`❌ Error creating KDS ticket for ${station} station:`, {
+                  message: ticketError.message,
+                  status: ticketError.status,
+                });
+              }
+            }
           }
 
-          console.log(`Determined station "${station}" for order ${orderId} based on categories:`, categoryStations);
-
-          // Handle tenantId and locationId (they might be arrays)
-          const tenantId = Array.isArray(currentOrder.tenantId) ? currentOrder.tenantId[0] : currentOrder.tenantId;
-          const locationId = Array.isArray(currentOrder.locationId) ? currentOrder.locationId[0] : currentOrder.locationId;
-
-          console.log(`Creating KDS ticket with tenantId=${tenantId}, locationId=${locationId}`);
-
-          // Create KDS ticket
-          const kdsTicket = await pb.collection('kdsTicket').create({
-            tenantId: tenantId,
-            locationId: locationId,
-            orderId: orderId,
-            station: station,
-            status: 'queued',
-            ticketItems: items,
-            priority: false,
-          });
-          console.log(`✅ Created KDS ticket ${kdsTicket.id} for order ${orderId}`);
+          if (createdTickets.length === 0) {
+            console.warn(`⚠️  No KDS tickets created for order ${orderId} (no items found)`);
+          } else {
+            console.log(`✅ Created ${createdTickets.length} KDS ticket(s) for order ${orderId}:`, createdTickets);
+          }
         } else {
-          console.log(`KDS ticket already exists for order ${orderId}`);
+          console.log(`KDS tickets already exist for order ${orderId} (${allExistingTickets.items.length} ticket(s) found)`);
         }
       } catch (kdsError: any) {
         console.error('❌ Error creating KDS ticket:', {
@@ -302,4 +353,5 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
+
 

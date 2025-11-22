@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
                     });
                     
                     // Ensure isMaster and role are properly set
-                    const userResponse = {
+                    const userResponse: any = {
                         ...fullUser,
                         isMaster: fullUser.isMaster === true,
                         role: fullUser.role || 'staff',
@@ -141,7 +141,7 @@ export async function GET(request: NextRequest) {
                     
                     console.log('Auth me: Returning user', {
                         id: userResponse.id,
-                        email: userResponse.email,
+                        email: (userResponse as any).email || 'N/A',
                         role: userResponse.role,
                         isMaster: userResponse.isMaster,
                         isMasterUser: userResponse.isMaster === true || userResponse.role === 'admin'

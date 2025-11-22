@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
       tenantId,
       locationId,
       name,
-      capacity: parseInt(capacity),
+      capacity: Math.floor(capacity), // Ensure it's an integer
       status: 'available',
       x: x || 0,
       y: y || 0,

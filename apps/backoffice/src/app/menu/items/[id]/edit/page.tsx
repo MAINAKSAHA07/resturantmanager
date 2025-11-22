@@ -210,19 +210,19 @@ export default function EditMenuItemPage() {
         formDataToSend.append('availability', formData.availability);
       } else {
         // Managers/admins can update all fields
-        formDataToSend.append('name', formData.name);
-        formDataToSend.append('description', formData.description || '');
-        formDataToSend.append('basePrice', parseFloat(formData.basePrice).toString());
-        formDataToSend.append('taxRate', parseFloat(formData.taxRate).toString());
-        formDataToSend.append('categoryId', formData.categoryId);
-        // Send availability as 'available' or 'not available'
-        formDataToSend.append('availability', formData.availability);
-        console.log('[Frontend] Sending availability:', formData.availability);
-        formDataToSend.append('hsnSac', formData.hsnSac || '');
-        formDataToSend.append('removeImage', removeImage.toString());
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('description', formData.description || '');
+      formDataToSend.append('basePrice', parseFloat(formData.basePrice).toString());
+      formDataToSend.append('taxRate', parseFloat(formData.taxRate).toString());
+      formDataToSend.append('categoryId', formData.categoryId);
+      // Send availability as 'available' or 'not available'
+      formDataToSend.append('availability', formData.availability);
+      console.log('[Frontend] Sending availability:', formData.availability);
+      formDataToSend.append('hsnSac', formData.hsnSac || '');
+      formDataToSend.append('removeImage', removeImage.toString());
 
-        if (imageFile) {
-          formDataToSend.append('image', imageFile);
+      if (imageFile) {
+        formDataToSend.append('image', imageFile);
         }
       }
 
@@ -309,7 +309,7 @@ export default function EditMenuItemPage() {
   }
 
   // Check if user is staff (can only edit availability)
-  const isStaffOnly = user && user.role === 'staff' && !hasPermission(user, 'menu.create');
+  const isStaffOnly = Boolean(user && user.role === 'staff' && !hasPermission(user, 'menu.create'));
   const canEditAll = hasPermission(user, 'menu.create') || hasPermission(user, 'menu.delete');
 
   return (
@@ -352,21 +352,21 @@ export default function EditMenuItemPage() {
                   className="w-32 h-32 object-cover rounded-lg border border-gray-300 mb-2"
                 />
                 {!isStaffOnly && (
-                  <label className="flex items-center text-sm text-gray-600">
-                    <input
-                      type="checkbox"
-                      checked={removeImage}
-                      onChange={(e) => {
-                        setRemoveImage(e.target.checked);
-                        if (e.target.checked) {
-                          setImagePreview(null);
-                          setImageFile(null);
-                        }
-                      }}
-                      className="mr-2"
-                    />
-                    Remove current image
-                  </label>
+                <label className="flex items-center text-sm text-gray-600">
+                  <input
+                    type="checkbox"
+                    checked={removeImage}
+                    onChange={(e) => {
+                      setRemoveImage(e.target.checked);
+                      if (e.target.checked) {
+                        setImagePreview(null);
+                        setImageFile(null);
+                      }
+                    }}
+                    className="mr-2"
+                  />
+                  Remove current image
+                </label>
                 )}
               </div>
             )}
@@ -501,12 +501,12 @@ export default function EditMenuItemPage() {
           </div>
 
           {canEditAll && (
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold text-red-600 mb-2">Danger Zone</h3>
-                {!showDeleteConfirm ? (
-                  <button
-                    type="button"
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-red-600 mb-2">Danger Zone</h3>
+              {!showDeleteConfirm ? (
+                <button
+                  type="button"
                   onClick={handleDelete}
                   disabled={saving || deleting}
                   className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50"

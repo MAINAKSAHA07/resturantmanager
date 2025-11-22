@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
         });
 
         console.log(`Users API: Fetched ${users.length} users`);
-        
+
         return NextResponse.json({ users });
     } catch (error: any) {
         return NextResponse.json(

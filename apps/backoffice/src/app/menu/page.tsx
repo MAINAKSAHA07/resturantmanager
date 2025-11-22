@@ -212,28 +212,28 @@ export default function MenuPage() {
           </div>
           <div className="flex gap-2">
             {hasPermission(user, 'menu.categories.view') && (
-              <Link
-                href="/menu/categories"
+            <Link
+              href="/menu/categories"
                 className="btn-secondary px-4 py-2 text-sm"
-              >
-                Manage Categories
-              </Link>
+            >
+              Manage Categories
+            </Link>
             )}
             {hasPermission(user, 'menu.categories.create') && (
-              <Link
-                href="/menu/categories/new"
+            <Link
+              href="/menu/categories/new"
                 className="btn-primary px-4 py-2 text-sm"
-              >
-                Add Category
-              </Link>
+            >
+              Add Category
+            </Link>
             )}
             {hasPermission(user, 'menu.create') && (
-              <Link
-                href="/menu/items/new"
+            <Link
+              href="/menu/items/new"
                 className="btn-success px-4 py-2 text-sm"
-              >
-                Add Item
-              </Link>
+            >
+              Add Item
+            </Link>
             )}
           </div>
         </div>
@@ -354,12 +354,12 @@ export default function MenuPage() {
                     ₹{(item.basePrice / 100).toFixed(2)}
                   </p>
                   {hasPermission(user, 'menu.edit') && (
-                    <Link
-                      href={`/menu/items/${item.id}/edit`}
+                  <Link
+                    href={`/menu/items/${item.id}/edit`}
                       className="text-accent-blue hover:text-accent-purple font-medium text-sm transition-colors duration-200"
-                    >
-                      Edit
-                    </Link>
+                  >
+                    Edit
+                  </Link>
                   )}
                 </div>
               </div>

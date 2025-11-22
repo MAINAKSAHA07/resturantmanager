@@ -211,24 +211,24 @@ export async function PUT(
       console.log('[API] Staff user - only updating availability:', availability);
     } else {
       // Managers/admins can update all fields
-      itemData.append('categoryId', categoryId);
-      itemData.append('name', name);
-      itemData.append('description', description);
-      itemData.append('basePrice', Math.round(basePrice * 100).toString()); // Convert to paise
-      itemData.append('taxRate', (taxRate || 5).toString());
-      itemData.append('hsnSac', hsnSac);
-      // Send availability as string: 'available' or 'not available'
-      itemData.append('availability', availability);
-      
-      console.log('[API] Using FormData with availability:', availability);
-      
-      // Handle image update
-      if (removeImage) {
-        itemData.append('image', '');
-      } else if (imageFile && imageFile.size > 0) {
-        itemData.append('image', imageFile);
-      }
-      // If neither, don't append image field (keeps existing image)
+    itemData.append('categoryId', categoryId);
+    itemData.append('name', name);
+    itemData.append('description', description);
+    itemData.append('basePrice', Math.round(basePrice * 100).toString()); // Convert to paise
+    itemData.append('taxRate', (taxRate || 5).toString());
+    itemData.append('hsnSac', hsnSac);
+    // Send availability as string: 'available' or 'not available'
+    itemData.append('availability', availability);
+    
+    console.log('[API] Using FormData with availability:', availability);
+    
+    // Handle image update
+    if (removeImage) {
+      itemData.append('image', '');
+    } else if (imageFile && imageFile.size > 0) {
+      itemData.append('image', imageFile);
+    }
+    // If neither, don't append image field (keeps existing image)
     }
     
     // Log what we're sending

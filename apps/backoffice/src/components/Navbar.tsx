@@ -127,9 +127,9 @@ export default function Navbar() {
         // Only filter for non-master users
         if (!isMaster && role !== 'admin') {
           if (userTenantIds.length > 0) {
-            filteredTenants = filteredTenants.filter((t: Tenant) =>
-              userTenantIds.includes(t.id)
-            );
+          filteredTenants = filteredTenants.filter((t: Tenant) =>
+            userTenantIds.includes(t.id)
+          );
             console.log('Navbar - Filtered tenants for non-master user:', {
               originalCount: data.tenants?.length || 0,
               filteredCount: filteredTenants.length

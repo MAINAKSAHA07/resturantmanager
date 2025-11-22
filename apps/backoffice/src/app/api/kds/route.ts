@@ -38,11 +38,41 @@ export async function GET(request: NextRequest) {
       throw error;
     }
 
-    // Filter by tenant and status (exclude bumped tickets)
+    // Fetch all orders to check their status
+    let allOrders;
+    try {
+      allOrders = await pb.collection('orders').getList(1, 1000);
+    } catch (error: any) {
+      console.warn('Could not fetch orders for filtering:', error.message);
+      allOrders = { items: [] };
+    }
+
+    // Create a map of order IDs to their status
+    const orderStatusMap = new Map<string, string>();
+    allOrders.items.forEach((order: any) => {
+      const orderId = order.id;
+      orderStatusMap.set(orderId, order.status);
+    });
+
+    // Filter by tenant and status (exclude bumped tickets and tickets for completed orders)
     const filteredTickets = allTickets.items.filter((ticket: any) => {
       const ticketTenantId = Array.isArray(ticket.tenantId) ? ticket.tenantId[0] : ticket.tenantId;
       const matchesTenant = ticketTenantId === tenantId;
-      const matchesStatus = filterStatus === 'all' ? ticket.status !== 'bumped' : ticket.status === filterStatus;
+      
+      // Exclude bumped tickets
+      if (ticket.status === 'bumped') {
+        return false;
+      }
+      
+      // Exclude tickets for completed orders
+      const orderId = Array.isArray(ticket.orderId) ? ticket.orderId[0] : ticket.orderId;
+      const orderStatus = orderStatusMap.get(orderId);
+      if (orderStatus === 'completed') {
+        return false;
+      }
+      
+      // Match status filter
+      const matchesStatus = filterStatus === 'all' ? true : ticket.status === filterStatus;
       return matchesTenant && matchesStatus;
     });
 

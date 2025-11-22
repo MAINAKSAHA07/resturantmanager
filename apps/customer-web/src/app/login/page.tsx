@@ -116,8 +116,8 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent mb-2">Login</h1>
           <p className="text-gray-600">
-            Please login to continue with checkout
-          </p>
+          Please login to continue with checkout
+        </p>
         </div>
 
         {error && (

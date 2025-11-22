@@ -54,7 +54,7 @@ export async function getCurrentUser(request: NextRequest): Promise<User | null>
             console.log('getCurrentUser: Not an admin token, trying user token');
             
             try {
-                const authData = await pb.collection('users').authRefresh();
+        const authData = await pb.collection('users').authRefresh();
                 if (authData.record) {
                     const user = authData.record;
                     const userObj = {
@@ -99,14 +99,14 @@ export async function getCurrentUser(request: NextRequest): Promise<User | null>
                                     });
                                     
                                     const userObj = {
-                                        id: user.id,
-                                        email: user.email,
-                                        name: user.name,
+            id: user.id,
+            email: user.email,
+            name: user.name,
                                         role: (user.role || 'staff') as 'admin' | 'manager' | 'staff',
-                                        isMaster: user.isMaster === true,
-                                        tenants: user.tenants || [],
-                                        expand: user.expand,
-                                    };
+            isMaster: user.isMaster === true,
+            tenants: user.tenants || [],
+            expand: user.expand,
+        };
                                     
                                     console.log('getCurrentUser: Fetched user by ID from token', {
                                         id: userObj.id,
