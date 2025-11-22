@@ -188,24 +188,24 @@ export default async function HomePage({
   const tenants = await getTenants();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 via-accent-purple/5 to-accent-green/5">
       <TenantSelector />
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Tenant Selector */}
         {tenants.length > 1 && (
-          <div className="mb-6 bg-white rounded-lg shadow-md p-4">
+          <div className="mb-6 card border-2 border-accent-blue/20">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Switch Restaurant:</p>
+                <p className="text-sm text-gray-600 mb-2 font-medium">Switch Restaurant:</p>
                 <div className="flex flex-wrap gap-2">
                   {tenants.map((tenant) => (
                     <Link
                       key={tenant.id}
                       href={`/?tenant=${tenant.key}`}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                         tenant.key === brandKey
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-accent-blue text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-accent-purple/20 hover:border-2 hover:border-accent-purple/30'
                       }`}
                     >
                       {tenant.name}
@@ -215,7 +215,7 @@ export default async function HomePage({
               </div>
               <Link
                 href="/tenants"
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="text-sm text-accent-blue hover:text-accent-purple font-medium transition-colors duration-200"
               >
                 View All →
               </Link>
@@ -224,9 +224,9 @@ export default async function HomePage({
         )}
 
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Our Menu</h1>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent mb-2">Our Menu</h1>
           {location && (
-            <p className="text-lg text-gray-600">{location.name}</p>
+            <p className="text-lg text-gray-600 font-medium">{location.name}</p>
           )}
         </div>
         {categories.length === 0 ? (
@@ -246,7 +246,7 @@ export default async function HomePage({
 
             return (
               <section key={category.id} className="mb-16">
-                <h2 className="text-3xl font-bold mb-6 text-gray-900 border-b-2 border-gray-200 pb-2">
+                <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent border-b-2 border-accent-blue/30 pb-2">
                   {category.name}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -254,7 +254,7 @@ export default async function HomePage({
                     <Link
                       key={item.id}
                       href={`/item/${item.id}`}
-                      className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                      className="card overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 border-2 border-transparent hover:border-accent-blue/30"
                     >
                       {item.image && (
                         <div className="h-48 bg-gray-200 overflow-hidden">
@@ -274,7 +274,7 @@ export default async function HomePage({
                             {item.description}
                           </p>
                         )}
-                        <p className="text-xl font-bold text-blue-600">
+                        <p className="text-xl font-bold text-accent-blue">
                           ₹{(item.basePrice / 100).toFixed(2)}
                         </p>
                       </div>

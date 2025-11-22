@@ -133,19 +133,19 @@ export default function KDSPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <h1 className="text-3xl font-bold mb-6">Kitchen Display System</h1>
+    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 via-accent-purple/5 to-accent-green/5 p-4">
+      <h1 className="text-4xl font-bold mb-6 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">Kitchen Display System</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stations.map((station) => (
-          <div key={station.key} className="bg-white rounded-lg shadow-md p-4">
-            <h2 className="text-xl font-bold mb-4">{station.label}</h2>
+          <div key={station.key} className="card border-2 border-accent-blue/20">
+            <h2 className="text-xl font-bold mb-4 text-accent-blue">{station.label}</h2>
             <div className="space-y-3">
               {tickets[station.key].map((ticket) => (
                 <div
                   key={ticket.id}
-                  className={`border-2 rounded-lg p-3 ${
-                    ticket.priority ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                  className={`border-2 rounded-lg p-3 transition-all duration-200 ${
+                    ticket.priority ? 'border-accent-pink bg-accent-pink/10 shadow-md' : 'border-gray-200 hover:border-accent-blue/50'
                   }`}
                 >
                   <div className="flex justify-between items-start mb-2">
@@ -161,12 +161,12 @@ export default function KDSPage() {
                       )}
                     </div>
                     <span
-                      className={`px-2 py-1 rounded text-xs ${
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
                         ticket.status === 'cooking'
-                          ? 'bg-yellow-100 text-yellow-800'
+                          ? 'bg-accent-orange/20 text-accent-brown border border-accent-orange/30'
                           : ticket.status === 'ready'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
+                          ? 'bg-accent-green/20 text-accent-green border border-accent-green/30'
+                          : 'bg-accent-gray/20 text-accent-gray border border-accent-gray/30'
                       }`}
                     >
                       {ticket.status}
@@ -207,7 +207,7 @@ export default function KDSPage() {
                     {ticket.status === 'queued' && (
                       <button
                         onClick={() => updateTicketStatus(ticket.id, 'cooking')}
-                        className="flex-1 bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                        className="flex-1 btn-primary text-sm py-2"
                       >
                         Start
                       </button>
@@ -215,7 +215,7 @@ export default function KDSPage() {
                     {ticket.status === 'cooking' && (
                       <button
                         onClick={() => updateTicketStatus(ticket.id, 'ready')}
-                        className="flex-1 bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                        className="flex-1 btn-success text-sm py-2"
                       >
                         Ready
                       </button>
@@ -223,7 +223,7 @@ export default function KDSPage() {
                     {ticket.status === 'ready' && (
                       <button
                         onClick={() => updateTicketStatus(ticket.id, 'bumped')}
-                        className="flex-1 bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700"
+                        className="flex-1 bg-accent-gray text-white px-3 py-2 rounded-lg text-sm hover:opacity-90 transition-all duration-200"
                       >
                         Bump
                       </button>

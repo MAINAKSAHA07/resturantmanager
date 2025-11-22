@@ -83,18 +83,18 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50">
+    <nav className="bg-gradient-to-r from-accent-blue to-accent-purple shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link href="/" className="text-2xl font-bold text-gray-900 hover:text-blue-600">
+          <Link href="/" className="text-2xl font-bold text-white hover:text-accent-yellow transition-colors duration-200">
             Restaurant
           </Link>
           
           <div className="flex items-center space-x-6">
             <Link
               href="/"
-              className={`text-gray-700 hover:text-blue-600 ${
-                pathname === '/' ? 'font-semibold text-blue-600' : ''
+              className={`text-white hover:text-accent-yellow transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 ${
+                pathname === '/' ? 'font-semibold bg-white/20' : ''
               }`}
             >
               Menu
@@ -102,8 +102,8 @@ export default function Navbar() {
             {isLoggedIn && (
               <Link
                 href="/my-orders"
-                className={`text-gray-700 hover:text-blue-600 ${
-                  pathname === '/my-orders' ? 'font-semibold text-blue-600' : ''
+                className={`text-white hover:text-accent-yellow transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 ${
+                  pathname === '/my-orders' ? 'font-semibold bg-white/20' : ''
                 }`}
               >
                 My Orders
@@ -111,15 +111,15 @@ export default function Navbar() {
             )}
             <Link
               href="/reservations"
-              className={`text-gray-700 hover:text-blue-600 ${
-                pathname === '/reservations' ? 'font-semibold text-blue-600' : ''
+              className={`text-white hover:text-accent-yellow transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 ${
+                pathname === '/reservations' ? 'font-semibold bg-white/20' : ''
               }`}
             >
               Reservations
             </Link>
             <Link
               href="/cart"
-              className="relative text-gray-700 hover:text-blue-600"
+              className="relative text-white hover:text-accent-yellow transition-colors duration-200"
             >
               <svg
                 className="w-6 h-6"
@@ -135,7 +135,7 @@ export default function Navbar() {
                 />
               </svg>
               {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute -top-2 -right-2 bg-accent-pink text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg">
                   {cartCount}
                 </span>
               )}
@@ -144,13 +144,13 @@ export default function Navbar() {
               <div className="flex items-center space-x-4">
                 <Link
                   href="/profile"
-                  className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                  className="text-sm text-white hover:text-accent-yellow transition-colors duration-200 px-3 py-1 rounded-lg hover:bg-white/20"
                 >
                   {customerName ? `Hi, ${customerName}` : 'Profile'}
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="text-gray-700 hover:text-blue-600 text-sm font-medium px-3 py-1 rounded hover:bg-gray-100 transition-colors"
+                  className="text-white hover:text-accent-yellow text-sm font-medium px-3 py-1 rounded-lg hover:bg-white/20 transition-all duration-200"
                 >
                   Logout
                 </button>
@@ -158,7 +158,7 @@ export default function Navbar() {
             ) : (
               <Link
                 href="/login"
-                className="text-gray-700 hover:text-blue-600 text-sm font-medium px-3 py-1 rounded hover:bg-gray-100 transition-colors"
+                className="text-white hover:text-accent-yellow text-sm font-medium px-3 py-1 rounded-lg hover:bg-white/20 transition-all duration-200"
               >
                 Login
               </Link>

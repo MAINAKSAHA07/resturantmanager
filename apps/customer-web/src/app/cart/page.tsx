@@ -113,10 +113,10 @@ export default function CartPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-accent-blue/5 to-accent-purple/5">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading cart...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-blue mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading cart...</p>
         </div>
       </div>
     );
@@ -124,10 +124,10 @@ export default function CartPage() {
 
   if (cart.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 to-accent-purple/5 flex items-center justify-center">
         <div className="text-center max-w-md">
           <svg
-            className="mx-auto h-24 w-24 text-gray-400 mb-4"
+            className="mx-auto h-24 w-24 text-accent-purple mb-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -139,11 +139,11 @@ export default function CartPage() {
               d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
             />
           </svg>
-          <h1 className="text-3xl font-bold mb-4 text-gray-900">Your cart is empty</h1>
+          <h1 className="text-3xl font-bold mb-4 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">Your cart is empty</h1>
           <p className="text-gray-600 mb-6">Add some delicious items to get started!</p>
           <Link
             href="/"
-            className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-block btn-primary"
           >
             Continue Shopping
           </Link>
@@ -153,11 +153,11 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 to-accent-purple/5">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-8 text-gray-900">Shopping Cart</h1>
+        <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">Shopping Cart</h1>
 
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+        <div className="card mb-6">
           {cart.map((item, index) => {
             const menuItem = items[item.menuItemId];
             if (!menuItem) return null;
@@ -174,24 +174,24 @@ export default function CartPage() {
                 <div className="flex-1">
                   <h3 className="font-semibold text-lg text-gray-900 mb-1">{menuItem.name}</h3>
                   <div className="flex items-center space-x-4 mt-2">
-                    <div className="flex items-center space-x-2 border rounded-lg">
+                    <div className="flex items-center space-x-2 border-2 border-gray-200 rounded-lg">
                       <button
                         onClick={() => updateQuantity(index, -1)}
-                        className="px-3 py-1 hover:bg-gray-100 rounded-l-lg"
+                        className="px-3 py-1 hover:bg-accent-blue/10 hover:border-accent-blue rounded-l-lg transition-all duration-200"
                       >
                         -
                       </button>
-                      <span className="px-3 py-1">{item.quantity}</span>
+                      <span className="px-3 py-1 font-semibold">{item.quantity}</span>
                       <button
                         onClick={() => updateQuantity(index, 1)}
-                        className="px-3 py-1 hover:bg-gray-100 rounded-r-lg"
+                        className="px-3 py-1 hover:bg-accent-blue/10 hover:border-accent-blue rounded-r-lg transition-all duration-200"
                       >
                         +
                       </button>
                     </div>
                     <button
                       onClick={() => removeItem(index)}
-                      className="text-red-600 hover:text-red-700 text-sm"
+                      className="text-accent-pink hover:text-accent-pink/80 text-sm font-medium transition-colors duration-200"
                     >
                       Remove
                     </button>
@@ -210,11 +210,11 @@ export default function CartPage() {
           })}
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="card border-2 border-accent-blue/20">
           <div className="space-y-2 mb-4">
-            <div className="flex justify-between">
+            <div className="flex justify-between text-gray-700">
               <span>Subtotal:</span>
-              <span>₹{(subtotal / 100).toFixed(2)}</span>
+              <span className="font-semibold">₹{(subtotal / 100).toFixed(2)}</span>
             </div>
             {gst.cgst > 0 && (
               <div className="flex justify-between text-sm text-gray-600">
@@ -234,14 +234,14 @@ export default function CartPage() {
                 <span>₹{(gst.igst / 100).toFixed(2)}</span>
               </div>
             )}
-            <div className="flex justify-between text-xl font-bold pt-2 border-t">
-              <span>Total:</span>
-              <span>₹{(total / 100).toFixed(2)}</span>
+            <div className="flex justify-between text-xl font-bold pt-2 border-t-2 border-accent-blue/20">
+              <span className="text-accent-blue">Total:</span>
+              <span className="text-accent-blue">₹{(total / 100).toFixed(2)}</span>
             </div>
           </div>
           <button
             onClick={handleCheckout}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 mt-4"
+            className="w-full btn-primary mt-4"
           >
             Proceed to Checkout
           </button>

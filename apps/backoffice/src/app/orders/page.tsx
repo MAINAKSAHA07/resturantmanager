@@ -116,15 +116,15 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 via-accent-purple/5 to-accent-green/5">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Orders</h1>
+        <h1 className="text-4xl font-bold mb-6 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">Orders</h1>
 
         <div className="mb-4">
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
+            className="px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/20 transition-all duration-200 outline-none bg-white"
           >
             <option value="all">All Statuses</option>
             {ORDER_STATUSES.map((status) => (
@@ -136,16 +136,16 @@ export default function OrdersPage() {
         </div>
 
         {orders.length === 0 && !loading && (
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <p className="text-gray-600 mb-2">No orders found.</p>
+          <div className="card text-center">
+            <p className="text-gray-600 mb-2 text-lg">No orders found.</p>
             <p className="text-sm text-gray-500">Make sure you have selected a tenant and that orders exist for that tenant.</p>
           </div>
         )}
 
         {orders.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="card overflow-hidden">
             <table className="w-full">
-              <thead className="bg-gray-100">
+              <thead className="bg-gradient-to-r from-accent-blue to-accent-purple text-white">
                 <tr>
                   <th className="px-4 py-3 text-left">Order ID</th>
                   <th className="px-4 py-3 text-left">Status</th>
@@ -168,7 +168,7 @@ export default function OrdersPage() {
                           {order.id.slice(0, 8)}
                         </td>
                         <td className="px-4 py-3">
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">
+                          <span className="px-3 py-1 bg-accent-blue/20 text-accent-blue rounded-full text-sm font-medium border border-accent-blue/30">
                             {order.status}
                           </span>
                         </td>
@@ -180,7 +180,7 @@ export default function OrdersPage() {
                               </span>
                               <button
                                 onClick={() => toggleOrderExpansion(order.id)}
-                                className="text-xs text-blue-600 hover:text-blue-800 underline"
+                                className="text-xs text-accent-blue hover:text-accent-purple font-medium transition-colors duration-200"
                               >
                                 {isExpanded ? 'Hide details' : 'Show details'}
                               </button>
@@ -212,7 +212,7 @@ export default function OrdersPage() {
                           <select
                             value={order.status}
                             onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                            className="px-2 py-1 border rounded text-sm"
+                            className="px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/20 transition-all duration-200 outline-none bg-white"
                           >
                             {ORDER_STATUSES.map((status) => (
                               <option key={status} value={status}>

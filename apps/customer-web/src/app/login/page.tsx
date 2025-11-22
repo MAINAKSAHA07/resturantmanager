@@ -103,7 +103,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-accent-blue via-accent-purple to-accent-green flex items-center justify-center p-4">
       <Script
         src="https://accounts.google.com/gsi/client"
         onLoad={() => {
@@ -112,15 +112,17 @@ export default function LoginPage() {
           }
         }}
       />
-      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
-        <h1 className="text-3xl font-bold text-center mb-6">Login</h1>
-        <p className="text-gray-600 text-center mb-6">
-          Please login to continue with checkout
-        </p>
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 border border-accent-blue/20">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent mb-2">Login</h1>
+          <p className="text-gray-600">
+            Please login to continue with checkout
+          </p>
+        </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
+          <div className="mb-4 p-4 bg-accent-pink/10 border-l-4 border-accent-pink rounded-lg">
+            <p className="font-semibold text-accent-pink">{error}</p>
           </div>
         )}
 
@@ -128,8 +130,8 @@ export default function LoginPage() {
           <div id="google-signin-button" className="w-full min-h-[42px] flex items-center justify-center"></div>
           
           {error && (
-            <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
-              {error}
+            <div className="p-4 bg-accent-pink/10 border-l-4 border-accent-pink rounded-lg text-sm">
+              <p className="font-semibold text-accent-pink">{error}</p>
             </div>
           )}
 

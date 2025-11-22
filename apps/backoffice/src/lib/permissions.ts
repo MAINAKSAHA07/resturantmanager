@@ -137,6 +137,7 @@ const ROLE_PERMISSIONS: Record<'admin' | 'manager' | 'staff', Permission[]> = {
     // Staff have limited operational permissions
     'dashboard.view',
     'menu.view',
+    'menu.edit', // Staff can edit menu items (e.g., availability status only)
     'orders.view',
     'orders.create',
     'orders.edit',
@@ -242,6 +243,12 @@ export const API_PERMISSIONS: Record<string, Permission[]> = {
   'PATCH /api/menu': ['menu.edit'],
   'DELETE /api/menu': ['menu.delete'],
   
+  'GET /api/menu/items': ['menu.view'],
+  'POST /api/menu/items': ['menu.create'],
+  'PATCH /api/menu/items': ['menu.edit'],
+  'PUT /api/menu/items': ['menu.edit'],
+  'DELETE /api/menu/items': ['menu.delete'],
+  
   'GET /api/menu/categories': ['menu.categories.view'],
   'POST /api/menu/categories': ['menu.categories.create'],
   'PATCH /api/menu/categories': ['menu.categories.edit'],
@@ -278,7 +285,12 @@ export function canPerformAction(user: User | null | undefined, method: string, 
   if (!user) return false;
   if (isMasterUser(user)) return true;
   
-  const actionKey = `${method} ${path}`;
+  // Normalize path: remove dynamic segments like [id] and trailing slashes
+  const normalizedPath = path
+    .replace(/\/\[.*?\]/g, '') // Remove [id], [slug], etc.
+    .replace(/\/$/, ''); // Remove trailing slash
+  
+  const actionKey = `${method} ${normalizedPath}`;
   const requiredPermissions = API_PERMISSIONS[actionKey];
   
   if (!requiredPermissions || requiredPermissions.length === 0) {

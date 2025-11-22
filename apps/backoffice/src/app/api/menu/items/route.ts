@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import PocketBase from 'pocketbase';
+import { getCurrentUser } from '@/lib/server-utils';
+import { canPerformAction } from '@/lib/permissions';
 
 export async function GET(request: NextRequest) {
   try {
@@ -285,14 +287,19 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Get auth token from cookie or header
-    const token = request.cookies.get('pb_auth_token')?.value ||
-      request.headers.get('authorization')?.replace('Bearer ', '');
-
-    if (!token) {
+    // Verify authentication and permissions
+    const user = await getCurrentUser(request);
+    if (!user) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Unauthorized: Please log in to create menu items' },
         { status: 401 }
+      );
+    }
+
+    if (!canPerformAction(user, 'POST', request.nextUrl.pathname)) {
+      return NextResponse.json(
+        { error: 'Forbidden: You do not have permission to create menu items' },
+        { status: 403 }
       );
     }
 

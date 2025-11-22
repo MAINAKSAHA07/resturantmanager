@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     console.log('Filter status:', filterStatus);
 
     // Fetch all orders and filter client-side because PocketBase relation filters don't work reliably
-    const allOrders = await pb.collection('orders').getList(1, 100, {
+    const allOrders = await pb.collection('orders').getList(1, 500, {
       sort: '-created',
     });
 
@@ -99,6 +99,7 @@ export async function GET(request: NextRequest) {
         timestamps: order.timestamps || {},
         tenantId: order.tenantId,
         locationId: order.locationId,
+        tableId: order.tableId, // Include tableId for filtering
         customerId: order.customerId,
         items: orderItems.map((item: any) => ({
           id: item.id,

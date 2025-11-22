@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { hasPermission } from '@/lib/permissions';
+import { type User } from '@/lib/user-utils';
 
 interface Category {
   id: string;
@@ -29,6 +31,7 @@ export default function EditMenuItemPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -47,9 +50,22 @@ export default function EditMenuItemPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
+    fetchUser();
     fetchCategories();
     fetchItem();
   }, [itemId]);
+
+  const fetchUser = async () => {
+    try {
+      const response = await fetch('/api/auth/me');
+      const data = await response.json();
+      if (response.ok && data.user) {
+        setUser(data.user);
+      }
+    } catch (error) {
+      console.error('Error fetching user:', error);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
@@ -188,19 +204,26 @@ export default function EditMenuItemPage() {
 
       // Create FormData for file upload
       const formDataToSend = new FormData();
-      formDataToSend.append('name', formData.name);
-      formDataToSend.append('description', formData.description || '');
-      formDataToSend.append('basePrice', parseFloat(formData.basePrice).toString());
-      formDataToSend.append('taxRate', parseFloat(formData.taxRate).toString());
-      formDataToSend.append('categoryId', formData.categoryId);
-      // Send availability as 'available' or 'not available'
-      formDataToSend.append('availability', formData.availability);
-      console.log('[Frontend] Sending availability:', formData.availability);
-      formDataToSend.append('hsnSac', formData.hsnSac || '');
-      formDataToSend.append('removeImage', removeImage.toString());
+      
+      // Staff can only update availability
+      if (isStaffOnly) {
+        formDataToSend.append('availability', formData.availability);
+      } else {
+        // Managers/admins can update all fields
+        formDataToSend.append('name', formData.name);
+        formDataToSend.append('description', formData.description || '');
+        formDataToSend.append('basePrice', parseFloat(formData.basePrice).toString());
+        formDataToSend.append('taxRate', parseFloat(formData.taxRate).toString());
+        formDataToSend.append('categoryId', formData.categoryId);
+        // Send availability as 'available' or 'not available'
+        formDataToSend.append('availability', formData.availability);
+        console.log('[Frontend] Sending availability:', formData.availability);
+        formDataToSend.append('hsnSac', formData.hsnSac || '');
+        formDataToSend.append('removeImage', removeImage.toString());
 
-      if (imageFile) {
-        formDataToSend.append('image', imageFile);
+        if (imageFile) {
+          formDataToSend.append('image', imageFile);
+        }
       }
 
       const headers: HeadersInit = {};
@@ -285,10 +308,22 @@ export default function EditMenuItemPage() {
     );
   }
 
+  // Check if user is staff (can only edit availability)
+  const isStaffOnly = user && user.role === 'staff' && !hasPermission(user, 'menu.create');
+  const canEditAll = hasPermission(user, 'menu.create') || hasPermission(user, 'menu.delete');
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6">Edit Menu Item</h1>
+        
+        {isStaffOnly && (
+          <div className="mb-4 p-4 bg-accent-yellow/20 border-l-4 border-accent-yellow rounded-lg">
+            <p className="text-sm text-gray-700">
+              <strong>Staff Mode:</strong> You can only change the availability status of this item.
+            </p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
           <div className="mb-4">
@@ -297,8 +332,10 @@ export default function EditMenuItemPage() {
               type="text"
               value={formData.name}
               onChange={handleNameChange}
-              className={`w-full px-4 py-2 border rounded-lg ${duplicateWarning ? 'border-yellow-500' : ''}`}
+              className={`w-full px-4 py-2 border rounded-lg ${duplicateWarning ? 'border-yellow-500' : ''} ${isStaffOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
               required
+              disabled={isStaffOnly}
+              readOnly={isStaffOnly}
             />
             {duplicateWarning && (
               <p className="text-yellow-600 text-sm mt-1">{duplicateWarning}</p>
@@ -314,29 +351,31 @@ export default function EditMenuItemPage() {
                   alt="Current"
                   className="w-32 h-32 object-cover rounded-lg border border-gray-300 mb-2"
                 />
-                <label className="flex items-center text-sm text-gray-600">
-                  <input
-                    type="checkbox"
-                    checked={removeImage}
-                    onChange={(e) => {
-                      setRemoveImage(e.target.checked);
-                      if (e.target.checked) {
-                        setImagePreview(null);
-                        setImageFile(null);
-                      }
-                    }}
-                    className="mr-2"
-                  />
-                  Remove current image
-                </label>
+                {!isStaffOnly && (
+                  <label className="flex items-center text-sm text-gray-600">
+                    <input
+                      type="checkbox"
+                      checked={removeImage}
+                      onChange={(e) => {
+                        setRemoveImage(e.target.checked);
+                        if (e.target.checked) {
+                          setImagePreview(null);
+                          setImageFile(null);
+                        }
+                      }}
+                      className="mr-2"
+                    />
+                    Remove current image
+                  </label>
+                )}
               </div>
             )}
             <input
               type="file"
               accept="image/*"
               onChange={handleImageChange}
-              className="w-full px-4 py-2 border rounded-lg"
-              disabled={removeImage}
+              className={`w-full px-4 py-2 border rounded-lg ${isStaffOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+              disabled={removeImage || isStaffOnly}
             />
             {imagePreview && (
               <div className="mt-3">
@@ -355,8 +394,10 @@ export default function EditMenuItemPage() {
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-4 py-2 border rounded-lg"
+              className={`w-full px-4 py-2 border rounded-lg ${isStaffOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
               rows={3}
+              disabled={isStaffOnly}
+              readOnly={isStaffOnly}
             />
           </div>
 
@@ -365,8 +406,9 @@ export default function EditMenuItemPage() {
             <select
               value={formData.categoryId}
               onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-              className="w-full px-4 py-2 border rounded-lg"
+              className={`w-full px-4 py-2 border rounded-lg ${isStaffOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
               required
+              disabled={isStaffOnly}
             >
               <option value="">Select a category</option>
               {categories.map((cat) => (
@@ -386,8 +428,10 @@ export default function EditMenuItemPage() {
                 min="0"
                 value={formData.basePrice}
                 onChange={(e) => setFormData({ ...formData, basePrice: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg"
+                className={`w-full px-4 py-2 border rounded-lg ${isStaffOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 required
+                disabled={isStaffOnly}
+                readOnly={isStaffOnly}
               />
             </div>
 
@@ -400,7 +444,9 @@ export default function EditMenuItemPage() {
                 max="100"
                 value={formData.taxRate}
                 onChange={(e) => setFormData({ ...formData, taxRate: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg"
+                className={`w-full px-4 py-2 border rounded-lg ${isStaffOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                disabled={isStaffOnly}
+                readOnly={isStaffOnly}
                 required
               />
             </div>
@@ -412,7 +458,9 @@ export default function EditMenuItemPage() {
               type="text"
               value={formData.hsnSac}
               onChange={(e) => setFormData({ ...formData, hsnSac: e.target.value })}
-              className="w-full px-4 py-2 border rounded-lg"
+              className={`w-full px-4 py-2 border rounded-lg ${isStaffOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+              disabled={isStaffOnly}
+              readOnly={isStaffOnly}
             />
           </div>
 
@@ -452,12 +500,13 @@ export default function EditMenuItemPage() {
             </button>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-red-600 mb-2">Danger Zone</h3>
-              {!showDeleteConfirm ? (
-                <button
-                  type="button"
+          {canEditAll && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-red-600 mb-2">Danger Zone</h3>
+                {!showDeleteConfirm ? (
+                  <button
+                    type="button"
                   onClick={handleDelete}
                   disabled={saving || deleting}
                   className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50"
@@ -491,6 +540,7 @@ export default function EditMenuItemPage() {
               )}
             </div>
           </div>
+          )}
         </form>
       </div>
     </div>

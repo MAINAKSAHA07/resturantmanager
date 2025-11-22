@@ -47,11 +47,21 @@ export default function Navbar() {
         const userTenantIds = data.user.tenants || [];
         const isMaster = data.user.isMaster === true || role === 'admin';
         
+        console.log('Navbar: User data received', {
+          id: data.user.id,
+          email: data.user.email,
+          role,
+          isMaster: data.user.isMaster,
+          isMasterUser: isMaster,
+          tenants: userTenantIds
+        });
+        
         setUserRole(role);
         setUserTenants(userTenantIds);
         setUser(data.user);
 
         // Fetch tenants after we know user's access
+        // Master users should see all tenants
         await fetchTenants(role, userTenantIds, isMaster);
         
         // Fetch current tenant after we have tenant list
@@ -107,14 +117,30 @@ export default function Navbar() {
 
         console.log('Navbar - Fetched tenants:', {
           count: filteredTenants.length,
+          isMaster,
+          role,
+          userTenantIds,
           tenantIds: filteredTenants.map((t: Tenant) => ({ id: t.id, name: t.name })),
         });
 
-        // If not master user, filter to only show user's assigned tenants
-        if (!isMaster && role !== 'admin' && userTenantIds.length > 0) {
-          filteredTenants = filteredTenants.filter((t: Tenant) =>
-            userTenantIds.includes(t.id)
-          );
+        // Master users (isMaster=true OR role='admin') should see all tenants
+        // Only filter for non-master users
+        if (!isMaster && role !== 'admin') {
+          if (userTenantIds.length > 0) {
+            filteredTenants = filteredTenants.filter((t: Tenant) =>
+              userTenantIds.includes(t.id)
+            );
+            console.log('Navbar - Filtered tenants for non-master user:', {
+              originalCount: data.tenants?.length || 0,
+              filteredCount: filteredTenants.length
+            });
+          } else {
+            // Non-master user with no tenants assigned
+            filteredTenants = [];
+            console.log('Navbar - Non-master user has no tenants assigned');
+          }
+        } else {
+          console.log('Navbar - Master user, showing all tenants');
         }
 
         setTenants(filteredTenants);
@@ -128,8 +154,14 @@ export default function Navbar() {
 
   const handleSwitchTenant = async (tenantId: string) => {
     try {
-      console.log('Switching to tenant:', tenantId);
-      console.log('Available tenants:', tenants.map(t => ({ id: t.id, name: t.name })));
+      const isMaster = isMasterUser(user) || userRole === 'admin';
+      console.log('Switching to tenant:', {
+        tenantId,
+        isMaster,
+        userRole,
+        userIsMaster: user?.isMaster,
+        availableTenants: tenants.map(t => ({ id: t.id, name: t.name }))
+      });
       
       const response = await fetch('/api/auth/select-tenant', {
         method: 'POST',
@@ -138,6 +170,12 @@ export default function Navbar() {
       });
 
       const data = await response.json();
+
+      console.log('Switch tenant response:', {
+        status: response.status,
+        ok: response.ok,
+        data
+      });
 
       if (response.ok) {
         setShowTenantSelector(false);
@@ -154,8 +192,10 @@ export default function Navbar() {
           error: data.error,
           tenantId,
           message: data.message,
+          isMaster,
+          userRole
         });
-        alert(`Failed to switch tenant: ${data.error || data.message || 'Unknown error'}\n\nTenant ID: ${tenantId}`);
+        alert(`Failed to switch tenant: ${data.error || data.message || 'Unknown error'}\n\nTenant ID: ${tenantId}\nStatus: ${response.status}`);
       }
     } catch (err: any) {
       console.error('Error switching tenant:', err);
@@ -164,29 +204,32 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white shadow-md mb-6">
+    <nav className="bg-gradient-to-r from-accent-blue to-accent-purple shadow-lg mb-6">
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
           <div className="flex gap-6 items-center">
-            <Link href="/dashboard" className="text-gray-700 hover:text-blue-600 font-medium">
+            <Link href="/dashboard" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20">
               Dashboard
             </Link>
-            <Link href="/menu" className="text-gray-700 hover:text-blue-600 font-medium">
+            <Link href="/menu" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20">
               Menu
             </Link>
-            <Link href="/orders" className="text-gray-700 hover:text-blue-600 font-medium">
+            <Link href="/orders" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20">
               Orders
             </Link>
-            <Link href="/kds" className="text-gray-700 hover:text-blue-600 font-medium">
+            <Link href="/kds" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20">
               KDS
             </Link>
-            <Link href="/reservations" className="text-gray-700 hover:text-blue-600 font-medium">
+            <Link href="/reservations" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20">
               Reservations
             </Link>
-            <Link href="/floorplan" className="text-gray-700 hover:text-blue-600 font-medium">
+            <Link href="/floorplan" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20">
               Floor Plan
             </Link>
-            <Link href="/users" className="text-gray-700 hover:text-blue-600 font-medium">
+            <Link href="/locations" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20">
+              Locations
+            </Link>
+            <Link href="/users" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20">
               Users
             </Link>
           </div>
@@ -202,7 +245,7 @@ export default function Navbar() {
                   <div className="relative">
                     <button
                       onClick={() => setShowTenantSelector(!showTenantSelector)}
-                      className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 font-medium text-sm"
+                      className="px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 font-medium text-sm backdrop-blur-sm transition-all duration-200"
                     >
                       {currentTenant 
                         ? `${currentTenant.name} ▼` 
@@ -217,7 +260,7 @@ export default function Navbar() {
                             <button
                               key={tenant.id}
                               onClick={() => handleSwitchTenant(tenant.id)}
-                              className={`w-full text-left px-4 py-2 hover:bg-gray-100 ${tenant.id === currentTenant?.id ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                              className={`w-full text-left px-4 py-2 hover:bg-accent-purple/20 transition-colors duration-200 ${tenant.id === currentTenant?.id ? 'bg-accent-blue/20 text-accent-blue font-medium' : 'text-gray-700'
                                 }`}
                             >
                               {tenant.name}
@@ -243,7 +286,7 @@ export default function Navbar() {
                   <div className="relative">
                     <button
                       onClick={() => setShowTenantSelector(!showTenantSelector)}
-                      className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 font-medium text-sm"
+                      className="px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 font-medium text-sm backdrop-blur-sm transition-all duration-200"
                     >
                       {currentTenant.name} ▼
                     </button>
@@ -254,7 +297,7 @@ export default function Navbar() {
                             <button
                               key={tenant.id}
                               onClick={() => handleSwitchTenant(tenant.id)}
-                              className={`w-full text-left px-4 py-2 hover:bg-gray-100 ${tenant.id === currentTenant?.id ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                              className={`w-full text-left px-4 py-2 hover:bg-accent-purple/20 transition-colors duration-200 ${tenant.id === currentTenant?.id ? 'bg-accent-blue/20 text-accent-blue font-medium' : 'text-gray-700'
                                 }`}
                             >
                               {tenant.name}
@@ -270,7 +313,7 @@ export default function Navbar() {
               // Show static badge if user has only one tenant
               if (currentTenant) {
                 return (
-                  <div className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg font-medium text-sm">
+                  <div className="px-4 py-2 bg-white/20 text-white rounded-lg font-medium text-sm backdrop-blur-sm">
                     {currentTenant.name}
                   </div>
                 );

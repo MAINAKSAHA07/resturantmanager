@@ -3,7 +3,7 @@
 
 export function MoneyBadge({ amount }: { amount: number }) {
   return (
-    <span className="font-semibold text-lg">
+    <span className="font-semibold text-lg text-accent-blue">
       ₹{(amount / 100).toFixed(2)}
     </span>
   );

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import PocketBase from 'pocketbase';
+import { getCurrentUser } from '@/lib/server-utils';
+import { canPerformAction, hasPermission } from '@/lib/permissions';
 
 export async function GET(
   request: NextRequest,
@@ -60,13 +62,19 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const token = request.cookies.get('pb_auth_token')?.value || 
-                  request.headers.get('authorization')?.replace('Bearer ', '');
-    
-    if (!token) {
+    // Verify authentication and permissions
+    const user = await getCurrentUser(request);
+    if (!user) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Unauthorized: Please log in to edit menu items' },
         { status: 401 }
+      );
+    }
+
+    if (!canPerformAction(user, 'PUT', request.nextUrl.pathname)) {
+      return NextResponse.json(
+        { error: 'Forbidden: You do not have permission to edit menu items' },
+        { status: 403 }
       );
     }
 
@@ -79,13 +87,19 @@ export async function PUT(
 
     // Handle FormData for file upload
     const formData = await request.formData();
-    const name = formData.get('name') as string;
-    const description = formData.get('description') as string || '';
-    const basePrice = parseFloat(formData.get('basePrice') as string);
-    const taxRate = parseFloat(formData.get('taxRate') as string) || 5;
-    const categoryId = formData.get('categoryId') as string;
-    // Get the existing item first to use as fallback for isActive
+    
+    // Check if user is staff (can only edit availability)
+    const isStaffOnly = user.role === 'staff' && !hasPermission(user, 'menu.create');
+    
+    // Get the existing item first
     const existingItem = await adminPb.collection('menuItem').getOne(params.id);
+    
+    // Staff can only update availability - use existing values for other fields
+    const name = isStaffOnly ? existingItem.name : (formData.get('name') as string);
+    const description = isStaffOnly ? (existingItem.description || '') : (formData.get('description') as string || '');
+    const basePrice = isStaffOnly ? existingItem.basePrice : parseFloat(formData.get('basePrice') as string);
+    const taxRate = isStaffOnly ? (existingItem.taxRate || 5) : (parseFloat(formData.get('taxRate') as string) || 5);
+    const categoryId = isStaffOnly ? (Array.isArray(existingItem.categoryId) ? existingItem.categoryId[0] : existingItem.categoryId) : (formData.get('categoryId') as string);
     const itemTenantId = Array.isArray(existingItem.tenantId) 
       ? existingItem.tenantId[0] 
       : existingItem.tenantId;
@@ -133,12 +147,12 @@ export async function PUT(
       type: typeof availabilityValue 
     });
     
-    const hsnSac = formData.get('hsnSac') as string || '';
-    const imageFile = formData.get('image') as File | null;
-    const removeImage = formData.get('removeImage') === 'true';
+    const hsnSac = isStaffOnly ? (existingItem.hsnSac || '') : (formData.get('hsnSac') as string || '');
+    const imageFile = isStaffOnly ? null : (formData.get('image') as File | null);
+    const removeImage = isStaffOnly ? false : (formData.get('removeImage') === 'true');
 
-    // Check for duplicate name (excluding current item)
-    if (name.toLowerCase().trim() !== existingItem.name.toLowerCase().trim()) {
+    // Check for duplicate name (excluding current item) - skip for staff as they can't change name
+    if (!isStaffOnly && name.toLowerCase().trim() !== existingItem.name.toLowerCase().trim()) {
       const allItems = await adminPb.collection('menuItem').getList(1, 1000);
       const duplicate = allItems.items.find((item: any) => {
         const itemId = item.id;
@@ -190,24 +204,32 @@ export async function PUT(
     const itemData = new FormData();
     itemData.append('tenantId', itemTenantId);
     itemData.append('locationId', itemLocationId);
-    itemData.append('categoryId', categoryId);
-    itemData.append('name', name);
-    itemData.append('description', description);
-    itemData.append('basePrice', Math.round(basePrice * 100).toString()); // Convert to paise
-    itemData.append('taxRate', (taxRate || 5).toString());
-    itemData.append('hsnSac', hsnSac);
-    // Send availability as string: 'available' or 'not available'
-    itemData.append('availability', availability);
     
-    console.log('[API] Using FormData with availability:', availability);
-    
-    // Handle image update
-    if (removeImage) {
-      itemData.append('image', '');
-    } else if (imageFile && imageFile.size > 0) {
-      itemData.append('image', imageFile);
+    // Staff can only update availability - preserve other fields
+    if (isStaffOnly) {
+      itemData.append('availability', availability);
+      console.log('[API] Staff user - only updating availability:', availability);
+    } else {
+      // Managers/admins can update all fields
+      itemData.append('categoryId', categoryId);
+      itemData.append('name', name);
+      itemData.append('description', description);
+      itemData.append('basePrice', Math.round(basePrice * 100).toString()); // Convert to paise
+      itemData.append('taxRate', (taxRate || 5).toString());
+      itemData.append('hsnSac', hsnSac);
+      // Send availability as string: 'available' or 'not available'
+      itemData.append('availability', availability);
+      
+      console.log('[API] Using FormData with availability:', availability);
+      
+      // Handle image update
+      if (removeImage) {
+        itemData.append('image', '');
+      } else if (imageFile && imageFile.size > 0) {
+        itemData.append('image', imageFile);
+      }
+      // If neither, don't append image field (keeps existing image)
     }
-    // If neither, don't append image field (keeps existing image)
     
     // Log what we're sending
     console.log('[API] FormData entries being sent:');
@@ -298,13 +320,19 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const token = request.cookies.get('pb_auth_token')?.value || 
-                  request.headers.get('authorization')?.replace('Bearer ', '');
-    
-    if (!token) {
+    // Verify authentication and permissions
+    const user = await getCurrentUser(request);
+    if (!user) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Unauthorized: Please log in to delete menu items' },
         { status: 401 }
+      );
+    }
+
+    if (!canPerformAction(user, 'DELETE', request.nextUrl.pathname)) {
+      return NextResponse.json(
+        { error: 'Forbidden: You do not have permission to delete menu items' },
+        { status: 403 }
       );
     }
 

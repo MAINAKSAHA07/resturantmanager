@@ -5,9 +5,29 @@ import { canPerformAction } from '@/lib/permissions';
 
 export async function GET(request: NextRequest) {
     try {
-        // Verify permissions
+        // Verify authentication first
         const user = await getCurrentUser(request);
-        if (!user || !canPerformAction(user, 'GET', '/api/users')) {
+        if (!user) {
+            console.log('Users API: No user found (unauthorized)');
+            return NextResponse.json(
+                { error: 'Unauthorized: Please log in to view users' },
+                { status: 401 }
+            );
+        }
+
+        console.log('Users API: User authenticated', {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            isMaster: user.isMaster,
+            isMasterUser: user.isMaster === true || user.role === 'admin'
+        });
+
+        // Then verify permissions
+        const canPerform = canPerformAction(user, 'GET', '/api/users');
+        console.log('Users API: Permission check', { canPerform, method: 'GET', path: '/api/users' });
+        
+        if (!canPerform) {
             return NextResponse.json(
                 { error: 'Forbidden: You do not have permission to view users' },
                 { status: 403 }
@@ -26,6 +46,8 @@ export async function GET(request: NextRequest) {
             expand: 'tenants',
         });
 
+        console.log(`Users API: Fetched ${users.length} users`);
+        
         return NextResponse.json({ users });
     } catch (error: any) {
         return NextResponse.json(
@@ -37,9 +59,17 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        // Verify permissions
+        // Verify authentication first
         const user = await getCurrentUser(request);
-        if (!user || !canPerformAction(user, 'POST', '/api/users')) {
+        if (!user) {
+            return NextResponse.json(
+                { error: 'Unauthorized: Please log in to create users' },
+                { status: 401 }
+            );
+        }
+
+        // Then verify permissions
+        if (!canPerformAction(user, 'POST', '/api/users')) {
             return NextResponse.json(
                 { error: 'Forbidden: You do not have permission to create users' },
                 { status: 403 }

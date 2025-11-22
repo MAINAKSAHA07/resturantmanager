@@ -63,22 +63,41 @@ export async function POST(request: NextRequest) {
       const user = await getCurrentUser(request);
 
       if (!user) {
+        console.log('Select tenant: No user found (unauthorized)');
         return NextResponse.json(
           { error: 'Unauthorized: Invalid or expired session' },
           { status: 401 }
         );
       }
 
+      console.log('Select tenant: User authenticated', {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        isMaster: user.isMaster,
+        isMasterUser: user.isMaster === true || user.role === 'admin',
+        tenants: user.tenants
+      });
+
       // Master users have access to all tenants
-      if (!isMasterUser(user)) {
+      const isMaster = isMasterUser(user);
+      console.log('Select tenant: Master user check', { isMaster, tenantId });
+      
+      if (!isMaster) {
         const userTenants = user.tenants || [];
 
         if (!userTenants.includes(tenantId)) {
+          console.log('Select tenant: User does not have access', {
+            userTenants,
+            requestedTenant: tenantId
+          });
           return NextResponse.json(
             { error: 'You do not have access to this tenant' },
             { status: 403 }
           );
         }
+      } else {
+        console.log('Select tenant: Master user - allowing access to all tenants');
       }
 
       const response = NextResponse.json({

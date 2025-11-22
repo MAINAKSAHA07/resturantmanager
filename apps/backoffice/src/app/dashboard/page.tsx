@@ -45,46 +45,46 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 to-accent-purple/5 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-blue mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 via-accent-purple/5 to-accent-green/5">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-          <h1 className="text-3xl font-bold">Dashboard</h1>
+        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">Dashboard</h1>
 
           <div className="flex items-center gap-4">
-            <div className="bg-white rounded-lg shadow-sm p-1 flex">
+            <div className="bg-white rounded-xl shadow-md p-1 flex border border-accent-blue/20">
               <button
                 onClick={() => setTimeRange('1d')}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${timeRange === '1d'
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'text-gray-600 hover:bg-gray-50'
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${timeRange === '1d'
+                  ? 'bg-accent-blue text-white shadow-md'
+                  : 'text-gray-600 hover:bg-accent-purple/10'
                   }`}
               >
                 Today
               </button>
               <button
                 onClick={() => setTimeRange('7d')}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${timeRange === '7d'
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'text-gray-600 hover:bg-gray-50'
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${timeRange === '7d'
+                  ? 'bg-accent-blue text-white shadow-md'
+                  : 'text-gray-600 hover:bg-accent-purple/10'
                   }`}
               >
                 7 Days
               </button>
               <button
                 onClick={() => setTimeRange('30d')}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${timeRange === '30d'
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'text-gray-600 hover:bg-gray-50'
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${timeRange === '30d'
+                  ? 'bg-accent-blue text-white shadow-md'
+                  : 'text-gray-600 hover:bg-accent-purple/10'
                   }`}
               >
                 30 Days
@@ -93,7 +93,7 @@ export default function DashboardPage() {
 
             <button
               onClick={fetchStats}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+              className="btn-primary text-sm"
             >
               Refresh
             </button>
@@ -101,43 +101,43 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="card-accent border-l-4 border-l-accent-blue">
             <h2 className="text-lg font-semibold text-gray-600 mb-2">
               {timeRange === '1d' ? "Today's Orders" :
                 timeRange === '7d' ? "Last 7 Days Orders" : "Last 30 Days Orders"}
             </h2>
-            <p className="text-3xl font-bold">{stats.todayOrders}</p>
+            <p className="text-4xl font-bold text-accent-blue">{stats.todayOrders}</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="card-accent border-l-4 border-l-accent-green">
             <h2 className="text-lg font-semibold text-gray-600 mb-2">Total Revenue</h2>
-            <p className="text-3xl font-bold">₹{(stats.totalRevenue / 100).toFixed(2)}</p>
+            <p className="text-4xl font-bold text-accent-green">₹{(stats.totalRevenue / 100).toFixed(2)}</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="card-accent border-l-4 border-l-accent-purple">
             <h2 className="text-lg font-semibold text-gray-600 mb-2">Completed</h2>
-            <p className="text-3xl font-bold">{stats.completedOrders}</p>
+            <p className="text-4xl font-bold text-accent-purple">{stats.completedOrders}</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-bold mb-4">Quick Actions</h2>
+        <div className="card">
+          <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Link
               href="/menu"
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 text-center"
+              className="btn-primary text-center"
             >
               Manage Menu
             </Link>
             <Link
               href="/orders"
-              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 text-center"
+              className="btn-success text-center"
             >
               View Orders
             </Link>
             <Link
               href="/kds"
-              className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 text-center"
+              className="btn-warning text-center"
             >
               Kitchen Display
             </Link>

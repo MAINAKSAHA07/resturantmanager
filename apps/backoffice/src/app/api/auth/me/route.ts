@@ -131,7 +131,23 @@ export async function GET(request: NextRequest) {
                     const fullUser = await adminPb.collection('users').getOne(user.id, {
                         expand: 'tenants',
                     });
-                    return NextResponse.json({ user: fullUser });
+                    
+                    // Ensure isMaster and role are properly set
+                    const userResponse = {
+                        ...fullUser,
+                        isMaster: fullUser.isMaster === true,
+                        role: fullUser.role || 'staff',
+                    };
+                    
+                    console.log('Auth me: Returning user', {
+                        id: userResponse.id,
+                        email: userResponse.email,
+                        role: userResponse.role,
+                        isMaster: userResponse.isMaster,
+                        isMasterUser: userResponse.isMaster === true || userResponse.role === 'admin'
+                    });
+                    
+                    return NextResponse.json({ user: userResponse });
                 } catch (getUserError: any) {
                     // If user doesn't exist (404), return 401
                     if (getUserError.status === 404) {

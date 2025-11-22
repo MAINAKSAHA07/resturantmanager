@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { hasPermission, type Permission } from '@/lib/permissions';
+import { type User } from '@/lib/user-utils';
 
 interface MenuCategory {
   id: string;
@@ -27,8 +29,10 @@ export default function MenuPage() {
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
+    fetchUser();
     fetchMenu();
     
     // Refetch when page becomes visible (user navigates back)
@@ -44,6 +48,18 @@ export default function MenuPage() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
+
+  const fetchUser = async () => {
+    try {
+      const response = await fetch('/api/auth/me');
+      const data = await response.json();
+      if (response.ok && data.user) {
+        setUser(data.user);
+      }
+    } catch (error) {
+      console.error('Error fetching user:', error);
+    }
+  };
 
   const fetchMenu = async () => {
     try {
@@ -188,31 +204,37 @@ export default function MenuPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 via-accent-purple/5 to-accent-green/5">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold">Menu Management</h1>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">Menu Management</h1>
           </div>
           <div className="flex gap-2">
-            <Link
-              href="/menu/categories"
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
-            >
-              Manage Categories
-            </Link>
-            <Link
-              href="/menu/categories/new"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-            >
-              Add Category
-            </Link>
-            <Link
-              href="/menu/items/new"
-              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-            >
-              Add Item
-            </Link>
+            {hasPermission(user, 'menu.categories.view') && (
+              <Link
+                href="/menu/categories"
+                className="btn-secondary px-4 py-2 text-sm"
+              >
+                Manage Categories
+              </Link>
+            )}
+            {hasPermission(user, 'menu.categories.create') && (
+              <Link
+                href="/menu/categories/new"
+                className="btn-primary px-4 py-2 text-sm"
+              >
+                Add Category
+              </Link>
+            )}
+            {hasPermission(user, 'menu.create') && (
+              <Link
+                href="/menu/items/new"
+                className="btn-success px-4 py-2 text-sm"
+              >
+                Add Item
+              </Link>
+            )}
           </div>
         </div>
 
@@ -222,7 +244,7 @@ export default function MenuPage() {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-2 border rounded-lg w-full"
+              className="px-4 py-3 border-2 border-gray-200 rounded-lg w-full focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/20 transition-all duration-200 outline-none"
             >
               {(() => {
                 // Get category IDs for filtering
@@ -266,9 +288,9 @@ export default function MenuPage() {
               })()}
             </select>
           </div>
-          <div className="bg-white px-4 py-2 rounded-lg border shadow-sm">
+          <div className="bg-white px-4 py-3 rounded-lg border-2 border-accent-blue/20 shadow-md">
             <p className="text-sm text-gray-600">Displaying</p>
-            <p className="text-2xl font-bold text-blue-600">{filteredItems.length}</p>
+            <p className="text-2xl font-bold text-accent-blue">{filteredItems.length}</p>
             <p className="text-xs text-gray-500">menu items</p>
           </div>
         </div>
@@ -279,7 +301,7 @@ export default function MenuPage() {
             return (
             <div
               key={item.id}
-              className="bg-white rounded-lg shadow-md overflow-hidden"
+              className="card overflow-hidden hover:scale-105 transition-transform duration-200"
             >
               {item.image && (
                 <div className="h-48 bg-gray-200">
@@ -331,12 +353,14 @@ export default function MenuPage() {
                   <p className="text-lg font-bold">
                     ₹{(item.basePrice / 100).toFixed(2)}
                   </p>
-                  <Link
-                    href={`/menu/items/${item.id}/edit`}
-                    className="text-blue-600 hover:underline text-sm"
-                  >
-                    Edit
-                  </Link>
+                  {hasPermission(user, 'menu.edit') && (
+                    <Link
+                      href={`/menu/items/${item.id}/edit`}
+                      className="text-accent-blue hover:text-accent-purple font-medium text-sm transition-colors duration-200"
+                    >
+                      Edit
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
@@ -345,11 +369,11 @@ export default function MenuPage() {
         </div>
 
         {filteredItems.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-lg shadow-md">
-            <p className="text-gray-600 mb-4">No menu items found</p>
+          <div className="text-center py-12 card">
+            <p className="text-gray-600 mb-4 text-lg">No menu items found</p>
             <Link
               href="/menu/items/new"
-              className="text-blue-600 hover:underline"
+              className="btn-primary inline-block"
             >
               Add your first menu item
             </Link>

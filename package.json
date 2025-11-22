@@ -22,7 +22,13 @@
     "pb:migrate-availability": "node pocketbase/scripts/migrate-availability-field.js",
     "pb:check-availability-field": "node pocketbase/scripts/check-and-add-availability-field.js",
     "pb:add-availability-field": "node pocketbase/scripts/add-availability-field-to-schema.js",
-    "pb:normalize-availability": "node pocketbase/scripts/normalize-availability-values.js"
+    "pb:normalize-availability": "node pocketbase/scripts/normalize-availability-values.js",
+    "pb:cleanup-duplicate-locations": "node pocketbase/scripts/cleanup-duplicate-locations.js",
+    "pb:cleanup-duplicate-locations-migrate": "node pocketbase/scripts/cleanup-duplicate-locations-migrate.js",
+    "pb:check-duplicate-menu": "node pocketbase/scripts/check-duplicate-menu-items.js",
+    "pb:cleanup-duplicate-menu": "node pocketbase/scripts/cleanup-duplicate-menu-items.js",
+    "pb:check-duplicate-tables": "node pocketbase/scripts/check-duplicate-tables.js",
+    "pb:cleanup-duplicate-tables": "node pocketbase/scripts/cleanup-duplicate-tables.js"
   },
   "devDependencies": {
     "dotenv": "^17.2.3",
