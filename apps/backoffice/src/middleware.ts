@@ -11,12 +11,9 @@ export function middleware(request: NextRequest) {
       request.nextUrl.pathname === '/select-tenant' ||
       request.nextUrl.pathname.startsWith('/api/auth/') ||
       request.nextUrl.pathname.startsWith('/api/tenants')) {
-    // If already logged in and trying to access login, redirect to tenant selection or dashboard
+    // If already logged in and trying to access login, redirect to dashboard
     if (request.nextUrl.pathname === '/login' && token) {
-      if (selectedTenant) {
-        return NextResponse.redirect(new URL('/dashboard', request.url));
-      }
-      return NextResponse.redirect(new URL('/select-tenant', request.url));
+      return NextResponse.redirect(new URL('/dashboard', request.url));
     }
     return NextResponse.next();
   }
@@ -27,9 +24,16 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Check if tenant is selected (except for select-tenant page)
+  // For master users (admin), allow access without tenant selection
+  // They can select tenant from navbar dropdown
+  // For non-master users, require tenant selection
+  // Note: We can't reliably check if user is master in middleware without API call
+  // So we'll allow access and let pages handle tenant requirement
+  // Master users will see tenant selector in navbar and can work without pre-selected tenant
   if (!selectedTenant && request.nextUrl.pathname !== '/select-tenant') {
-    return NextResponse.redirect(new URL('/select-tenant', request.url));
+    // Allow access - pages will handle tenant requirement
+    // Master users can select from navbar, non-master will be redirected by page logic
+    return NextResponse.next();
   }
 
   return NextResponse.next();

@@ -129,10 +129,21 @@ export default function Navbar() {
 
       if (response.ok) {
         setShowTenantSelector(false);
-        window.location.reload(); // Reload to refresh all data
+        // Update current tenant immediately
+        const selectedTenant = tenants.find(t => t.id === tenantId);
+        if (selectedTenant) {
+          setCurrentTenant(selectedTenant);
+        }
+        // Reload to refresh all data
+        window.location.reload();
+      } else {
+        const data = await response.json();
+        console.error('Failed to switch tenant:', data.error);
+        alert(`Failed to switch tenant: ${data.error || 'Unknown error'}`);
       }
     } catch (err) {
       console.error('Error switching tenant:', err);
+      alert('Failed to switch tenant. Please try again.');
     }
   };
 

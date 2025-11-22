@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
         token: pb.authStore.token,
         user: { id: adminAuth.admin?.id, email: adminAuth.admin?.email },
         type: 'admin',
+        isMaster: true, // Admin users are master users
       });
 
       response.cookies.set('pb_auth_token', pb.authStore.token || '', {
@@ -40,6 +41,8 @@ export async function POST(request: NextRequest) {
         maxAge: 60 * 60 * 24,
         path: '/',
       });
+
+      // Don't set tenant cookie for master users - they'll select from navbar
 
       return response;
     } catch (adminError: any) {
@@ -81,6 +84,7 @@ export async function POST(request: NextRequest) {
           token: pb.authStore.token,
           user: authData.record,
           type: 'user',
+          isMaster: isMaster, // Include isMaster flag
         });
 
         response.cookies.set('pb_auth_token', pb.authStore.token || '', {
@@ -91,8 +95,9 @@ export async function POST(request: NextRequest) {
           path: '/',
         });
 
-        // Auto-select first tenant for non-admin users
-        if (userTenants.length > 0) {
+        // Auto-select first tenant for non-master users only
+        // Master users will select from navbar dropdown
+        if (!isMaster && userTenants.length > 0) {
           response.cookies.set('selected_tenant_id', userTenants[0], {
             httpOnly: false,
             secure: process.env.NODE_ENV === 'production',

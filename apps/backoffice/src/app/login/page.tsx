@@ -30,8 +30,13 @@ export default function LoginPage() {
           localStorage.setItem('pb_auth_token', data.token);
           // Cookie is already set by the server response
         }
-        // Redirect to tenant selection instead of dashboard
-        router.push('/select-tenant');
+        // Redirect master users directly to dashboard (they'll select tenant from navbar)
+        // Non-master users go to tenant selection
+        if (data.isMaster || data.type === 'admin') {
+          router.push('/dashboard');
+        } else {
+          router.push('/select-tenant');
+        }
       } else {
         // Show more specific error message
         const errorMessage = data.error || data.message || 'Login failed. Please check your credentials.';
