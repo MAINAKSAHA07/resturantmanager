@@ -127,36 +127,44 @@ export default function FloorPlanPage() {
       e.preventDefault();
       e.stopPropagation();
 
-      // Small delay to prevent click event from firing
-      await new Promise(resolve => setTimeout(resolve, 10));
-
       // If it was a drag, save the new position
       if (wasDragging) {
         const currentTables = tablesRef.current;
         const table = currentTables.find(t => t.id === currentActiveTableId);
         if (table) {
+          console.log(`[FloorPlan] Saving table position: ${table.name} to (${table.x}, ${table.y})`);
           await updateTablePosition(currentActiveTableId, table.x, table.y);
         }
+        // Prevent any click events after a drag
+        setTimeout(() => {
+          setActiveTableId(null);
+          setIsDragging(false);
+          setDragStartPos(null);
+          setInitialTablePos(null);
+          setDragOffset(null);
+          isDraggingRef.current = false;
+          activeTableIdRef.current = null;
+        }, 100);
       } else {
         // If it wasn't a drag (just a click), handle click
-        // Use a timeout to ensure state is updated
+        // Use a timeout to ensure state is updated and prevent race conditions
         setTimeout(() => {
           const currentTables = tablesRef.current;
           const table = currentTables.find(t => t.id === currentActiveTableId);
-          if (table) {
+          if (table && !isDraggingRef.current) {
+            console.log(`[FloorPlan] Handling table click: ${table.name}`);
             handleTableClick(table);
           }
+          // Reset state after click handling
+          setActiveTableId(null);
+          setIsDragging(false);
+          setDragStartPos(null);
+          setInitialTablePos(null);
+          setDragOffset(null);
+          isDraggingRef.current = false;
+          activeTableIdRef.current = null;
         }, 50);
       }
-
-      // Reset state
-      setActiveTableId(null);
-      setIsDragging(false);
-      setDragStartPos(null);
-      setInitialTablePos(null);
-      setDragOffset(null);
-      isDraggingRef.current = false;
-      activeTableIdRef.current = null;
     };
 
     if (activeTableId) {
@@ -271,41 +279,59 @@ export default function FloorPlanPage() {
       });
 
       const data = await response.json();
-      if (data.success) {
-        // Add the new table to local state immediately for instant display
-        if (data.table) {
-          const newTable: Table = {
-            id: data.table.id,
-            name: data.table.name,
-            capacity: data.table.capacity,
-            status: data.table.status || 'available',
-            x: data.table.x || 100,
-            y: data.table.y || 100,
-            locationId: Array.isArray(data.table.locationId) ? data.table.locationId[0] : data.table.locationId,
-            activeOrders: 0,
-            orderTotal: 0,
-          };
-          
-          // Add to local state immediately
-          setTables(prevTables => [...prevTables, newTable]);
-          
-          // Ensure location is selected
-          const tableLocationId = Array.isArray(data.table.locationId)
-            ? data.table.locationId[0]
-            : data.table.locationId;
-          if (tableLocationId && tableLocationId !== selectedLocation) {
-            setSelectedLocation(tableLocationId);
-          }
+      if (data.success && data.table) {
+        // Extract locationId properly
+        const tableLocationId = Array.isArray(data.table.locationId)
+          ? data.table.locationId[0]
+          : data.table.locationId;
+        
+        // Ensure location is selected before adding table
+        if (tableLocationId && tableLocationId !== selectedLocation) {
+          console.log(`[FloorPlan] Setting location to ${tableLocationId} for new table`);
+          setSelectedLocation(tableLocationId);
         }
+        
+        // Create new table object with proper locationId
+        const newTable: Table = {
+          id: data.table.id,
+          name: data.table.name,
+          capacity: data.table.capacity,
+          status: data.table.status || 'available',
+          x: data.table.x || 100,
+          y: data.table.y || 100,
+          locationId: tableLocationId || selectedLocation, // Use selectedLocation as fallback
+          activeOrders: 0,
+          orderTotal: 0,
+        };
+        
+        console.log('[FloorPlan] Adding new table to state:', {
+          id: newTable.id,
+          name: newTable.name,
+          locationId: newTable.locationId,
+          selectedLocation: selectedLocation,
+        });
+        
+        // Add to local state immediately - use functional update to ensure we have latest state
+        setTables(prevTables => {
+          // Check if table already exists (prevent duplicates)
+          const exists = prevTables.find(t => t.id === newTable.id);
+          if (exists) {
+            console.warn('[FloorPlan] Table already exists in state, updating instead');
+            return prevTables.map(t => t.id === newTable.id ? newTable : t);
+          }
+          return [...prevTables, newTable];
+        });
         
         setShowAddTable(false);
         setNewTableName('');
         setNewTableCapacity(4);
 
-        // Refresh tables and locations in background to sync with server
-        Promise.all([fetchTables(), fetchLocations()]).catch(err => {
-          console.error('Error refreshing after table creation:', err);
-        });
+        // Refresh tables in background to sync with server (this will also update activeOrders/orderTotal)
+        setTimeout(() => {
+          fetchTables().catch(err => {
+            console.error('Error refreshing after table creation:', err);
+          });
+        }, 100);
       } else {
         alert(data.error || 'Failed to create table');
       }
@@ -399,13 +425,23 @@ export default function FloorPlanPage() {
   const [activeTab, setActiveTab] = useState<'menu' | 'ongoing'>('menu');
 
   const handleMouseDown = (e: React.MouseEvent, table: Table) => {
+    // Only handle left mouse button
+    if (e.button !== 0) return;
+    
     e.preventDefault(); // Prevent text selection
     e.stopPropagation();
 
-    const floorPlan = e.currentTarget.closest('.floor-plan-container');
+    // Ensure we're clicking on the table element, not a child
+    const target = e.target as HTMLElement;
+    const tableElement = e.currentTarget as HTMLElement;
+    if (target !== tableElement && !tableElement.contains(target)) {
+      return;
+    }
+
+    const floorPlan = tableElement.closest('.floor-plan-container');
     if (!floorPlan) return;
 
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const rect = tableElement.getBoundingClientRect();
     const offsetX = e.clientX - rect.left;
     const offsetY = e.clientY - rect.top;
 
@@ -1020,9 +1056,19 @@ export default function FloorPlanPage() {
   const filteredTables = selectedLocation
     ? tables.filter(t => {
       const tableLocationId = Array.isArray(t.locationId) ? t.locationId[0] : t.locationId;
-      return tableLocationId === selectedLocation;
+      const matches = tableLocationId === selectedLocation;
+      if (!matches && t.id) {
+        // Debug: log tables that don't match
+        console.log(`[FloorPlan] Table ${t.name} (${t.id.slice(0, 8)}) filtered out: locationId=${tableLocationId}, selectedLocation=${selectedLocation}`);
+      }
+      return matches;
     })
     : tables;
+  
+  // Debug: log filtered results
+  React.useEffect(() => {
+    console.log(`[FloorPlan] Filtered tables: ${filteredTables.length} of ${tables.length} tables (selectedLocation: ${selectedLocation})`);
+  }, [filteredTables.length, tables.length, selectedLocation]);
 
   if (loading) {
     return (
@@ -1073,10 +1119,20 @@ export default function FloorPlanPage() {
                 e.preventDefault();
                 e.stopPropagation();
               }
+              // Also prevent if we're in a drag operation
+              if (isDragging || isDraggingRef.current || activeTableId) {
+                e.preventDefault();
+                e.stopPropagation();
+              }
             }}
             onMouseDown={(e) => {
               // Prevent mouse down on container from interfering
               if (e.target === e.currentTarget) {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+              // Also prevent if we're already dragging a table
+              if (activeTableId) {
                 e.preventDefault();
                 e.stopPropagation();
               }
@@ -1091,8 +1147,14 @@ export default function FloorPlanPage() {
                   handleMouseDown(e, table);
                 }}
                 onClick={(e) => {
-                  // Prevent click if we just finished dragging
-                  if (isDraggingRef.current) {
+                  // Prevent click if we just finished dragging or are currently dragging
+                  if (isDraggingRef.current || isDragging) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                  }
+                  // Also prevent if this was a drag operation
+                  if (activeTableId === table.id && dragStartPos) {
                     e.preventDefault();
                     e.stopPropagation();
                     return;

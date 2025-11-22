@@ -1,11 +1,12 @@
 [build]
   base = "apps/backoffice"
-  command = "cd ../.. && NPM_CONFIG_PRODUCTION=false npm install --include=dev && npx turbo run build --filter=@restaurant/backoffice && cd apps/backoffice && ln -sf ../../node_modules node_modules 2>/dev/null || true"
+  command = "cd ../.. && npm install --legacy-peer-deps && npx turbo run build --filter=@restaurant/backoffice"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20"
   NPM_FLAGS = "--legacy-peer-deps"
+  NEXT_TELEMETRY_DISABLED = "1"
 
 # Next.js plugin handles routing automatically
 [[plugins]]

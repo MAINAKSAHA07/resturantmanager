@@ -8,6 +8,17 @@ export async function GET(request: NextRequest) {
     const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
     const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
 
+    // Validate environment variables
+    if (!pbUrl || pbUrl === 'http://localhost:8090') {
+      console.warn('[KDS API] Warning: Using default PocketBase URL. Set AWS_POCKETBASE_URL or POCKETBASE_URL environment variable.');
+    }
+    if (!adminEmail || adminEmail === 'mainaksaha0807@gmail.com') {
+      console.warn('[KDS API] Warning: Using default admin email. Set PB_ADMIN_EMAIL environment variable.');
+    }
+    if (!adminPassword || adminPassword === '8104760831') {
+      console.warn('[KDS API] Warning: Using default admin password. Set PB_ADMIN_PASSWORD environment variable.');
+    }
+
     const pb = new PocketBase(pbUrl);
     await pb.admins.authWithPassword(adminEmail, adminPassword);
 
@@ -216,10 +227,33 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ tickets: ticketsWithItems });
   } catch (error: any) {
-    console.error('Error fetching KDS tickets:', error);
+    console.error('Error fetching KDS tickets:', {
+      message: error.message,
+      status: error.status,
+      response: error.response?.data || error.response,
+      stack: error.stack,
+      pbUrl: process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL,
+      hasEmail: !!process.env.PB_ADMIN_EMAIL,
+      hasPassword: !!process.env.PB_ADMIN_PASSWORD,
+    });
+    
+    // Return more detailed error in development, generic in production
+    const errorMessage = process.env.NODE_ENV === 'development'
+      ? error.message || 'Failed to fetch KDS tickets'
+      : 'Failed to fetch KDS tickets';
+    
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch KDS tickets' },
-      { status: 500 }
+      { 
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' 
+          ? { 
+              message: error.message,
+              status: error.status,
+              response: error.response?.data || error.response,
+            }
+          : undefined
+      },
+      { status: error.status || 500 }
     );
   }
 }
@@ -245,10 +279,26 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('Error updating ticket:', error);
+    console.error('Error updating ticket:', {
+      message: error.message,
+      status: error.status,
+      response: error.response?.data || error.response,
+      stack: error.stack,
+      pbUrl: process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL,
+      hasEmail: !!process.env.PB_ADMIN_EMAIL,
+      hasPassword: !!process.env.PB_ADMIN_PASSWORD,
+    });
+    
     return NextResponse.json(
-      { error: error.message || 'Failed to update ticket' },
-      { status: 500 }
+      { 
+        error: process.env.NODE_ENV === 'development'
+          ? error.message || 'Failed to update ticket'
+          : 'Failed to update ticket',
+        details: process.env.NODE_ENV === 'development'
+          ? { message: error.message, status: error.status }
+          : undefined
+      },
+      { status: error.status || 500 }
     );
   }
 }

@@ -2,8 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@restaurant/lib', '@restaurant/ui'],
-  // Remove 'standalone' output for Netlify compatibility
-  // output: 'standalone',
+  // Do not use standalone output for Netlify - the plugin handles it
   images: {
     remotePatterns: [
       {
@@ -18,6 +17,19 @@ const nextConfig = {
         pathname: '/api/files/**',
       },
     ],
+  },
+  // Ensure proper webpack configuration for Netlify
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Ensure all chunks are properly resolved
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+    return config;
   },
 };
 
