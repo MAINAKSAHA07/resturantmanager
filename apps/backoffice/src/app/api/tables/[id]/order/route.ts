@@ -36,6 +36,13 @@ export async function POST(
       );
     }
 
+    // Log received items to verify comments are present
+    console.log('[API] Received items for order creation:', items.map((item: any) => ({
+      menuItemId: item.menuItemId,
+      quantity: item.quantity,
+      comment: item.comment || '(no comment)',
+    })));
+
     // Get table
     const table = await pb.collection('tables').getOne(params.id);
     const tableTenantId = Array.isArray(table.tenantId) ? table.tenantId[0] : table.tenantId;
@@ -78,6 +85,11 @@ export async function POST(
       const itemSubtotalPaise = basePriceInPaise * quantity;
       subtotalPaise += itemSubtotalPaise;
 
+      const itemComment = item.comment || '';
+      if (itemComment) {
+        console.log(`[API] Item ${menuItem.name} (${item.menuItemId.slice(0, 8)}): comment="${itemComment}"`);
+      }
+      
       orderItems.push({
         menuItemId: item.menuItemId,
         nameSnapshot: menuItem.name,
@@ -85,7 +97,7 @@ export async function POST(
         qty: quantity,
         unitPrice: basePriceInPaise, // Already in paise
         optionsSnapshot: item.options || [],
-        comment: item.comment || '',
+        comment: itemComment,
       });
 
       // Prepare GST calculation data (all in paise)
@@ -229,7 +241,12 @@ export async function POST(
 
     // Create order items
     for (const item of orderItems) {
-      await pb.collection('orderItem').create({
+      const savedComment = item.comment || '';
+      if (savedComment) {
+        console.log(`[API] Saving orderItem for ${item.nameSnapshot}: comment="${savedComment}"`);
+      }
+      
+      const createdItem = await pb.collection('orderItem').create({
         orderId: order.id,
         menuItemId: item.menuItemId,
         nameSnapshot: item.nameSnapshot,
@@ -237,8 +254,15 @@ export async function POST(
         qty: item.qty,
         unitPrice: item.unitPrice,
         optionsSnapshot: item.optionsSnapshot,
-        comment: item.comment || '',
+        comment: savedComment,
       });
+      
+      // Verify comment was saved
+      if (savedComment && !createdItem.comment) {
+        console.warn(`[API] WARNING: Comment was not saved for orderItem ${createdItem.id}: expected "${savedComment}"`);
+      } else if (savedComment) {
+        console.log(`[API] ✅ Comment saved successfully for orderItem ${createdItem.id}: "${createdItem.comment}"`);
+      }
     }
 
     // Update table status to 'seated'

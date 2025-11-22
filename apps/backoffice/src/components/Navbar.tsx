@@ -204,7 +204,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-gradient-to-r from-accent-blue to-accent-purple shadow-lg mb-6">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-accent-blue to-accent-purple shadow-lg">
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
           <div className="flex gap-6 items-center">

@@ -272,6 +272,9 @@ export async function PATCH(request: NextRequest) {
               }
 
               // Add item to the appropriate station group
+              const itemComment = orderItem.comment || '';
+              console.log(`[KDS Ticket Creation] OrderItem ${orderItem.id.slice(0, 8)}: comment="${itemComment}"`);
+              
               itemsByStation[itemStation].push({
                 menuItemId: orderItem.menuItemId,
                 name: orderItem.nameSnapshot,
@@ -279,7 +282,7 @@ export async function PATCH(request: NextRequest) {
                 qty: orderItem.qty,
                 options: orderItem.optionsSnapshot || [],
                 unitPrice: orderItem.unitPrice,
-                comment: orderItem.comment || '',
+                comment: itemComment,
               });
             } catch (e) {
               // Menu item not found, use default

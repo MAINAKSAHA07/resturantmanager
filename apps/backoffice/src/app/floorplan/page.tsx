@@ -60,7 +60,7 @@ export default function FloorPlanPage() {
   const [selectedLocation, setSelectedLocation] = useState<string>('');
   const [newTableName, setNewTableName] = useState('');
   const [newTableCapacity, setNewTableCapacity] = useState(4);
-  const [orderItems, setOrderItems] = useState<{ menuItemId: string; quantity: number; comment?: string }[]>([]);
+  const [orderItems, setOrderItems] = useState<{ menuItemId: string; quantity: number; comment?: string; options?: any[] }[]>([]);
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [menuSearchQuery, setMenuSearchQuery] = useState('');
   const [currentOrder, setCurrentOrder] = useState<any>(null);
@@ -554,10 +554,25 @@ export default function FloorPlanPage() {
 
     setCreatingOrder(true);
     try {
+      // Ensure all items have comment field (normalize data)
+      const normalizedItems = orderItems.map(item => ({
+        menuItemId: item.menuItemId,
+        quantity: item.quantity,
+        comment: item.comment || '',
+        ...(item.options && { options: item.options }),
+      }));
+      
+      // Log orderItems before sending to verify comments are included
+      console.log('[FloorPlan] Creating order with items:', normalizedItems.map(item => ({
+        menuItemId: item.menuItemId,
+        quantity: item.quantity,
+        comment: item.comment || '(no comment)',
+      })));
+      
       const response = await fetch(`/api/tables/${selectedTable.id}/order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: orderItems }),
+        body: JSON.stringify({ items: normalizedItems }),
       });
 
       const data = await response.json();
@@ -612,7 +627,7 @@ export default function FloorPlanPage() {
     if (existing) {
       setOrderItems(orderItems.map(item =>
         item.menuItemId === menuItemId
-          ? { ...item, quantity: item.quantity + 1 }
+          ? { ...item, quantity: item.quantity + 1, comment: item.comment || '' }
           : item
       ));
     } else {
@@ -679,11 +694,26 @@ export default function FloorPlanPage() {
 
     setCreatingOrder(true);
     try {
+      // Ensure all items have comment field (normalize data)
+      const normalizedItems = orderItems.map(item => ({
+        menuItemId: item.menuItemId,
+        quantity: item.quantity,
+        comment: item.comment || '',
+        ...(item.options && { options: item.options }),
+      }));
+      
+      // Log orderItems before sending to verify comments are included
+      console.log('[FloorPlan] Adding items to existing order:', normalizedItems.map(item => ({
+        menuItemId: item.menuItemId,
+        quantity: item.quantity,
+        comment: item.comment || '(no comment)',
+      })));
+      
       // Add items to existing order
       const response = await fetch(`/api/orders/${currentOrder.id}/items`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: orderItems }),
+        body: JSON.stringify({ items: normalizedItems }),
       });
 
       const data = await response.json();
