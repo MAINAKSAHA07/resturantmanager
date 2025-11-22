@@ -27,14 +27,26 @@ export default function SelectTenantPage() {
       const response = await fetch('/api/tenants');
       const data = await response.json();
       
-      if (response.ok && data.success !== false) {
-        setTenants(data.tenants || []);
-        setError(''); // Clear error on success
+      if (response.ok && data.tenants) {
+        const tenantList = data.tenants || [];
+        setTenants(tenantList);
+        // Always clear error when we successfully get tenants
+        if (tenantList.length > 0) {
+          setError('');
+        } else {
+          setError('No tenants available');
+        }
       } else {
+        // Only set error if we don't have tenants
         setError(data.error || 'Failed to load tenants');
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      // Only set error if we don't have tenants from a previous load
+      if (tenants.length === 0) {
+        setError(err.message || 'An error occurred');
+      } else {
+        setError(''); // Clear error if we have tenants
+      }
     } finally {
       setLoading(false);
     }
@@ -58,10 +70,14 @@ export default function SelectTenantPage() {
         setError('');
         router.push('/dashboard');
       } else {
-        // Only show error if it's not a 404 (tenant not found might be from stale data)
+        // Show error for failed selection (but don't persist it)
         const errorMsg = data.error || 'Failed to select tenant';
         setError(errorMsg);
         setSelecting(false);
+        // Auto-clear error after 5 seconds if tenants are still available
+        if (tenants.length > 0) {
+          setTimeout(() => setError(''), 5000);
+        }
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred');
@@ -105,9 +121,23 @@ export default function SelectTenantPage() {
           Choose which restaurant brand you want to manage
         </p>
 
-        {error && tenants.length === 0 && (
+        {/* Only show error if there are no tenants - don't show selection errors when tenants are available */}
+        {error && tenants.length === 0 && !loading && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
             {error}
+          </div>
+        )}
+        
+        {/* Show selection error temporarily if tenants are available */}
+        {error && tenants.length > 0 && !selecting && (
+          <div className="mb-4 p-3 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
+            {error}
+            <button 
+              onClick={() => setError('')}
+              className="ml-2 text-yellow-800 hover:text-yellow-900 underline"
+            >
+              Dismiss
+            </button>
           </div>
         )}
 
