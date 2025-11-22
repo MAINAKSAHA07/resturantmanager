@@ -8,6 +8,7 @@ interface User {
     name: string;
     email: string;
     role: string;
+    isMaster?: boolean;
     created: string;
     expand?: {
         tenants?: { name: string }[];
