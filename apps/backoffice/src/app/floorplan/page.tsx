@@ -101,11 +101,35 @@ export default function FloorPlanPage() {
         newY = Math.max(0, Math.min(newY, maxY));
 
         // Update local state immediately for smooth dragging
-        setTables(prevTables =>
-          prevTables.map(t =>
-            t.id === currentActiveTableId ? { ...t, x: newX, y: newY } : t
-          )
-        );
+        // Use functional update to ensure we're working with latest state
+        setTables(prevTables => {
+          // Find the table and update it, ensuring we don't create duplicates
+          const updatedTables = prevTables.map(t => {
+            if (t.id === currentActiveTableId) {
+              // Create a new object with updated position
+              return { ...t, x: newX, y: newY };
+            }
+            return t;
+          });
+          
+          // Debug: log if we find duplicates
+          const duplicateCount = updatedTables.filter(t => t.id === currentActiveTableId).length;
+          if (duplicateCount > 1) {
+            console.warn(`[FloorPlan] WARNING: Found ${duplicateCount} tables with same ID: ${currentActiveTableId}`);
+            // Remove duplicates, keep the one with updated position
+            const seen = new Set<string>();
+            return updatedTables.filter(t => {
+              if (seen.has(t.id)) {
+                console.warn(`[FloorPlan] Removing duplicate table: ${t.id}`);
+                return false;
+              }
+              seen.add(t.id);
+              return true;
+            });
+          }
+          
+          return updatedTables;
+        });
 
         // Check if we've moved enough to consider it a drag (increased threshold for better detection)
         if (dragStartPos) {
@@ -197,7 +221,56 @@ export default function FloorPlanPage() {
       const response = await fetch('/api/tables');
       const data = await response.json();
       if (data.tables) {
-        setTables(data.tables);
+        // Merge with current state to preserve positions of tables being dragged
+        setTables(prevTables => {
+          // If we're currently dragging, preserve the dragged table's position
+          const currentlyDraggingId = activeTableIdRef.current;
+          
+          // Create a map of current positions for tables being dragged
+          const currentPositions = new Map<string, { x: number; y: number }>();
+          if (currentlyDraggingId) {
+            const draggedTable = prevTables.find(t => t.id === currentlyDraggingId);
+            if (draggedTable) {
+              currentPositions.set(currentlyDraggingId, { x: draggedTable.x, y: draggedTable.y });
+            }
+          }
+          
+          // Merge fetched tables with current state, preserving dragged positions
+          const mergedTables: Table[] = data.tables.map((fetchedTable: any) => {
+            const tableId = fetchedTable.id;
+            const currentPos = currentPositions.get(tableId);
+            
+            // If this table is being dragged, use its current position
+            if (currentPos) {
+              return {
+                ...fetchedTable,
+                x: currentPos.x,
+                y: currentPos.y,
+              } as Table;
+            }
+            
+            // Otherwise, check if we have this table in current state with a more recent position
+            const existingTable = prevTables.find((t: Table) => t.id === tableId);
+            if (existingTable && currentlyDraggingId !== tableId) {
+              // Use existing position if it's different (might have been dragged but not saved yet)
+              return {
+                ...fetchedTable,
+                x: existingTable.x,
+                y: existingTable.y,
+              } as Table;
+            }
+            
+            return fetchedTable as Table;
+          });
+          
+          // Remove any duplicates by ID
+          const uniqueTables: Table[] = Array.from(
+            new Map(mergedTables.map((t: Table) => [t.id, t])).values()
+          ) as Table[];
+          
+          return uniqueTables;
+        });
+        
         if (data.tables.length > 0 && !selectedLocation) {
           // Get locationId from first table (handle array format)
           const firstTable = data.tables[0];
@@ -1053,8 +1126,25 @@ export default function FloorPlanPage() {
     item.name.toLowerCase().includes(menuSearchQuery.toLowerCase())
   );
 
+  // Remove duplicates before filtering
+  const uniqueTables = React.useMemo(() => {
+    const seen = new Map<string, Table>();
+    tables.forEach(t => {
+      if (!seen.has(t.id)) {
+        seen.set(t.id, t);
+      } else {
+        // If duplicate found, keep the one with the most recent position (if being dragged)
+        const existing = seen.get(t.id)!;
+        if (activeTableId === t.id && (t.x !== existing.x || t.y !== existing.y)) {
+          seen.set(t.id, t); // Use the updated one
+        }
+      }
+    });
+    return Array.from(seen.values());
+  }, [tables, activeTableId]);
+  
   const filteredTables = selectedLocation
-    ? tables.filter(t => {
+    ? uniqueTables.filter(t => {
       const tableLocationId = Array.isArray(t.locationId) ? t.locationId[0] : t.locationId;
       const matches = tableLocationId === selectedLocation;
       if (!matches && t.id) {
@@ -1063,12 +1153,26 @@ export default function FloorPlanPage() {
       }
       return matches;
     })
-    : tables;
+    : uniqueTables;
   
-  // Debug: log filtered results
+  // Debug: log filtered results and check for duplicates
   React.useEffect(() => {
-    console.log(`[FloorPlan] Filtered tables: ${filteredTables.length} of ${tables.length} tables (selectedLocation: ${selectedLocation})`);
-  }, [filteredTables.length, tables.length, selectedLocation]);
+    const duplicateIds = new Set<string>();
+    const seenIds = new Set<string>();
+    tables.forEach(t => {
+      if (seenIds.has(t.id)) {
+        duplicateIds.add(t.id);
+      } else {
+        seenIds.add(t.id);
+      }
+    });
+    
+    if (duplicateIds.size > 0) {
+      console.warn(`[FloorPlan] WARNING: Found duplicate table IDs:`, Array.from(duplicateIds));
+    }
+    
+    console.log(`[FloorPlan] Filtered tables: ${filteredTables.length} of ${uniqueTables.length} unique tables (selectedLocation: ${selectedLocation})`);
+  }, [filteredTables.length, uniqueTables.length, tables.length, selectedLocation]);
 
   if (loading) {
     return (
@@ -1138,9 +1242,14 @@ export default function FloorPlanPage() {
               }
             }}
           >
-            {filteredTables.map((table) => (
+            {filteredTables.map((table) => {
+              // Ensure we don't render duplicates - use a unique key
+              const isActive = activeTableId === table.id;
+              const isBeingDragged = isActive && isDragging;
+              
+              return (
               <div
-                key={table.id}
+                key={`table-${table.id}`}
                 onMouseDown={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -1162,12 +1271,16 @@ export default function FloorPlanPage() {
                 }}
                 className={`absolute w-20 h-20 rounded-full flex flex-col items-center justify-center text-white cursor-pointer shadow-lg hover:scale-110 transition-transform ${getStatusColor(
                   table.status
-                )} ${activeTableId === table.id ? 'z-50 scale-110 shadow-xl' : ''}`}
+                )} ${isActive ? 'z-50 scale-110 shadow-xl' : ''}`}
                 style={{
                   left: `${table.x || 0}px`,
                   top: `${table.y || 0}px`,
-                  cursor: isDragging && activeTableId === table.id ? 'grabbing' : 'grab',
-                  pointerEvents: 'auto'
+                  cursor: isBeingDragged ? 'grabbing' : 'grab',
+                  pointerEvents: 'auto',
+                  // Ensure the dragged table is always on top
+                  zIndex: isActive ? 1000 : 'auto',
+                  // Prevent transition during drag for smoother movement
+                  transition: isBeingDragged ? 'none' : 'transform 0.2s',
                 }}
                 title={`${table.name} - ${table.capacity} seats - ${table.status}`}
               >
@@ -1182,7 +1295,8 @@ export default function FloorPlanPage() {
                   <p className="text-xs mt-1">₹{(table.orderTotal / 100).toFixed(0)}</p>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="mt-6 flex flex-wrap gap-4">
