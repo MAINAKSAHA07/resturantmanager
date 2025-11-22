@@ -179,9 +179,9 @@ export default function KDSPage() {
                         <div key={idx} className="text-sm border-b border-gray-100 pb-1 last:border-0">
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
-                              <span className="font-medium">
-                                {item.qty}x {item.name || item.nameSnapshot || 'Unknown Item'}
-                              </span>
+                            <span className="font-medium">
+                              {item.qty}x {item.name || item.nameSnapshot || 'Unknown Item'}
+                            </span>
                               {item.description && item.description.trim() && (
                                 <div className="text-xs text-gray-600 mt-0.5 italic">
                                   {item.description}

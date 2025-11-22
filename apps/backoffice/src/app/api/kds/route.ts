@@ -109,15 +109,15 @@ export async function GET(request: NextRequest) {
         const items = (ticket.ticketItems && ticket.ticketItems.length > 0)
           ? ticket.ticketItems
           : (orderItems.length > 0
-            ? orderItems.map((item: any) => ({
-              menuItemId: item.menuItemId,
-              name: item.nameSnapshot,
+          ? orderItems.map((item: any) => ({
+            menuItemId: item.menuItemId,
+            name: item.nameSnapshot,
               description: item.descriptionSnapshot || '',
-              qty: item.qty,
-              options: item.optionsSnapshot || [],
-              unitPrice: item.unitPrice,
+            qty: item.qty,
+            options: item.optionsSnapshot || [],
+            unitPrice: item.unitPrice,
               comment: item.comment || '',
-            }))
+          }))
             : []);
 
         console.log(`Ticket ${ticket.id.slice(0, 8)} (${ticket.station}): Using ${items.length} items (${ticket.ticketItems?.length || 0} from ticketItems, ${orderItems.length} from order)`);
