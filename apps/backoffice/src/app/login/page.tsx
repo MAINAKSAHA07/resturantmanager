@@ -55,13 +55,6 @@ export default function LoginPage() {
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
             <p className="font-semibold">{error}</p>
-            {error.includes('Invalid') || error.includes('Failed to authenticate') ? (
-              <p className="text-sm mt-2 text-red-600">
-                Please use your PocketBase admin credentials. 
-                <br />
-                Default: <code className="bg-red-50 px-1 rounded">mainaksaha0807@gmail.com</code> / <code className="bg-red-50 px-1 rounded">8104760831</code>
-              </p>
-            ) : null}
           </div>
         )}
 
