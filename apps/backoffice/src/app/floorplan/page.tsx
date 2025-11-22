@@ -272,22 +272,40 @@ export default function FloorPlanPage() {
 
       const data = await response.json();
       if (data.success) {
+        // Add the new table to local state immediately for instant display
+        if (data.table) {
+          const newTable: Table = {
+            id: data.table.id,
+            name: data.table.name,
+            capacity: data.table.capacity,
+            status: data.table.status || 'available',
+            x: data.table.x || 100,
+            y: data.table.y || 100,
+            locationId: Array.isArray(data.table.locationId) ? data.table.locationId[0] : data.table.locationId,
+            activeOrders: 0,
+            orderTotal: 0,
+          };
+          
+          // Add to local state immediately
+          setTables(prevTables => [...prevTables, newTable]);
+          
+          // Ensure location is selected
+          const tableLocationId = Array.isArray(data.table.locationId)
+            ? data.table.locationId[0]
+            : data.table.locationId;
+          if (tableLocationId && tableLocationId !== selectedLocation) {
+            setSelectedLocation(tableLocationId);
+          }
+        }
+        
         setShowAddTable(false);
         setNewTableName('');
         setNewTableCapacity(4);
 
-        // If the new table has a locationId, ensure it's selected
-        if (data.table && data.table.locationId) {
-          const tableLocationId = Array.isArray(data.table.locationId)
-            ? data.table.locationId[0]
-            : data.table.locationId;
-          if (tableLocationId) {
-            setSelectedLocation(tableLocationId);
-          }
-        }
-
-        // Refresh tables and locations
-        await Promise.all([fetchTables(), fetchLocations()]);
+        // Refresh tables and locations in background to sync with server
+        Promise.all([fetchTables(), fetchLocations()]).catch(err => {
+          console.error('Error refreshing after table creation:', err);
+        });
       } else {
         alert(data.error || 'Failed to create table');
       }
@@ -320,6 +338,18 @@ export default function FloorPlanPage() {
   };
 
   const handleUpdateTableStatus = async (tableId: string, status: string) => {
+    // Update local state immediately for real-time UI update
+    setTables(prevTables =>
+      prevTables.map(t =>
+        t.id === tableId ? { ...t, status } : t
+      )
+    );
+    
+    // Also update selectedTable if it's the one being updated
+    if (selectedTable && selectedTable.id === tableId) {
+      setSelectedTable({ ...selectedTable, status });
+    }
+    
     try {
       const response = await fetch('/api/tables', {
         method: 'PATCH',
@@ -329,12 +359,27 @@ export default function FloorPlanPage() {
 
       const data = await response.json();
       if (data.success) {
-        await fetchTables();
+        // Refresh in background to sync with server (activeOrders, orderTotal, etc.)
+        fetchTables().catch(err => {
+          console.error('Error refreshing after status update:', err);
+        });
       } else {
+        // Revert on error
+        setTables(prevTables =>
+          prevTables.map(t =>
+            t.id === tableId ? { ...t, status: selectedTable?.status || 'available' } : t
+          )
+        );
         alert(data.error || 'Failed to update table status');
       }
     } catch (error: any) {
       console.error('Error updating table status:', error);
+      // Revert on error
+      setTables(prevTables =>
+        prevTables.map(t =>
+          t.id === tableId ? { ...t, status: selectedTable?.status || 'available' } : t
+        )
+      );
       alert('Failed to update table status: ' + error.message);
     }
   };
@@ -517,6 +562,16 @@ export default function FloorPlanPage() {
 
       const data = await response.json();
       if (data.success) {
+        // Update table status to 'seated' immediately for real-time UI
+        if (selectedTable) {
+          setTables(prevTables =>
+            prevTables.map(t =>
+              t.id === selectedTable.id ? { ...t, status: 'seated' } : t
+            )
+          );
+          setSelectedTable({ ...selectedTable, status: 'seated' });
+        }
+        
         // Fetch the created order details
         if (data.order) {
           // Fetch order items
@@ -536,7 +591,11 @@ export default function FloorPlanPage() {
         console.log('[FloorPlan] Order created, switching to ongoing tab. Order:', data.order);
         setActiveTab('ongoing');
         setOrderItems([]);
-        await fetchTables();
+        
+        // Refresh tables in background to sync activeOrders and orderTotal
+        fetchTables().catch(err => {
+          console.error('Error refreshing after order creation:', err);
+        });
       } else {
         alert(data.error || 'Failed to create order');
       }
