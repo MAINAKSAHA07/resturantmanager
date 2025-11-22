@@ -27,7 +27,7 @@ export default function SelectTenantPage() {
       const response = await fetch('/api/tenants');
       const data = await response.json();
       
-      if (response.ok && data.tenants) {
+      if (response.ok) {
         const tenantList = data.tenants || [];
         setTenants(tenantList);
         // Always clear error when we successfully get tenants

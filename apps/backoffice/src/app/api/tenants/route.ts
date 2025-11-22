@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json({ 
+      success: true,
       tenants: tenants.items.map(t => ({
         id: t.id,
         name: t.name,
