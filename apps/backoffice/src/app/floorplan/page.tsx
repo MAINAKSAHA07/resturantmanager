@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -41,6 +41,18 @@ export default function FloorPlanPage() {
   const [dragStartPos, setDragStartPos] = useState<{ x: number; y: number } | null>(null);
   const [initialTablePos, setInitialTablePos] = useState<{ x: number; y: number } | null>(null);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
+  
+  // Use refs to avoid stale closures in event handlers
+  const isDraggingRef = React.useRef(false);
+  const activeTableIdRef = React.useRef<string | null>(null);
+  const tablesRef = React.useRef<Table[]>([]);
+  
+  // Keep refs in sync with state
+  React.useEffect(() => {
+    isDraggingRef.current = isDragging;
+    activeTableIdRef.current = activeTableId;
+    tablesRef.current = tables;
+  }, [isDragging, activeTableId, tables]);
 
   const [showAddTable, setShowAddTable] = useState(false);
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -64,9 +76,11 @@ export default function FloorPlanPage() {
   // Global mouse event listeners for dragging
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!activeTableId || !dragOffset) return;
+      const currentActiveTableId = activeTableIdRef.current;
+      if (!currentActiveTableId || !dragOffset) return;
 
       e.preventDefault();
+      e.stopPropagation();
 
       // Calculate new position
       const floorPlan = document.querySelector('.floor-plan-container');
@@ -89,36 +103,50 @@ export default function FloorPlanPage() {
         // Update local state immediately for smooth dragging
         setTables(prevTables =>
           prevTables.map(t =>
-            t.id === activeTableId ? { ...t, x: newX, y: newY } : t
+            t.id === currentActiveTableId ? { ...t, x: newX, y: newY } : t
           )
         );
 
-        // Check if we've moved enough to consider it a drag
+        // Check if we've moved enough to consider it a drag (increased threshold for better detection)
         if (dragStartPos) {
-          const moved = Math.abs(e.clientX - dragStartPos.x) > 5 || Math.abs(e.clientY - dragStartPos.y) > 5;
-          if (moved && !isDragging) {
+          const moved = Math.abs(e.clientX - dragStartPos.x) > 10 || Math.abs(e.clientY - dragStartPos.y) > 10;
+          if (moved && !isDraggingRef.current) {
             setIsDragging(true);
+            isDraggingRef.current = true;
           }
         }
       }
     };
 
     const handleMouseUp = async (e: MouseEvent) => {
-      if (!activeTableId) return;
+      const currentActiveTableId = activeTableIdRef.current;
+      const wasDragging = isDraggingRef.current;
+      
+      if (!currentActiveTableId) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Small delay to prevent click event from firing
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       // If it was a drag, save the new position
-      if (isDragging) {
-        const table = tables.find(t => t.id === activeTableId);
+      if (wasDragging) {
+        const currentTables = tablesRef.current;
+        const table = currentTables.find(t => t.id === currentActiveTableId);
         if (table) {
-          await updateTablePosition(activeTableId, table.x, table.y);
+          await updateTablePosition(currentActiveTableId, table.x, table.y);
         }
       } else {
         // If it wasn't a drag (just a click), handle click
-        // We need to find the table that was clicked
-        const table = tables.find(t => t.id === activeTableId);
-        if (table) {
-          handleTableClick(table);
-        }
+        // Use a timeout to ensure state is updated
+        setTimeout(() => {
+          const currentTables = tablesRef.current;
+          const table = currentTables.find(t => t.id === currentActiveTableId);
+          if (table) {
+            handleTableClick(table);
+          }
+        }, 50);
       }
 
       // Reset state
@@ -127,18 +155,20 @@ export default function FloorPlanPage() {
       setDragStartPos(null);
       setInitialTablePos(null);
       setDragOffset(null);
+      isDraggingRef.current = false;
+      activeTableIdRef.current = null;
     };
 
     if (activeTableId) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('mousemove', handleMouseMove, { passive: false });
+      window.addEventListener('mouseup', handleMouseUp, { passive: false });
     }
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [activeTableId, dragOffset, dragStartPos, isDragging, tables]);
+  }, [activeTableId, dragOffset, dragStartPos]);
 
   const fetchData = async () => {
     try {
@@ -334,11 +364,15 @@ export default function FloorPlanPage() {
     const offsetX = e.clientX - rect.left;
     const offsetY = e.clientY - rect.top;
 
+    // Reset drag state
+    setIsDragging(false);
+    isDraggingRef.current = false;
+    
     setActiveTableId(table.id);
+    activeTableIdRef.current = table.id;
     setDragStartPos({ x: e.clientX, y: e.clientY });
     setInitialTablePos({ x: table.x, y: table.y });
     setDragOffset({ x: offsetX, y: offsetY });
-    setIsDragging(false); // Start as not dragging, will switch to true if moved
   };
 
   const updateTablePosition = async (tableId: string, x: number, y: number) => {
@@ -943,18 +977,46 @@ export default function FloorPlanPage() {
         <div className="card">
           <div
             className="relative w-full h-[600px] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 floor-plan-container"
+            onClick={(e) => {
+              // Prevent clicks on the container itself from doing anything
+              // Only allow clicks on tables
+              if (e.target === e.currentTarget) {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
+            onMouseDown={(e) => {
+              // Prevent mouse down on container from interfering
+              if (e.target === e.currentTarget) {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
           >
             {filteredTables.map((table) => (
               <div
                 key={table.id}
-                onMouseDown={(e) => handleMouseDown(e, table)}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleMouseDown(e, table);
+                }}
+                onClick={(e) => {
+                  // Prevent click if we just finished dragging
+                  if (isDraggingRef.current) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                  }
+                }}
                 className={`absolute w-20 h-20 rounded-full flex flex-col items-center justify-center text-white cursor-pointer shadow-lg hover:scale-110 transition-transform ${getStatusColor(
                   table.status
                 )} ${activeTableId === table.id ? 'z-50 scale-110 shadow-xl' : ''}`}
                 style={{
                   left: `${table.x || 0}px`,
                   top: `${table.y || 0}px`,
-                  cursor: isDragging && activeTableId === table.id ? 'grabbing' : 'grab'
+                  cursor: isDragging && activeTableId === table.id ? 'grabbing' : 'grab',
+                  pointerEvents: 'auto'
                 }}
                 title={`${table.name} - ${table.capacity} seats - ${table.status}`}
               >
