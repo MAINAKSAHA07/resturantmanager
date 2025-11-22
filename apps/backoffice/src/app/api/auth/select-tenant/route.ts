@@ -36,9 +36,12 @@ export async function POST(request: NextRequest) {
     const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
     const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
 
+    console.log('Select tenant request:', { tenantId, pbUrl, hasEmail: !!adminEmail, hasPassword: !!adminPassword });
+
     const adminPb = new PocketBase(pbUrl);
     try {
       await adminPb.admins.authWithPassword(adminEmail, adminPassword);
+      console.log('Admin authenticated successfully');
     } catch (error: any) {
       console.error('Failed to authenticate as admin in select-tenant route:', {
         email: adminEmail,
@@ -49,7 +52,9 @@ export async function POST(request: NextRequest) {
       throw error;
     }
     try {
+      console.log('Fetching tenant:', tenantId);
       const tenant = await adminPb.collection('tenant').getOne(tenantId);
+      console.log('Tenant found:', { id: tenant.id, name: tenant.name });
 
       // Verify user has access to this tenant (if we can get the user)
       // Try to get user info, but don't fail if we can't - graceful degradation
@@ -139,9 +144,29 @@ export async function POST(request: NextRequest) {
 
       return response;
     } catch (error: any) {
+      console.error('Error fetching tenant:', {
+        tenantId,
+        error: error.message,
+        status: error.status,
+        response: error.response?.data,
+        pbUrl,
+      });
+      
       if (error.status === 404) {
+        // List available tenants for debugging
+        try {
+          const allTenants = await adminPb.collection('tenant').getList(1, 100);
+          console.log('Available tenants:', allTenants.items.map(t => ({ id: t.id, name: t.name })));
+        } catch (listError) {
+          console.error('Could not list tenants:', listError);
+        }
+        
         return NextResponse.json(
-          { error: 'Tenant not found' },
+          { 
+            error: 'Tenant not found',
+            tenantId,
+            message: `Tenant with ID "${tenantId}" does not exist in the database`
+          },
           { status: 404 }
         );
       }

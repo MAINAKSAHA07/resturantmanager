@@ -121,11 +121,16 @@ export default function Navbar() {
 
   const handleSwitchTenant = async (tenantId: string) => {
     try {
+      console.log('Switching to tenant:', tenantId);
+      console.log('Available tenants:', tenants.map(t => ({ id: t.id, name: t.name })));
+      
       const response = await fetch('/api/auth/select-tenant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tenantId }),
       });
+
+      const data = await response.json();
 
       if (response.ok) {
         setShowTenantSelector(false);
@@ -137,13 +142,17 @@ export default function Navbar() {
         // Reload to refresh all data
         window.location.reload();
       } else {
-        const data = await response.json();
-        console.error('Failed to switch tenant:', data.error);
-        alert(`Failed to switch tenant: ${data.error || 'Unknown error'}`);
+        console.error('Failed to switch tenant:', {
+          status: response.status,
+          error: data.error,
+          tenantId,
+          message: data.message,
+        });
+        alert(`Failed to switch tenant: ${data.error || data.message || 'Unknown error'}\n\nTenant ID: ${tenantId}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error switching tenant:', err);
-      alert('Failed to switch tenant. Please try again.');
+      alert(`Failed to switch tenant: ${err.message || 'Please try again.'}`);
     }
   };
 
