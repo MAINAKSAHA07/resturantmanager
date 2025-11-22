@@ -81,9 +81,11 @@ export async function POST(
       orderItems.push({
         menuItemId: item.menuItemId,
         nameSnapshot: menuItem.name,
+        descriptionSnapshot: menuItem.description || '',
         qty: quantity,
         unitPrice: basePriceInPaise, // Already in paise
         optionsSnapshot: item.options || [],
+        comment: item.comment || '',
       });
 
       // Prepare GST calculation data (all in paise)
@@ -231,9 +233,11 @@ export async function POST(
         orderId: order.id,
         menuItemId: item.menuItemId,
         nameSnapshot: item.nameSnapshot,
+        descriptionSnapshot: item.descriptionSnapshot || '',
         qty: item.qty,
         unitPrice: item.unitPrice,
         optionsSnapshot: item.optionsSnapshot,
+        comment: item.comment || '',
       });
     }
 

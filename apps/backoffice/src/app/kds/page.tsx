@@ -178,15 +178,27 @@ export default function KDSPage() {
                       (ticket.ticketItems || ticket.items || []).map((item: any, idx: number) => (
                         <div key={idx} className="text-sm border-b border-gray-100 pb-1 last:border-0">
                           <div className="flex justify-between items-start">
-                            <span className="font-medium">
-                              {item.qty}x {item.name || item.nameSnapshot || 'Unknown Item'}
-                            </span>
+                            <div className="flex-1">
+                              <span className="font-medium">
+                                {item.qty}x {item.name || item.nameSnapshot || 'Unknown Item'}
+                              </span>
+                              {item.description && item.description.trim() && (
+                                <div className="text-xs text-gray-600 mt-0.5 italic">
+                                  {item.description}
+                                </div>
+                              )}
+                            </div>
                             {item.unitPrice && (
                               <span className="text-xs text-gray-500 ml-2">
                                 ₹{((item.unitPrice * item.qty) / 100).toFixed(2)}
                               </span>
                             )}
                           </div>
+                          {item.comment && item.comment.trim() && (
+                            <div className="text-xs text-blue-600 font-medium mt-1 ml-2 italic">
+                              💬 {item.comment}
+                            </div>
+                          )}
                           {item.options && Array.isArray(item.options) && item.options.length > 0 && (
                             <div className="text-xs text-gray-500 mt-0.5 ml-4">
                               {item.options.map((opt: any, optIdx: number) => (

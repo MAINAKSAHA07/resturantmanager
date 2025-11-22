@@ -48,7 +48,7 @@ export default function FloorPlanPage() {
   const [selectedLocation, setSelectedLocation] = useState<string>('');
   const [newTableName, setNewTableName] = useState('');
   const [newTableCapacity, setNewTableCapacity] = useState(4);
-  const [orderItems, setOrderItems] = useState<{ menuItemId: string; quantity: number }[]>([]);
+  const [orderItems, setOrderItems] = useState<{ menuItemId: string; quantity: number; comment?: string }[]>([]);
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [menuSearchQuery, setMenuSearchQuery] = useState('');
   const [currentOrder, setCurrentOrder] = useState<any>(null);
@@ -496,7 +496,7 @@ export default function FloorPlanPage() {
             console.error('Error fetching order items:', e);
           }
           setCurrentOrder(data.order);
-        }
+    }
 
         // Switch to ongoing tab instead of closing
         console.log('[FloorPlan] Order created, switching to ongoing tab. Order:', data.order);
@@ -523,8 +523,16 @@ export default function FloorPlanPage() {
           : item
       ));
     } else {
-      setOrderItems([...orderItems, { menuItemId, quantity: 1 }]);
+      setOrderItems([...orderItems, { menuItemId, quantity: 1, comment: '' }]);
     }
+  };
+
+  const updateItemComment = (menuItemId: string, comment: string) => {
+    setOrderItems(orderItems.map(item =>
+      item.menuItemId === menuItemId
+        ? { ...item, comment }
+        : item
+    ));
   };
 
   const removeItemFromOrder = (menuItemId: string) => {
@@ -951,11 +959,11 @@ export default function FloorPlanPage() {
                 title={`${table.name} - ${table.capacity} seats - ${table.status}`}
               >
                 <p className="font-bold text-sm">{table.name}</p>
-                <p className="text-xs">({table.capacity})</p>
+                  <p className="text-xs">({table.capacity})</p>
                 {table.activeOrders && table.activeOrders > 0 && (
                   <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                     {table.activeOrders}
-                  </div>
+                </div>
                 )}
                 {table.orderTotal && table.orderTotal > 0 && (
                   <p className="text-xs mt-1">₹{(table.orderTotal / 100).toFixed(0)}</p>
@@ -965,21 +973,21 @@ export default function FloorPlanPage() {
           </div>
 
           <div className="mt-6 flex flex-wrap gap-4">
-            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-accent-green rounded-full"></div>
-              <span>Available</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-500 rounded-full"></div>
-              <span>Seated</span>
-            </div>
-            <div className="flex items-center gap-2">
+                <span>Available</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-red-500 rounded-full"></div>
+                <span>Seated</span>
+              </div>
+              <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
-              <span>Cleaning</span>
-            </div>
-            <div className="flex items-center gap-2">
+                <span>Cleaning</span>
+              </div>
+              <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-accent-blue rounded-full"></div>
-              <span>Held</span>
+                <span>Held</span>
             </div>
           </div>
         </div>
@@ -1192,34 +1200,46 @@ export default function FloorPlanPage() {
                         return (
                           <div
                             key={item.menuItemId}
-                            className="flex justify-between items-center p-2 border rounded bg-white"
+                            className="p-2 border rounded bg-white space-y-2"
                           >
-                            <div>
-                              <p className="font-medium">{menuItem.name}</p>
-                              <p className="text-sm text-gray-600">
-                                ₹{(menuItem.basePrice / 100).toFixed(2)} × {item.quantity} = ₹{((menuItem.basePrice / 100) * item.quantity).toFixed(2)}
-                              </p>
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <p className="font-medium">{menuItem.name}</p>
+                                <p className="text-sm text-gray-600">
+                                  ₹{(menuItem.basePrice / 100).toFixed(2)} × {item.quantity} = ₹{((menuItem.basePrice / 100) * item.quantity).toFixed(2)}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => updateItemQuantity(item.menuItemId, item.quantity - 1)}
+                                  className="px-2 py-1 bg-gray-200 rounded"
+                                >
+                                  -
+                                </button>
+                                <span>{item.quantity}</span>
+                                <button
+                                  onClick={() => updateItemQuantity(item.menuItemId, item.quantity + 1)}
+                                  className="px-2 py-1 bg-gray-200 rounded"
+                                >
+                                  +
+                                </button>
+                                <button
+                                  onClick={() => removeItemFromOrder(item.menuItemId)}
+                                  className="px-2 py-1 bg-red-500 text-white rounded text-sm"
+                                >
+                                  Remove
+                                </button>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => updateItemQuantity(item.menuItemId, item.quantity - 1)}
-                                className="px-2 py-1 bg-gray-200 rounded"
-                              >
-                                -
-                              </button>
-                              <span>{item.quantity}</span>
-                              <button
-                                onClick={() => updateItemQuantity(item.menuItemId, item.quantity + 1)}
-                                className="px-2 py-1 bg-gray-200 rounded"
-                              >
-                                +
-                              </button>
-                              <button
-                                onClick={() => removeItemFromOrder(item.menuItemId)}
-                                className="px-2 py-1 bg-red-500 text-white rounded text-sm"
-                              >
-                                Remove
-                              </button>
+                            <div>
+                              <label className="block text-xs text-gray-600 mb-1">Comment/Note:</label>
+                              <input
+                                type="text"
+                                placeholder="Add special instructions..."
+                                value={item.comment || ''}
+                                onChange={(e) => updateItemComment(item.menuItemId, e.target.value)}
+                                className="w-full px-2 py-1 text-sm border rounded"
+                              />
                             </div>
                           </div>
                         );

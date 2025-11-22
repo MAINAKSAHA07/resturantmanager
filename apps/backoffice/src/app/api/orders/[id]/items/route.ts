@@ -116,9 +116,11 @@ export async function POST(
       newOrderItems.push({
         menuItemId: item.menuItemId,
         nameSnapshot: menuItem.name,
+        descriptionSnapshot: menuItem.description || '',
         qty: quantity,
         unitPrice: basePriceInPaise,
         optionsSnapshot: item.options || [],
+        comment: item.comment || '',
       });
 
       gstItems.push({
@@ -153,9 +155,11 @@ export async function POST(
         orderId: params.id,
         menuItemId: item.menuItemId,
         nameSnapshot: item.nameSnapshot,
+        descriptionSnapshot: item.descriptionSnapshot || '',
         qty: item.qty,
         unitPrice: item.unitPrice,
         optionsSnapshot: item.optionsSnapshot,
+        comment: item.comment || '',
       });
     }
 
@@ -167,6 +171,121 @@ export async function POST(
       taxIgst: Math.round(updatedTaxIgst),
       total: Math.round(updatedTotal),
     });
+
+    // Create KDS tickets for newly added items (even if order is already ready)
+    // This ensures new items appear in KDS when added to existing orders
+    try {
+      console.log(`Creating KDS tickets for ${newOrderItems.length} newly added items to order ${params.id}...`);
+
+      // Handle tenantId and locationId (they might be arrays)
+      const tenantId = Array.isArray(order.tenantId) ? order.tenantId[0] : order.tenantId;
+      const locationId = Array.isArray(order.locationId) ? order.locationId[0] : order.locationId;
+
+      // Group new items by station
+      const itemsByStation: Record<string, any[]> = {
+        hot: [],
+        cold: [],
+        bar: [],
+        default: [],
+      };
+
+      // Fetch menu items and their categories to determine station for each new item
+      for (const newItem of newOrderItems) {
+        try {
+          const menuItem = await pb.collection('menuItem').getOne(newItem.menuItemId, {
+            expand: 'categoryId',
+          });
+
+          // Get category name
+          let categoryName = '';
+          if (menuItem.categoryId) {
+            try {
+              const categoryId = Array.isArray(menuItem.categoryId) ? menuItem.categoryId[0] : menuItem.categoryId;
+              const category = await pb.collection('menuCategory').getOne(categoryId);
+              categoryName = category.name.toLowerCase();
+            } catch (e) {
+              // Category not found, skip
+            }
+          }
+
+          // Map category to station based on category name
+          let itemStation = 'default';
+          if (categoryName.includes('beverage') || categoryName.includes('drink') || categoryName.includes('bar') || categoryName.includes('juice') || categoryName.includes('coffee') || categoryName.includes('tea') || categoryName.includes('cocktail') || categoryName.includes('mocktail') || categoryName.includes('shake') || categoryName.includes('smoothie')) {
+            itemStation = 'bar';
+          } else if (categoryName.includes('salad') || categoryName.includes('cold') || (categoryName.includes('appetizer') && categoryName.includes('cold')) || categoryName.includes('ice cream')) {
+            itemStation = 'cold';
+          } else if (categoryName.includes('main') || categoryName.includes('entree') || categoryName.includes('hot') || categoryName.includes('appetizer') || categoryName.includes('dessert') || categoryName.includes('starter') || categoryName.includes('bread') || categoryName.includes('rice') || categoryName.includes('soup') || categoryName.includes('curry') || categoryName.includes('tandoor') || categoryName.includes('pizza') || categoryName.includes('burger') || categoryName.includes('pasta')) {
+            itemStation = 'hot';
+          }
+
+          // Add item to the appropriate station group
+          itemsByStation[itemStation].push({
+            menuItemId: newItem.menuItemId,
+            name: newItem.nameSnapshot,
+            description: newItem.descriptionSnapshot || '',
+            qty: newItem.qty,
+            options: newItem.optionsSnapshot || [],
+            unitPrice: newItem.unitPrice,
+            comment: newItem.comment || '',
+          });
+        } catch (e) {
+          // Menu item not found, use default
+          itemsByStation['default'].push({
+            menuItemId: newItem.menuItemId,
+            name: newItem.nameSnapshot,
+            description: newItem.descriptionSnapshot || '',
+            qty: newItem.qty,
+            options: newItem.optionsSnapshot || [],
+            unitPrice: newItem.unitPrice,
+            comment: newItem.comment || '',
+          });
+        }
+      }
+
+      console.log(`Grouped new items by station for order ${params.id}:`, {
+        hot: itemsByStation.hot.length,
+        cold: itemsByStation.cold.length,
+        bar: itemsByStation.bar.length,
+        default: itemsByStation.default.length,
+      });
+
+      // Create separate KDS ticket for each station that has new items
+      const createdTickets = [];
+      for (const [station, items] of Object.entries(itemsByStation)) {
+        if (items.length > 0) {
+          try {
+            const kdsTicket = await pb.collection('kdsTicket').create({
+              tenantId: tenantId,
+              locationId: locationId,
+              orderId: params.id,
+              station: station,
+              status: 'queued',
+              ticketItems: items,
+              priority: false,
+            });
+            createdTickets.push({ station, ticketId: kdsTicket.id });
+            console.log(`✅ Created KDS ticket ${kdsTicket.id} for newly added items to order ${params.id} at ${station} station with ${items.length} items`);
+          } catch (ticketError: any) {
+            console.error(`❌ Error creating KDS ticket for ${station} station:`, {
+              message: ticketError.message,
+              status: ticketError.status,
+            });
+          }
+        }
+      }
+
+      if (createdTickets.length === 0) {
+        console.warn(`⚠️  No KDS tickets created for newly added items to order ${params.id} (no items found)`);
+      } else {
+        console.log(`✅ Created ${createdTickets.length} KDS ticket(s) for newly added items to order ${params.id}:`, createdTickets);
+      }
+    } catch (kdsError: any) {
+      console.error('❌ Error creating KDS tickets for newly added items:', {
+        message: kdsError.message,
+        status: kdsError.status,
+      });
+      // Don't fail the item addition if KDS ticket creation fails
+    }
 
     // Fetch updated order
     const updatedOrder = await pb.collection('orders').getOne(params.id);

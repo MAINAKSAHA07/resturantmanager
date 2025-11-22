@@ -275,18 +275,22 @@ export async function PATCH(request: NextRequest) {
               itemsByStation[itemStation].push({
                 menuItemId: orderItem.menuItemId,
                 name: orderItem.nameSnapshot,
+                description: orderItem.descriptionSnapshot || '',
                 qty: orderItem.qty,
                 options: orderItem.optionsSnapshot || [],
                 unitPrice: orderItem.unitPrice,
+                comment: orderItem.comment || '',
               });
             } catch (e) {
               // Menu item not found, use default
               itemsByStation['default'].push({
                 menuItemId: orderItem.menuItemId,
                 name: orderItem.nameSnapshot,
+                description: orderItem.descriptionSnapshot || '',
                 qty: orderItem.qty,
                 options: orderItem.optionsSnapshot || [],
                 unitPrice: orderItem.unitPrice,
+                comment: orderItem.comment || '',
               });
             }
           }
@@ -303,15 +307,15 @@ export async function PATCH(request: NextRequest) {
           for (const [station, items] of Object.entries(itemsByStation)) {
             if (items.length > 0) {
               try {
-                const kdsTicket = await pb.collection('kdsTicket').create({
-                  tenantId: tenantId,
-                  locationId: locationId,
-                  orderId: orderId,
-                  station: station,
-                  status: 'queued',
-                  ticketItems: items,
-                  priority: false,
-                });
+          const kdsTicket = await pb.collection('kdsTicket').create({
+            tenantId: tenantId,
+            locationId: locationId,
+            orderId: orderId,
+            station: station,
+            status: 'queued',
+            ticketItems: items,
+            priority: false,
+          });
                 createdTickets.push({ station, ticketId: kdsTicket.id });
                 console.log(`✅ Created KDS ticket ${kdsTicket.id} for order ${orderId} at ${station} station with ${items.length} items`);
               } catch (ticketError: any) {

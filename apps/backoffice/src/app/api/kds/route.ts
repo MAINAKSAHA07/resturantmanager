@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
             return itemOrderId === orderId;
           });
 
-          console.log(`Ticket ${ticket.id.slice(0, 8)}: Found ${orderItems.length} order items for order ${orderId.slice(0, 8)}`);
+          console.log(`Ticket ${ticket.id.slice(0, 8)} (${ticket.station}): Found ${orderItems.length} order items for order ${orderId.slice(0, 8)}`);
         } catch (e: any) {
           console.error(`Error fetching items for ticket ${ticket.id}:`, {
             message: e.message,
@@ -104,16 +104,23 @@ export async function GET(request: NextRequest) {
           });
         }
 
-        // Use actual order items if available, otherwise fall back to ticketItems
-        const items = orderItems.length > 0
-          ? orderItems.map((item: any) => ({
-            menuItemId: item.menuItemId,
-            name: item.nameSnapshot,
-            qty: item.qty,
-            options: item.optionsSnapshot || [],
-            unitPrice: item.unitPrice,
-          }))
-          : (ticket.ticketItems || []);
+        // Use ticketItems (station-specific items) if available, otherwise fall back to all order items
+        // ticketItems contains only the items for this specific station
+        const items = (ticket.ticketItems && ticket.ticketItems.length > 0)
+          ? ticket.ticketItems
+          : (orderItems.length > 0
+            ? orderItems.map((item: any) => ({
+              menuItemId: item.menuItemId,
+              name: item.nameSnapshot,
+              description: item.descriptionSnapshot || '',
+              qty: item.qty,
+              options: item.optionsSnapshot || [],
+              unitPrice: item.unitPrice,
+              comment: item.comment || '',
+            }))
+            : []);
+
+        console.log(`Ticket ${ticket.id.slice(0, 8)} (${ticket.station}): Using ${items.length} items (${ticket.ticketItems?.length || 0} from ticketItems, ${orderItems.length} from order)`);
 
         return {
           ...ticket,
