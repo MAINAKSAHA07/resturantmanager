@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ 
       success: true,
+      pbUrl, // Include the URL being used for debugging
       tenants: tenants.items.map(t => ({
         id: t.id,
         name: t.name,

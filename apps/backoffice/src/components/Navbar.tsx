@@ -105,6 +105,11 @@ export default function Navbar() {
       if (response.ok) {
         let filteredTenants = data.tenants || [];
 
+        console.log('Navbar - Fetched tenants:', {
+          count: filteredTenants.length,
+          tenantIds: filteredTenants.map((t: Tenant) => ({ id: t.id, name: t.name })),
+        });
+
         // If not master user, filter to only show user's assigned tenants
         if (!isMaster && role !== 'admin' && userTenantIds.length > 0) {
           filteredTenants = filteredTenants.filter((t: Tenant) =>
@@ -113,6 +118,8 @@ export default function Navbar() {
         }
 
         setTenants(filteredTenants);
+      } else {
+        console.error('Failed to fetch tenants:', data.error);
       }
     } catch (err) {
       console.error('Error fetching tenants:', err);
