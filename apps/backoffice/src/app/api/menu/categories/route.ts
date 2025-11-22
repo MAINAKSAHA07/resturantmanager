@@ -4,9 +4,9 @@ import PocketBase from 'pocketbase';
 export async function GET(request: NextRequest) {
   try {
     // Get auth token from cookie or header
-    const token = request.cookies.get('pb_auth_token')?.value || 
-                  request.headers.get('authorization')?.replace('Bearer ', '');
-    
+    const token = request.cookies.get('pb_auth_token')?.value ||
+      request.headers.get('authorization')?.replace('Bearer ', '');
+
     if (!token) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -15,19 +15,19 @@ export async function GET(request: NextRequest) {
     }
 
     const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    
+
     // Use admin client to ensure we have access to all collections
     // Create admin client directly to avoid environment variable issues
     const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
     const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
-    
+
     const adminPb = new PocketBase(pbUrl);
     await adminPb.admins.authWithPassword(adminEmail, adminPassword);
-    
+
     // Get selected tenant from cookie, or fallback to first tenant
     const selectedTenantId = request.cookies.get('selected_tenant_id')?.value;
     let tenant;
-    
+
     if (selectedTenantId) {
       try {
         tenant = await adminPb.collection('tenant').getOne(selectedTenantId);
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       }
       tenant = tenants.items[0];
     }
-    
+
     // Check if location collection exists and get locations for this tenant
     let locations;
     try {
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
       const allLocations = await adminPb.collection('location').getList(1, 100, {
         expand: 'tenantId',
       });
-      
+
       // Filter by tenant (handle relation fields which may be arrays)
       locations = {
         items: allLocations.items.filter(loc => {
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
         sort: 'sort',
         expand: 'tenantId,locationId',
       });
-      
+
       // Filter by tenant only (show categories from all locations for this tenant)
       const filteredCategories = allCategories.items.filter(cat => {
         const catTenantId = Array.isArray(cat.tenantId) ? cat.tenantId[0] : cat.tenantId;
@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
       stack: error.stack,
     });
     return NextResponse.json(
-      { 
+      {
         error: error.message || 'Failed to fetch categories',
         details: process.env.NODE_ENV === 'development' ? (error.response?.data || error.response) : undefined
       },
@@ -145,9 +145,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Get auth token from cookie or header
-    const token = request.cookies.get('pb_auth_token')?.value || 
-                  request.headers.get('authorization')?.replace('Bearer ', '');
-    
+    const token = request.cookies.get('pb_auth_token')?.value ||
+      request.headers.get('authorization')?.replace('Bearer ', '');
+
     if (!token) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -156,22 +156,22 @@ export async function POST(request: NextRequest) {
     }
 
     const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    
+
     // Use admin client to ensure we have access to all collections
     // Create admin client directly to avoid environment variable issues
     const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
     const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
-    
+
     const adminPb = new PocketBase(pbUrl);
     await adminPb.admins.authWithPassword(adminEmail, adminPassword);
 
     const body = await request.json();
     const { name, sort } = body;
-    
+
     // Get selected tenant from cookie, or fallback to first tenant
     const selectedTenantId = request.cookies.get('selected_tenant_id')?.value;
     let tenant;
-    
+
     if (selectedTenantId) {
       try {
         tenant = await adminPb.collection('tenant').getOne(selectedTenantId);
@@ -179,8 +179,8 @@ export async function POST(request: NextRequest) {
         // If tenant not found, fallback to first tenant
         const tenants = await adminPb.collection('tenant').getList(1, 1);
         if (tenants.items.length === 0) {
-          return NextResponse.json({ 
-            error: 'No tenant found. Please run the seed script to create initial data: npm run seed' 
+          return NextResponse.json({
+            error: 'No tenant found. Please run the seed script to create initial data: npm run seed'
           }, { status: 404 });
         }
         tenant = tenants.items[0];
@@ -189,13 +189,13 @@ export async function POST(request: NextRequest) {
       // Fallback to first tenant if no selection
       const tenants = await adminPb.collection('tenant').getList(1, 1);
       if (tenants.items.length === 0) {
-        return NextResponse.json({ 
-          error: 'No tenant found. Please run the seed script to create initial data: npm run seed' 
+        return NextResponse.json({
+          error: 'No tenant found. Please run the seed script to create initial data: npm run seed'
         }, { status: 404 });
       }
       tenant = tenants.items[0];
     }
-    
+
     // Check if location collection exists
     let locations;
     try {
@@ -203,7 +203,7 @@ export async function POST(request: NextRequest) {
       const allLocations = await adminPb.collection('location').getList(1, 100, {
         expand: 'tenantId',
       });
-      
+
       // Filter by tenant (handle relation fields which may be arrays)
       locations = {
         items: allLocations.items.filter(loc => {
@@ -214,7 +214,7 @@ export async function POST(request: NextRequest) {
     } catch (error: any) {
       const errorStatus = error.status || error.response?.status;
       if (errorStatus === 404) {
-        return NextResponse.json({ 
+        return NextResponse.json({
           error: 'Location collection does not exist. Please create it in PocketBase Admin UI first.',
           details: 'Go to http://localhost:8090/_/ → Collections → Create new collection named "location"'
         }, { status: 404 });
@@ -223,8 +223,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (locations.items.length === 0) {
-      return NextResponse.json({ 
-        error: 'No location found for the selected tenant. Please create a location first or run the seed script: npm run seed' 
+      return NextResponse.json({
+        error: 'No location found for the selected tenant. Please create a location first or run the seed script: npm run seed'
       }, { status: 404 });
     }
 
@@ -242,7 +242,7 @@ export async function POST(request: NextRequest) {
     } catch (error: any) {
       const errorStatus = error.status || error.response?.status;
       if (errorStatus === 404) {
-        return NextResponse.json({ 
+        return NextResponse.json({
           error: 'menuCategory collection does not exist. Please create it in PocketBase Admin UI first.',
           details: 'Go to http://localhost:8090/_/ → Collections → Create new collection named "menuCategory"'
         }, { status: 404 });
@@ -257,18 +257,18 @@ export async function POST(request: NextRequest) {
       status: error.status || error.response?.status,
       response: error.response?.data || error.response,
     });
-    
+
     // Handle 404 - collection doesn't exist
     if (error.status === 404 || error.response?.status === 404) {
       return NextResponse.json(
-        { 
+        {
           error: 'Required collections are missing. Please create "location" and "menuCategory" collections in PocketBase Admin UI first.',
           details: 'Go to http://localhost:8090/_/ and create the collections manually, or run the collection creation script.'
         },
         { status: 404 }
       );
     }
-    
+
     return NextResponse.json(
       { error: error.message || 'Failed to create category' },
       { status: 500 }

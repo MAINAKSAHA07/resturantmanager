@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import PocketBase from 'pocketbase';
+import { getCurrentUser } from '@/lib/server-utils';
+import { isMasterUser } from '@/lib/user-utils';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * Check if user is a master user (isMaster=true OR role='admin')
+ * Select tenant API
  */
-function isMasterUser(user: any): boolean {
-  return user?.isMaster === true || user?.role === 'admin';
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,78 +52,34 @@ export async function POST(request: NextRequest) {
       });
       throw error;
     }
+
     try {
       console.log('Fetching tenant:', tenantId);
       const tenant = await adminPb.collection('tenant').getOne(tenantId);
       console.log('Tenant found:', { id: tenant.id, name: tenant.name });
 
-      // Verify user has access to this tenant (if we can get the user)
-      // Try to get user info, but don't fail if we can't - graceful degradation
-      let user = null;
-      let canVerifyAccess = false;
+      // Verify user has access to this tenant
+      // We use the robust getCurrentUser helper which validates the token against the DB
+      const user = await getCurrentUser(request);
 
-      try {
-        const userPb = new PocketBase(pbUrl);
-        userPb.authStore.save(token, null);
-
-        try {
-          // Try to refresh auth to get current user data
-          const authData = await userPb.collection('users').authRefresh();
-          user = authData.record;
-          canVerifyAccess = true;
-        } catch (refreshError: any) {
-          // If refresh fails, token might be expired but still valid for basic operations
-          // Try to parse token to get user info, but don't fail if we can't
-          try {
-            const tokenParts = token.split('.');
-            if (tokenParts.length >= 2) {
-              const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
-              const userId = payload.id || payload.userId || payload.record?.id || payload.recordId;
-
-              if (userId) {
-                try {
-                  // Try to get user using admin client
-                  user = await adminPb.collection('users').getOne(userId);
-                  canVerifyAccess = true;
-                } catch (getUserError: any) {
-                  // User doesn't exist or can't be fetched - token might be stale
-                  // But token exists, so we'll allow tenant selection anyway
-                  console.warn('Could not fetch user for tenant access verification:', getUserError.message);
-                  canVerifyAccess = false;
-                }
-              }
-            }
-          } catch (parseError: any) {
-            // Token format is invalid, but we have a token so allow it
-            console.warn('Could not parse token for user verification:', parseError.message);
-            canVerifyAccess = false;
-          }
-        }
-      } catch (error: any) {
-        // If we can't verify user, we'll still allow tenant selection
-        // since they have a valid token (they're logged in)
-        console.warn('Could not verify user access, allowing tenant selection anyway:', error.message);
-        canVerifyAccess = false;
+      if (!user) {
+        return NextResponse.json(
+          { error: 'Unauthorized: Invalid or expired session' },
+          { status: 401 }
+        );
       }
 
-      // Only check tenant access if we successfully got user info
-      if (canVerifyAccess && user) {
-        // Master users have access to all tenants
-        if (!isMasterUser(user)) {
-          const userTenants = user.tenants || [];
+      // Master users have access to all tenants
+      if (!isMasterUser(user)) {
+        const userTenants = user.tenants || [];
 
-          if (!userTenants.includes(tenantId)) {
-            return NextResponse.json(
-              { error: 'You do not have access to this tenant' },
-              { status: 403 }
-            );
-          }
+        if (!userTenants.includes(tenantId)) {
+          return NextResponse.json(
+            { error: 'You do not have access to this tenant' },
+            { status: 403 }
+          );
         }
       }
-      // If we can't verify access, we still allow it since:
-      // 1. They have a valid token (they're authenticated)
-      // 2. The tenant exists (we verified that above)
-      // 3. This is a graceful degradation for edge cases
 
       const response = NextResponse.json({
         success: true,

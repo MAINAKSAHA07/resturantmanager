@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import PocketBase from 'pocketbase';
+import { getCurrentUser } from '@/lib/server-utils';
+import { canPerformAction } from '@/lib/permissions';
 
 export async function GET(request: NextRequest) {
     try {
+        // Verify permissions
+        const user = await getCurrentUser(request);
+        if (!user || !canPerformAction(user, 'GET', '/api/users')) {
+            return NextResponse.json(
+                { error: 'Forbidden: You do not have permission to view users' },
+                { status: 403 }
+            );
+        }
+
         const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
         const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
         const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
@@ -26,6 +37,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
+        // Verify permissions
+        const user = await getCurrentUser(request);
+        if (!user || !canPerformAction(user, 'POST', '/api/users')) {
+            return NextResponse.json(
+                { error: 'Forbidden: You do not have permission to create users' },
+                { status: 403 }
+            );
+        }
+
         const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
         const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
         const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
@@ -53,9 +73,9 @@ export async function POST(request: NextRequest) {
             userData.tenants = [];
         }
 
-        const user = await pb.collection('users').create(userData);
+        const newUser = await pb.collection('users').create(userData);
 
-        return NextResponse.json({ user });
+        return NextResponse.json({ user: newUser });
     } catch (error: any) {
         return NextResponse.json(
             { error: error.message || 'Failed to create user' },

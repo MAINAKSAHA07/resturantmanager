@@ -5,6 +5,10 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    // Note: Tenants API is accessible to all authenticated users
+    // Permission filtering happens on the frontend based on user role
+    // We use admin client to fetch all tenants, then frontend filters based on user permissions
+
     // Use admin client to fetch all tenants
     // No need to check user auth here - we'll filter on frontend based on user role
     // Create admin client directly to ensure environment variables are used
@@ -46,7 +50,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      pbUrl, // Include the URL being used for debugging
       tenants: tenants.items.map(t => ({
         id: t.id,
         name: t.name,

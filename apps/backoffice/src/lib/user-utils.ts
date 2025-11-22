@@ -38,3 +38,6 @@ export function hasTenantAccess(user: User | null | undefined, tenantId: string)
   return userTenants.includes(tenantId);
 }
 
+// Re-export permissions for convenience
+export * from './permissions';
+

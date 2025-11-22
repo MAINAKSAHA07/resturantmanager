@@ -6,20 +6,20 @@ export async function GET(request: NextRequest) {
     // Check for duplicate query parameter
     const searchParams = request.nextUrl.searchParams;
     const checkName = searchParams.get('name');
-    
+
     if (checkName) {
       // Check for duplicate
       const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
       const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
       const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
-      
+
       const adminPb = new PocketBase(pbUrl);
       await adminPb.admins.authWithPassword(adminEmail, adminPassword);
 
       // Get selected tenant
       const cookieStore = request.cookies;
       const selectedTenantId = cookieStore.get('selected_tenant_id')?.value;
-      
+
       if (!selectedTenantId) {
         return NextResponse.json({ isDuplicate: false });
       }
@@ -43,8 +43,8 @@ export async function GET(request: NextRequest) {
         const itemTenantId = Array.isArray(item.tenantId) ? item.tenantId[0] : item.tenantId;
         const itemLocationId = Array.isArray(item.locationId) ? item.locationId[0] : item.locationId;
         return item.name.toLowerCase().trim() === checkName.toLowerCase().trim() &&
-               itemTenantId === selectedTenantId &&
-               itemLocationId === locationId;
+          itemTenantId === selectedTenantId &&
+          itemLocationId === locationId;
       });
 
       return NextResponse.json({ isDuplicate: !!duplicate });
@@ -52,9 +52,9 @@ export async function GET(request: NextRequest) {
 
     // Regular GET - fetch all items
     // Get auth token from cookie or header
-    const token = request.cookies.get('pb_auth_token')?.value || 
-                  request.headers.get('authorization')?.replace('Bearer ', '');
-    
+    const token = request.cookies.get('pb_auth_token')?.value ||
+      request.headers.get('authorization')?.replace('Bearer ', '');
+
     if (!token) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -63,18 +63,18 @@ export async function GET(request: NextRequest) {
     }
 
     const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
-    
+
     // Use admin client to ensure we have access to all collections
     const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
     const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
-    
+
     const adminPb = new PocketBase(pbUrl);
     await adminPb.admins.authWithPassword(adminEmail, adminPassword);
-    
+
     // Get selected tenant from cookie, or fallback to first tenant
     const selectedTenantId = request.cookies.get('selected_tenant_id')?.value;
     let tenant;
-    
+
     if (selectedTenantId) {
       try {
         tenant = await adminPb.collection('tenant').getOne(selectedTenantId);
@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
       }
       tenant = tenants.items[0];
     }
-    
+
     // Check if location collection exists and get locations for this tenant
     let locations;
     try {
@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
       const allLocations = await adminPb.collection('location').getList(1, 100, {
         expand: 'tenantId',
       });
-      
+
       // Filter by tenant (handle relation fields which may be arrays)
       locations = {
         items: allLocations.items.filter(loc => {
@@ -131,21 +131,21 @@ export async function GET(request: NextRequest) {
       // Get all items - don't use expand as it might cause duplication issues
       // We'll handle relations manually
       const allItems = await adminPb.collection('menuItem').getList(1, 1000);
-      
+
       // Filter by tenant and deduplicate by ID immediately (most important step)
       const initialFilteredMap = new Map<string, any>();
       const initialSeenIds = new Set<string>();
-      
+
       allItems.items.forEach(item => {
         // Skip if we've already seen this ID
         if (initialSeenIds.has(item.id)) {
           return;
         }
         initialSeenIds.add(item.id);
-        
+
         const itemTenantId = Array.isArray(item.tenantId) ? item.tenantId[0] : item.tenantId;
         const itemLocationId = Array.isArray(item.locationId) ? item.locationId[0] : item.locationId;
-        
+
         // Match tenant AND ensure location belongs to this tenant
         if (itemTenantId === tenant.id && locationIds.includes(itemLocationId)) {
           // Only add if not already in map (extra safety)
@@ -154,7 +154,7 @@ export async function GET(request: NextRequest) {
           }
         }
       });
-      
+
       const filteredItems = Array.from(initialFilteredMap.values());
       console.log(`[API] After initial filter: ${allItems.items.length} -> ${filteredItems.length} items`);
 
@@ -171,14 +171,14 @@ export async function GET(request: NextRequest) {
         // Normalize categoryId to always be a string
         const categoryId = Array.isArray(item.categoryId) ? item.categoryId[0] : item.categoryId;
         const categoryName = categoryId ? categoryMap.get(categoryId) : null;
-        
+
         // Normalize availability to lowercase for consistency
         let normalizedAvailability = item.availability || (item.isActive !== false ? 'available' : 'not available');
         normalizedAvailability = String(normalizedAvailability).toLowerCase().trim();
         if (normalizedAvailability !== 'available' && normalizedAvailability !== 'not available') {
           normalizedAvailability = normalizedAvailability === 'notavailable' ? 'not available' : 'available';
         }
-        
+
         return {
           ...item,
           categoryId: categoryId || '',
@@ -211,11 +211,11 @@ export async function GET(request: NextRequest) {
           nameCategoryMap.set(key, item);
         } else {
           const existing = nameCategoryMap.get(key);
-          
+
           // Normalize availability for comparison
           const itemAvailability = String(item.availability || (item.isActive !== false ? 'available' : 'not available')).toLowerCase();
           const existingAvailability = String(existing.availability || (existing.isActive !== false ? 'available' : 'not available')).toLowerCase();
-          
+
           // Priority: prefer "not available" items (they're more restrictive/accurate)
           // If both have same availability, prefer the most recent
           if (itemAvailability === 'not available' && existingAvailability === 'available') {
@@ -236,7 +236,7 @@ export async function GET(request: NextRequest) {
       // Final deduplication pass using Set to ensure absolute uniqueness by ID
       const finalUniqueItems: any[] = [];
       const finalSeenIds = new Set<string>();
-      
+
       Array.from(nameCategoryMap.values()).forEach((item: any) => {
         if (!finalSeenIds.has(item.id)) {
           finalSeenIds.add(item.id);
@@ -260,21 +260,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ items: items.items });
   } catch (error: any) {
     const status = error.status || error.response?.status;
-    
+
     console.error('Error fetching items:', {
       message: error.message,
       response: error.response?.data || error.response,
       status: status,
       stack: error.stack,
     });
-    
+
     // Handle 404 - collection doesn't exist
     if (status === 404) {
       return NextResponse.json({ items: [] });
     }
-    
+
     return NextResponse.json(
-      { 
+      {
         error: error.message || 'Failed to fetch items',
         details: process.env.NODE_ENV === 'development' ? (error.response?.data || error.response) : undefined
       },
@@ -286,9 +286,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Get auth token from cookie or header
-    const token = request.cookies.get('pb_auth_token')?.value || 
-                  request.headers.get('authorization')?.replace('Bearer ', '');
-    
+    const token = request.cookies.get('pb_auth_token')?.value ||
+      request.headers.get('authorization')?.replace('Bearer ', '');
+
     if (!token) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -297,12 +297,12 @@ export async function POST(request: NextRequest) {
     }
 
     const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
-    
+
     // Use admin client to ensure we have access to all collections
     // Create admin client directly to avoid environment variable issues
     const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
     const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
-    
+
     const adminPb = new PocketBase(pbUrl);
     await adminPb.admins.authWithPassword(adminEmail, adminPassword);
 
@@ -331,11 +331,11 @@ export async function POST(request: NextRequest) {
     }
     const hsnSac = formData.get('hsnSac') as string || '';
     const imageFile = formData.get('image') as File | null;
-    
+
     // Get selected tenant from cookie, or fallback to first tenant
     const selectedTenantId = request.cookies.get('selected_tenant_id')?.value;
     let tenant;
-    
+
     if (selectedTenantId) {
       try {
         tenant = await adminPb.collection('tenant').getOne(selectedTenantId);
@@ -343,8 +343,8 @@ export async function POST(request: NextRequest) {
         // If tenant not found, fallback to first tenant
         const tenants = await adminPb.collection('tenant').getList(1, 1);
         if (tenants.items.length === 0) {
-          return NextResponse.json({ 
-            error: 'No tenant found. Please run the seed script: npm run seed' 
+          return NextResponse.json({
+            error: 'No tenant found. Please run the seed script: npm run seed'
           }, { status: 404 });
         }
         tenant = tenants.items[0];
@@ -353,8 +353,8 @@ export async function POST(request: NextRequest) {
       // Fallback to first tenant if no selection
       const tenants = await adminPb.collection('tenant').getList(1, 1);
       if (tenants.items.length === 0) {
-        return NextResponse.json({ 
-          error: 'No tenant found. Please run the seed script: npm run seed' 
+        return NextResponse.json({
+          error: 'No tenant found. Please run the seed script: npm run seed'
         }, { status: 404 });
       }
       tenant = tenants.items[0];
@@ -363,7 +363,7 @@ export async function POST(request: NextRequest) {
     const allLocations = await adminPb.collection('location').getList(1, 100, {
       expand: 'tenantId',
     });
-    
+
     // Filter by tenant (handle relation fields which may be arrays)
     const locations = {
       items: allLocations.items.filter(loc => {
@@ -373,8 +373,8 @@ export async function POST(request: NextRequest) {
     };
 
     if (locations.items.length === 0) {
-      return NextResponse.json({ 
-        error: 'No location found for the selected tenant. Please create a location first or run the seed script: npm run seed' 
+      return NextResponse.json({
+        error: 'No location found for the selected tenant. Please create a location first or run the seed script: npm run seed'
       }, { status: 404 });
     }
 
@@ -386,8 +386,8 @@ export async function POST(request: NextRequest) {
       const itemTenantId = Array.isArray(item.tenantId) ? item.tenantId[0] : item.tenantId;
       const itemLocationId = Array.isArray(item.locationId) ? item.locationId[0] : item.locationId;
       return item.name.toLowerCase().trim() === name.toLowerCase().trim() &&
-             itemTenantId === tenant.id &&
-             itemLocationId === location.id;
+        itemTenantId === tenant.id &&
+        itemLocationId === location.id;
     });
 
     if (duplicate) {
@@ -423,18 +423,18 @@ export async function POST(request: NextRequest) {
       status: error.status || error.response?.status,
       response: error.response?.data || error.response,
     });
-    
+
     // Handle 404 - collection doesn't exist
     if (error.status === 404 || error.response?.status === 404) {
       return NextResponse.json(
-        { 
+        {
           error: 'Required collections are missing. Please create "location" and "menuItem" collections in PocketBase Admin UI first.',
           details: 'Go to http://localhost:8090/_/ and create the collections manually.'
         },
         { status: 404 }
       );
     }
-    
+
     return NextResponse.json(
       { error: error.message || 'Failed to create item' },
       { status: 500 }

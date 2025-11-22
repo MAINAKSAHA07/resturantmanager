@@ -94,6 +94,7 @@ async function createReservationCollection() {
           type: 'select',
           required: true,
           options: {
+            maxSelect: 1,
             values: ['pending', 'confirmed', 'seated', 'completed', 'canceled', 'no_show'],
           },
         },
@@ -101,6 +102,11 @@ async function createReservationCollection() {
           name: 'notes',
           type: 'text',
           required: false,
+          options: {
+            min: null,
+            max: null,
+            pattern: '',
+          },
         },
       ],
     });

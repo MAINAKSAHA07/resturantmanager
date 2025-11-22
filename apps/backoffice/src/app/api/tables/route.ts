@@ -4,7 +4,7 @@ import { createPocketBaseAdminClient } from '@restaurant/lib';
 export async function GET(request: NextRequest) {
   try {
     const pb = await createPocketBaseAdminClient();
-    
+
     const tables = await pb.collection('tables').getList(1, 100);
 
     return NextResponse.json({ tables: tables.items });

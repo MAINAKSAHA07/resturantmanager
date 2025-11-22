@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -11,6 +11,22 @@ interface Reservation {
   status: string;
   notes: string;
   created: string;
+  expand?: {
+    customerId?: {
+      id: string;
+      name: string;
+      email: string;
+      phone: string;
+    };
+    tenantId?: {
+      id: string;
+      name: string;
+    };
+    locationId?: {
+      id: string;
+      name: string;
+    };
+  };
 }
 
 export default function ReservationDetailPage() {
@@ -19,28 +35,68 @@ export default function ReservationDetailPage() {
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const reservationRef = useRef<Reservation | null>(null);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    reservationRef.current = reservation;
+  }, [reservation]);
 
   useEffect(() => {
-    const fetchReservation = async () => {
+    let isMounted = true;
+    
+    const fetchReservation = async (showLoading = false) => {
+      if (showLoading) {
+        setLoading(true);
+      }
+      
       try {
-        const response = await fetch(`/api/reservations/${reservationId}`);
+        // Add cache-busting to ensure we get fresh data
+        const response = await fetch(`/api/reservations/${reservationId}?t=${Date.now()}`, {
+          cache: 'no-store',
+        });
         if (response.ok) {
           const data = await response.json();
-          setReservation(data.reservation);
+          if (isMounted) {
+            setReservation(data.reservation);
+            setError(null);
+          }
         } else {
           const errorData = await response.json();
-          setError(errorData.error || 'Failed to load reservation');
+          if (isMounted) {
+            setError(errorData.error || 'Failed to load reservation');
+          }
         }
       } catch (error: any) {
         console.error('Error fetching reservation:', error);
-        setError('Failed to load reservation');
+        if (isMounted) {
+          setError('Failed to load reservation');
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     if (reservationId) {
-      fetchReservation();
+      // Initial fetch
+      fetchReservation(true);
+      
+      // Auto-refresh every 5 seconds to get status updates
+      // Stop auto-refresh if status is final (completed, canceled, no_show)
+      const interval = setInterval(() => {
+        // Check current reservation status from ref
+        const currentReservation = reservationRef.current;
+        if (currentReservation && !['completed', 'canceled', 'no_show'].includes(currentReservation.status)) {
+          fetchReservation(false);
+        }
+      }, 5000);
+      
+      return () => {
+        isMounted = false;
+        clearInterval(interval);
+      };
     }
   }, [reservationId]);
 
@@ -99,9 +155,18 @@ export default function ReservationDetailPage() {
                   statusColors[reservation.status] || 'bg-gray-100 text-gray-800'
                 }`}
               >
-                {reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}
+                {reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1).replace('_', ' ')}
               </span>
             </div>
+
+            {reservation.expand?.customerId && (
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Customer</p>
+                <p className="text-lg font-semibold">{reservation.expand.customerId.name}</p>
+                <p className="text-sm text-gray-600">{reservation.expand.customerId.email}</p>
+                <p className="text-sm text-gray-600">{reservation.expand.customerId.phone}</p>
+              </div>
+            )}
 
             <div>
               <p className="text-sm text-gray-600 mb-1">Party Size</p>
@@ -122,6 +187,13 @@ export default function ReservationDetailPage() {
               </p>
             </div>
 
+            {reservation.expand?.locationId && (
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Location</p>
+                <p className="text-lg font-semibold">{reservation.expand.locationId.name}</p>
+              </div>
+            )}
+
             {reservation.notes && (
               <div>
                 <p className="text-sm text-gray-600 mb-1">Special Requests</p>
@@ -131,10 +203,42 @@ export default function ReservationDetailPage() {
 
             <div className="pt-4 border-t">
               <p className="text-sm text-gray-600">
-                Your reservation is {reservation.status}. You'll receive a confirmation once it's been reviewed by our team.
+                {reservation.status === 'pending' && "Your reservation is pending. You'll receive a confirmation once it's been reviewed by our team."}
+                {reservation.status === 'confirmed' && "Your reservation has been confirmed! We look forward to seeing you."}
+                {reservation.status === 'seated' && "You have been seated. Enjoy your meal!"}
+                {reservation.status === 'completed' && "Thank you for dining with us!"}
+                {reservation.status === 'canceled' && "This reservation has been canceled."}
+                {reservation.status === 'no_show' && "This reservation was marked as no-show."}
+                {!['pending', 'confirmed', 'seated', 'completed', 'canceled', 'no_show'].includes(reservation.status) && 
+                  `Your reservation is ${reservation.status}.`}
               </p>
             </div>
           </div>
+        </div>
+
+        <div className="flex gap-4 mb-4">
+          <button
+            onClick={async () => {
+              setLoading(true);
+              try {
+                const response = await fetch(`/api/reservations/${reservationId}?t=${Date.now()}`, { 
+                  cache: 'no-store' 
+                });
+                const data = await response.json();
+                if (response.ok) {
+                  setReservation(data.reservation);
+                }
+              } catch (err) {
+                console.error('Error refreshing:', err);
+              } finally {
+                setLoading(false);
+              }
+            }}
+            disabled={loading}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+          >
+            {loading ? 'Refreshing...' : '🔄 Refresh Status'}
+          </button>
         </div>
 
         <div className="flex gap-4">
