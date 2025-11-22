@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import PocketBase from 'pocketbase';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // Use admin client to fetch all tenants
@@ -9,7 +11,7 @@ export async function GET(request: NextRequest) {
     const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
     const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
     const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
-    
+
     console.log('Tenants API - Connecting to:', {
       pbUrl,
       hasAwsUrl: !!process.env.AWS_POCKETBASE_URL,
@@ -17,7 +19,7 @@ export async function GET(request: NextRequest) {
       hasEmail: !!process.env.PB_ADMIN_EMAIL,
       hasPassword: !!process.env.PB_ADMIN_PASSWORD,
     });
-    
+
     const adminPb = new PocketBase(pbUrl);
     try {
       await adminPb.admins.authWithPassword(adminEmail, adminPassword);
@@ -32,7 +34,7 @@ export async function GET(request: NextRequest) {
       });
       throw error;
     }
-    
+
     const tenants = await adminPb.collection('tenant').getList(1, 100, {
       sort: 'name',
     });
@@ -42,7 +44,7 @@ export async function GET(request: NextRequest) {
       tenantIds: tenants.items.map(t => ({ id: t.id, name: t.name })),
     });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
       pbUrl, // Include the URL being used for debugging
       tenants: tenants.items.map(t => ({

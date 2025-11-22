@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import PocketBase from 'pocketbase';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Check if user is a master user (isMaster=true OR role='admin')
  */
@@ -60,11 +62,11 @@ export async function POST(request: NextRequest) {
       // Try to get user info, but don't fail if we can't - graceful degradation
       let user = null;
       let canVerifyAccess = false;
-      
+
       try {
         const userPb = new PocketBase(pbUrl);
         userPb.authStore.save(token, null);
-        
+
         try {
           // Try to refresh auth to get current user data
           const authData = await userPb.collection('users').authRefresh();
@@ -78,7 +80,7 @@ export async function POST(request: NextRequest) {
             if (tokenParts.length >= 2) {
               const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
               const userId = payload.id || payload.userId || payload.record?.id || payload.recordId;
-              
+
               if (userId) {
                 try {
                   // Try to get user using admin client
@@ -151,7 +153,7 @@ export async function POST(request: NextRequest) {
         response: error.response?.data,
         pbUrl,
       });
-      
+
       if (error.status === 404) {
         // List available tenants for debugging
         try {
@@ -160,9 +162,9 @@ export async function POST(request: NextRequest) {
         } catch (listError) {
           console.error('Could not list tenants:', listError);
         }
-        
+
         return NextResponse.json(
-          { 
+          {
             error: 'Tenant not found',
             tenantId,
             message: `Tenant with ID "${tenantId}" does not exist in the database`

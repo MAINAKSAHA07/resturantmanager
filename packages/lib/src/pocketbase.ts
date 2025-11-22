@@ -2,8 +2,12 @@ import PocketBase from 'pocketbase';
 
 function getPocketBaseUrl(): string {
   // Read dynamically each time to ensure Next.js env vars are available
-  // Priority: AWS_POCKETBASE_URL (for production/AWS) > POCKETBASE_URL (for local/other) > localhost default
-  return process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
+  // Priority: AWS_POCKETBASE_URL (for production/AWS) > POCKETBASE_URL (for local/other) > AWS IP (prod fallback) > localhost default
+  const defaultUrl = process.env.NODE_ENV === 'production'
+    ? 'http://18.218.140.182:8090'
+    : 'http://localhost:8090';
+
+  return process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || defaultUrl;
 }
 
 export function createPocketBaseClient(token?: string): PocketBase {
