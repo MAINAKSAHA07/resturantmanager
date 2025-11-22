@@ -108,15 +108,18 @@ export default function UsersPage() {
                                                 <span className="px-2 py-0.5 text-xs bg-yellow-50 text-yellow-700 rounded border border-yellow-200">
                                                     All Restaurants
                                                 </span>
-                                            ) : user.expand?.tenants?.length > 0 ? (
-                                                user.expand.tenants.map((t, i) => (
-                                                    <span key={i} className="px-2 py-0.5 text-xs bg-gray-100 rounded border border-gray-200">
-                                                        {t.name}
-                                                    </span>
-                                                ))
-                                            ) : (
-                                                <span className="text-gray-400 text-xs">None</span>
-                                            )}
+                                            ) : (() => {
+                                                const tenants = user.expand?.tenants;
+                                                return tenants && tenants.length > 0 ? (
+                                                    tenants.map((t, i) => (
+                                                        <span key={i} className="px-2 py-0.5 text-xs bg-gray-100 rounded border border-gray-200">
+                                                            {t.name}
+                                                        </span>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-gray-400 text-xs">None</span>
+                                                );
+                                            })()}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
