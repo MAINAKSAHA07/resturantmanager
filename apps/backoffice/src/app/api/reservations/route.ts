@@ -26,7 +26,16 @@ export async function GET(request: NextRequest) {
         userPb.authStore.save(token, null);
         try {
           const authData = await userPb.collection('users').authRefresh({ expand: 'tenants' });
-          user = authData.record as User;
+          const record = authData.record as any;
+          user = {
+            id: record.id,
+            email: record.email,
+            name: record.name,
+            role: record.role,
+            isMaster: record.isMaster === true,
+            tenants: record.tenants || [],
+            expand: record.expand,
+          } as User;
           isMaster = isMasterUser(user);
         } catch (e) {
           // Try admin token
@@ -145,7 +154,16 @@ export async function PATCH(request: NextRequest) {
         userPb.authStore.save(token, null);
         try {
           const authData = await userPb.collection('users').authRefresh({ expand: 'tenants' });
-          user = authData.record as User;
+          const record = authData.record as any;
+          user = {
+            id: record.id,
+            email: record.email,
+            name: record.name,
+            role: record.role,
+            isMaster: record.isMaster === true,
+            tenants: record.tenants || [],
+            expand: record.expand,
+          } as User;
         } catch (e) {
           // Try admin token
           try {

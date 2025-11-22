@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import PocketBase from 'pocketbase';
-import { getUserPermissions, canAccessRoute, validateUserPermissions } from '@/lib/permissions';
+import { getUserPermissions, canAccessRoute } from '@/lib/permissions';
+import { validateUserPermissions } from '@/lib/check-user-permissions';
 import { User } from '@/lib/user-utils';
 
 export async function GET(request: NextRequest) {
