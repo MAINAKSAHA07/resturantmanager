@@ -27,7 +27,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { items } = body;
+    const { items, couponCode } = body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
@@ -121,7 +121,59 @@ export async function POST(
       ? Math.round(Number(gst.igst)) 
       : 0;
 
-    const totalPaise = Math.round(subtotalPaise + taxCgstPaise + taxSgstPaise + taxIgstPaise);
+    let totalPaise = Math.round(subtotalPaise + taxCgstPaise + taxSgstPaise + taxIgstPaise);
+    
+    // Apply coupon discount if provided
+    let couponId = null;
+    let discountAmountPaise = 0;
+    if (couponCode && tenantId) {
+      try {
+        // Find and validate coupon
+        const coupons = await pb.collection('coupon').getList(1, 1, {
+          filter: `code = "${couponCode.toUpperCase().trim()}" && tenantId = "${tenantId}"`,
+        });
+        
+        if (coupons.items.length > 0) {
+          const coupon = coupons.items[0];
+          const now = new Date();
+          const validFrom = new Date(coupon.validFrom);
+          const validUntil = new Date(coupon.validUntil);
+          
+          // Validate coupon
+          if (coupon.isActive && now >= validFrom && now <= validUntil) {
+            if (!coupon.usageLimit || coupon.usedCount < coupon.usageLimit) {
+              if (subtotalPaise >= (coupon.minOrderAmount || 0)) {
+                // Calculate discount
+                if (coupon.discountType === 'percentage') {
+                  discountAmountPaise = Math.round((subtotalPaise * coupon.discountValue) / 100);
+                  if (coupon.maxDiscountAmount && discountAmountPaise > coupon.maxDiscountAmount) {
+                    discountAmountPaise = coupon.maxDiscountAmount;
+                  }
+                } else {
+                  discountAmountPaise = coupon.discountValue;
+                }
+                
+                // Don't exceed order total
+                if (discountAmountPaise > totalPaise) {
+                  discountAmountPaise = totalPaise;
+                }
+                
+                totalPaise = Math.max(0, totalPaise - discountAmountPaise);
+                couponId = coupon.id;
+                
+                // Increment used count
+                await pb.collection('coupon').update(coupon.id, {
+                  usedCount: coupon.usedCount + 1,
+                });
+              }
+            }
+          }
+        }
+      } catch (couponError) {
+        console.error('Error applying coupon:', couponError);
+        // Continue without coupon if there's an error
+      }
+    }
 
     // Validate all values are valid numbers
     if (isNaN(subtotalPaise) || isNaN(taxCgstPaise) || isNaN(taxSgstPaise) || isNaN(taxIgstPaise) || isNaN(totalPaise)) {
@@ -159,6 +211,8 @@ export async function POST(
       taxSgst: finalTaxSgst,
       taxIgst: finalTaxIgst,
       total: finalTotal,
+      ...(couponId && { couponId }),
+      ...(discountAmountPaise > 0 && { discountAmount: discountAmountPaise }),
       timestamps: {
         placedAt: now,
         acceptedAt: now, // Set accepted timestamp immediately

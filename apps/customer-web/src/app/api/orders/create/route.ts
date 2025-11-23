@@ -6,7 +6,7 @@ import PocketBase from 'pocketbase';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { items } = body;
+    const { items, couponCode } = body;
 
     console.log('Order creation request received:', {
       itemsCount: items?.length || 0,
@@ -133,7 +133,67 @@ export async function POST(request: NextRequest) {
     }
     
     const totalTax = taxCgst + taxSgst + taxIgst;
-    const total = Math.round(subtotal + totalTax);
+    let total = Math.round(subtotal + totalTax);
+    
+    // Apply coupon discount if provided
+    let couponId = null;
+    let discountAmount = 0;
+    if (couponCode) {
+      try {
+        // Get tenant
+        const tenants = await pb.collection('tenant').getList(1, 1, {
+          filter: `key = "${brandKey}"`,
+        });
+        if (tenants.items.length > 0) {
+          const tenantId = tenants.items[0].id;
+          
+          // Find and validate coupon
+          const coupons = await pb.collection('coupon').getList(1, 1, {
+            filter: `code = "${couponCode.toUpperCase().trim()}" && tenantId = "${tenantId}"`,
+          });
+          
+          if (coupons.items.length > 0) {
+            const coupon = coupons.items[0];
+            const now = new Date();
+            const validFrom = new Date(coupon.validFrom);
+            const validUntil = new Date(coupon.validUntil);
+            
+            // Validate coupon
+            if (coupon.isActive && now >= validFrom && now <= validUntil) {
+              if (!coupon.usageLimit || coupon.usedCount < coupon.usageLimit) {
+                if (subtotal >= (coupon.minOrderAmount || 0)) {
+                  // Calculate discount
+                  if (coupon.discountType === 'percentage') {
+                    discountAmount = Math.round((subtotal * coupon.discountValue) / 100);
+                    if (coupon.maxDiscountAmount && discountAmount > coupon.maxDiscountAmount) {
+                      discountAmount = coupon.maxDiscountAmount;
+                    }
+                  } else {
+                    discountAmount = coupon.discountValue;
+                  }
+                  
+                  // Don't exceed order total
+                  if (discountAmount > total) {
+                    discountAmount = total;
+                  }
+                  
+                  total = Math.max(0, total - discountAmount);
+                  couponId = coupon.id;
+                  
+                  // Increment used count
+                  await pb.collection('coupon').update(coupon.id, {
+                    usedCount: coupon.usedCount + 1,
+                  });
+                }
+              }
+            }
+          }
+        }
+      } catch (couponError) {
+        console.error('Error applying coupon:', couponError);
+        // Continue without coupon if there's an error
+      }
+    }
     
     console.log('Calculated tax values:', {
       taxCgst,
@@ -183,6 +243,8 @@ export async function POST(request: NextRequest) {
       taxSgst: finalTaxSgst,
       taxIgst: finalTaxIgst,
       total: finalTotal,
+      ...(couponId && { couponId }),
+      ...(discountAmount > 0 && { discountAmount }),
       timestamps: {
         placedAt: new Date().toISOString(),
       },

@@ -63,6 +63,10 @@ export default function FloorPlanPage() {
   const [orderItems, setOrderItems] = useState<{ menuItemId: string; quantity: number; comment?: string; options?: any[] }[]>([]);
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [menuSearchQuery, setMenuSearchQuery] = useState('');
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponError, setCouponError] = useState('');
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [currentOrder, setCurrentOrder] = useState<any>(null);
   const [allTableOrders, setAllTableOrders] = useState<any[]>([]);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
@@ -681,7 +685,10 @@ export default function FloorPlanPage() {
       const response = await fetch(`/api/tables/${selectedTable.id}/order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: normalizedItems }),
+        body: JSON.stringify({ 
+          items: normalizedItems,
+          couponCode: appliedCoupon?.code || null,
+        }),
       });
 
       const data = await response.json();
@@ -784,7 +791,7 @@ export default function FloorPlanPage() {
   };
 
   const getOrderTotal = () => {
-    return orderItems.reduce((total, item) => {
+    const subtotal = orderItems.reduce((total, item) => {
       const menuItem = menuItems.find(mi => mi.id === item.menuItemId);
       if (menuItem) {
         // basePrice is in paise, convert to rupees for display
@@ -793,6 +800,14 @@ export default function FloorPlanPage() {
       }
       return total;
     }, 0);
+    
+    // Apply coupon discount if available
+    if (appliedCoupon && appliedCoupon.discountAmount) {
+      const discount = appliedCoupon.discountAmount / 100; // Convert from paise to rupees
+      return Math.max(0, subtotal - discount);
+    }
+    
+    return subtotal;
   };
 
   const addItemsToExistingOrder = async () => {
@@ -1415,6 +1430,9 @@ export default function FloorPlanPage() {
                   setSelectedTable(null);
                   setOrderItems([]);
                   setActiveTab('menu');
+                  setCouponCode('');
+                  setAppliedCoupon(null);
+                  setCouponError('');
                 }}
                 className="text-gray-500 hover:text-gray-700"
               >
@@ -1573,12 +1591,95 @@ export default function FloorPlanPage() {
                       })
                     )}
                   </div>
+                  {/* Coupon Section */}
+                  {orderItems.length > 0 && (
+                    <div className="mt-4 pt-4 border-t">
+                      <h4 className="font-semibold mb-2">Coupon Code</h4>
+                      {!appliedCoupon ? (
+                        <div className="flex gap-2 mb-2">
+                          <input
+                            type="text"
+                            value={couponCode}
+                            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                            placeholder="Enter coupon code"
+                            className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                            disabled={validatingCoupon}
+                          />
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (!couponCode.trim()) {
+                                setCouponError('Please enter a coupon code');
+                                return;
+                              }
+                              setValidatingCoupon(true);
+                              setCouponError('');
+                              try {
+                                const total = getOrderTotal() * 100; // Convert to paise
+                                const response = await fetch('/api/coupons/validate', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ code: couponCode, orderAmount: total }),
+                                });
+                                const data = await response.json();
+                                if (response.ok && data.valid) {
+                                  setAppliedCoupon(data.coupon);
+                                  setCouponError('');
+                                } else {
+                                  setCouponError(data.error || 'Invalid coupon code');
+                                  setAppliedCoupon(null);
+                                }
+                              } catch (error: any) {
+                                setCouponError('Failed to validate coupon');
+                                setAppliedCoupon(null);
+                              } finally {
+                                setValidatingCoupon(false);
+                              }
+                            }}
+                            disabled={validatingCoupon || !couponCode.trim()}
+                            className="px-4 py-2 bg-accent-purple text-white rounded-lg hover:bg-accent-purple/90 disabled:opacity-50 text-sm"
+                          >
+                            {validatingCoupon ? 'Applying...' : 'Apply'}
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between p-2 bg-green-50 rounded-lg mb-2">
+                          <div>
+                            <span className="font-semibold text-green-800 text-sm">{appliedCoupon.code}</span>
+                            <span className="text-xs text-green-600 ml-2">
+                              - ₹{(appliedCoupon.discountAmount / 100).toFixed(2)} discount
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCouponCode('');
+                              setAppliedCoupon(null);
+                              setCouponError('');
+                            }}
+                            className="text-red-600 hover:text-red-800 text-xs"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                      {couponError && (
+                        <p className="text-red-600 text-xs mb-2">{couponError}</p>
+                      )}
+                    </div>
+                  )}
                   {orderItems.length > 0 && (
                     <div className="mt-4 pt-4 border-t">
                       <div className="flex justify-between font-bold text-lg">
                         <span>Total:</span>
                         <span>₹{getOrderTotal()}</span>
                       </div>
+                      {appliedCoupon && (
+                        <div className="flex justify-between text-sm text-green-600 mt-1">
+                          <span>Discount:</span>
+                          <span>- ₹{(appliedCoupon.discountAmount / 100).toFixed(2)}</span>
+                        </div>
+                      )}
                       {currentOrder ? (
                         <button
                           onClick={addItemsToExistingOrder}

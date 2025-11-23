@@ -23,7 +23,9 @@
     "pb:check-duplicate-tables": "node pocketbase/scripts/check-duplicate-tables.js",
     "pb:cleanup-duplicate-tables": "node pocketbase/scripts/cleanup-duplicate-tables.js",
     "pb:add-image-field": "node pocketbase/scripts/add-image-field-to-menuitem.js",
-    "pb:check-duplicate-menu-aws": "node pocketbase/scripts/check-duplicate-menu-aws.js"
+    "pb:check-duplicate-menu-aws": "node pocketbase/scripts/check-duplicate-menu-aws.js",
+    "pb:create-coupon-collection": "node pocketbase/scripts/create-coupon-collection.js",
+    "pb:add-coupon-fields-to-orders": "node pocketbase/scripts/add-coupon-fields-to-orders.js"
   },
   "devDependencies": {
     "dotenv": "^17.2.3",

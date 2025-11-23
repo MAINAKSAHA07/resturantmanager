@@ -229,6 +229,9 @@ export default function Navbar() {
             <Link href="/locations" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20">
               Locations
             </Link>
+            <Link href="/coupons" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20">
+              Coupons
+            </Link>
             <Link href="/users" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20">
               Users
             </Link>
