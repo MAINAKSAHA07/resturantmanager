@@ -791,23 +791,59 @@ export default function FloorPlanPage() {
   };
 
   const getOrderTotal = () => {
-    const subtotal = orderItems.reduce((total, item) => {
+    // Calculate subtotal in paise
+    const subtotalInPaise = orderItems.reduce((total, item) => {
       const menuItem = menuItems.find(mi => mi.id === item.menuItemId);
       if (menuItem) {
-        // basePrice is in paise, convert to rupees for display
-        const priceInRupees = menuItem.basePrice / 100;
-        return total + (priceInRupees * item.quantity);
+        return total + (menuItem.basePrice * item.quantity); // basePrice is in paise
       }
       return total;
     }, 0);
     
+    // Calculate tax (simplified - using default 5% GST for now)
+    // In a real scenario, we'd need to get tax rate from menu items and location state code
+    const taxRate = 5; // Default 5% GST
+    const taxInPaise = Math.round((subtotalInPaise * taxRate) / 100);
+    const totalWithTax = subtotalInPaise + taxInPaise;
+    
     // Apply coupon discount if available
+    let finalTotal = totalWithTax;
     if (appliedCoupon && appliedCoupon.discountAmount) {
-      const discount = appliedCoupon.discountAmount / 100; // Convert from paise to rupees
-      return Math.max(0, subtotal - discount);
+      finalTotal = Math.max(0, totalWithTax - appliedCoupon.discountAmount); // discountAmount is in paise
     }
     
-    return subtotal;
+    // Convert to rupees for display
+    return (finalTotal / 100).toFixed(2);
+  };
+  
+  const getOrderBreakdown = () => {
+    // Calculate subtotal in paise
+    const subtotalInPaise = orderItems.reduce((total, item) => {
+      const menuItem = menuItems.find(mi => mi.id === item.menuItemId);
+      if (menuItem) {
+        return total + (menuItem.basePrice * item.quantity);
+      }
+      return total;
+    }, 0);
+    
+    // Calculate tax (simplified - using default 5% GST)
+    const taxRate = 5;
+    const taxInPaise = Math.round((subtotalInPaise * taxRate) / 100);
+    const totalWithTax = subtotalInPaise + taxInPaise;
+    
+    // Apply coupon discount if available
+    let finalTotal = totalWithTax;
+    const discountAmount = appliedCoupon?.discountAmount || 0;
+    if (discountAmount > 0) {
+      finalTotal = Math.max(0, totalWithTax - discountAmount);
+    }
+    
+    return {
+      subtotal: subtotalInPaise,
+      tax: taxInPaise,
+      discount: discountAmount,
+      total: finalTotal,
+    };
   };
 
   const addItemsToExistingOrder = async () => {
@@ -1615,7 +1651,8 @@ export default function FloorPlanPage() {
                               setValidatingCoupon(true);
                               setCouponError('');
                               try {
-                                const total = getOrderTotal() * 100; // Convert to paise
+                                const breakdown = getOrderBreakdown();
+                                const total = breakdown.total; // Already in paise
                                 const response = await fetch('/api/coupons/validate', {
                                   method: 'POST',
                                   headers: { 'Content-Type': 'application/json' },
@@ -1670,16 +1707,31 @@ export default function FloorPlanPage() {
                   )}
                   {orderItems.length > 0 && (
                     <div className="mt-4 pt-4 border-t">
-                      <div className="flex justify-between font-bold text-lg">
-                        <span>Total:</span>
-                        <span>₹{getOrderTotal()}</span>
-                      </div>
-                      {appliedCoupon && (
-                        <div className="flex justify-between text-sm text-green-600 mt-1">
-                          <span>Discount:</span>
-                          <span>- ₹{(appliedCoupon.discountAmount / 100).toFixed(2)}</span>
-                        </div>
-                      )}
+                      {(() => {
+                        const breakdown = getOrderBreakdown();
+                        return (
+                          <>
+                            <div className="flex justify-between text-sm mb-1">
+                              <span className="text-gray-600">Subtotal</span>
+                              <span>₹{(breakdown.subtotal / 100).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between text-sm mb-1">
+                              <span className="text-gray-600">Tax (GST)</span>
+                              <span>₹{(breakdown.tax / 100).toFixed(2)}</span>
+                            </div>
+                            {breakdown.discount > 0 && (
+                              <div className="flex justify-between text-sm text-green-600 font-medium mb-1">
+                                <span>Coupon Discount</span>
+                                <span>- ₹{(breakdown.discount / 100).toFixed(2)}</span>
+                              </div>
+                            )}
+                            <div className="flex justify-between font-bold text-lg pt-2 border-t border-gray-200 mt-2">
+                              <span>Total Payable</span>
+                              <span>₹{(breakdown.total / 100).toFixed(2)}</span>
+                            </div>
+                          </>
+                        );
+                      })()}
                       {currentOrder ? (
                         <button
                           onClick={addItemsToExistingOrder}
@@ -1853,6 +1905,7 @@ export default function FloorPlanPage() {
                         const combinedTaxCgst = allTableOrders.reduce((sum, order) => sum + (order.taxCgst || 0), 0);
                         const combinedTaxSgst = allTableOrders.reduce((sum, order) => sum + (order.taxSgst || 0), 0);
                         const combinedTaxIgst = allTableOrders.reduce((sum, order) => sum + (order.taxIgst || 0), 0);
+                        const combinedDiscount = allTableOrders.reduce((sum, order) => sum + (order.discountAmount || 0), 0);
                         const combinedTotal = allTableOrders.reduce((sum, order) => sum + (order.total || 0), 0);
                         
                         return (
@@ -1879,8 +1932,14 @@ export default function FloorPlanPage() {
                                 <span>₹{(combinedTaxIgst / 100).toFixed(2)}</span>
                               </div>
                             )}
-                            <div className="flex justify-between font-bold text-xl pt-4 border-t border-gray-300 mt-2">
-                              <span>Total</span>
+                            {combinedDiscount > 0 && (
+                              <div className="flex justify-between text-sm text-green-600 font-medium pt-2 border-t border-gray-200 mt-2">
+                                <span>Coupon Discount</span>
+                                <span>- ₹{(combinedDiscount / 100).toFixed(2)}</span>
+                              </div>
+                            )}
+                            <div className="flex justify-between font-bold text-xl pt-4 border-t-2 border-gray-300 mt-2">
+                              <span>Total Payable</span>
                               <span>₹{(combinedTotal / 100).toFixed(2)}</span>
                             </div>
                           </>

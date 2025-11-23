@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import PocketBase from 'pocketbase';
 import { getCurrentUser } from '@/lib/server-utils';
-import { canPerformAction } from '@/lib/permissions';
+import { canPerformAction, hasPermission } from '@/lib/permissions';
 
 export async function GET(request: NextRequest) {
     try {
@@ -85,6 +85,33 @@ export async function POST(request: NextRequest) {
 
         const body = await request.json();
 
+        // Check if user with this email already exists
+        try {
+            const existingUsers = await pb.collection('users').getList(1, 1, {
+                filter: `email = "${body.email}"`,
+            });
+
+            if (existingUsers.items.length > 0) {
+                return NextResponse.json(
+                    { error: 'A user with this email already exists' },
+                    { status: 400 }
+                );
+            }
+        } catch (checkError: any) {
+            // If filter fails, try to catch the error but continue
+            console.error('Error checking for existing user:', checkError);
+        }
+
+        // Only master users can create master users
+        const isCreatingMaster = body.isMaster === true;
+        
+        if (isCreatingMaster && !hasPermission(user, 'users.create.master')) {
+            return NextResponse.json(
+                { error: 'Forbidden: Only master users can create master users' },
+                { status: 403 }
+            );
+        }
+
         const userData: any = {
             email: body.email,
             emailVisibility: true,
@@ -92,7 +119,7 @@ export async function POST(request: NextRequest) {
             passwordConfirm: body.passwordConfirm,
             name: body.name,
             role: body.role,
-            isMaster: body.isMaster === true,
+            isMaster: isCreatingMaster && hasPermission(user, 'users.create.master') ? true : false,
         };
 
         // Add tenants if provided (can be empty array)

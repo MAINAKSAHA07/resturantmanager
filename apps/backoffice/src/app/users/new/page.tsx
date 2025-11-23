@@ -16,6 +16,8 @@ export default function NewUserPage() {
     const [error, setError] = useState('');
     const [tenants, setTenants] = useState<Tenant[]>([]);
     const [selectedTenants, setSelectedTenants] = useState<string[]>([]);
+    const [currentUser, setCurrentUser] = useState<any>(null);
+    const [isMasterUser, setIsMasterUser] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -26,8 +28,22 @@ export default function NewUserPage() {
     });
 
     useEffect(() => {
+        fetchCurrentUser();
         fetchTenants();
     }, []);
+
+    const fetchCurrentUser = async () => {
+        try {
+            const response = await fetch('/api/auth/me');
+            const data = await response.json();
+            if (response.ok && data.user) {
+                setCurrentUser(data.user);
+                setIsMasterUser(data.user.isMaster === true || data.user.role === 'admin');
+            }
+        } catch (err) {
+            console.error('Error fetching current user:', err);
+        }
+    };
 
     const fetchTenants = async () => {
         try {
@@ -163,20 +179,22 @@ export default function NewUserPage() {
                             </select>
                         </div>
 
-                        <div>
-                            <label className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    checked={formData.isMaster}
-                                    onChange={(e) => setFormData({ ...formData, isMaster: e.target.checked })}
-                                    className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                />
-                                <span className="text-sm font-medium text-gray-700">Master User</span>
-                            </label>
-                            <p className="text-xs text-gray-500 mt-1 ml-6">
-                                Master users have access to all restaurants/tenants and can switch between them
-                            </p>
-                        </div>
+                        {isMasterUser && (
+                            <div>
+                                <label className="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.isMaster}
+                                        onChange={(e) => setFormData({ ...formData, isMaster: e.target.checked })}
+                                        className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                    />
+                                    <span className="text-sm font-medium text-gray-700">Master User</span>
+                                </label>
+                                <p className="text-xs text-gray-500 mt-1 ml-6">
+                                    Master users have access to all restaurants/tenants and can switch between them. Only master users can create other master users.
+                                </p>
+                            </div>
+                        )}
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">

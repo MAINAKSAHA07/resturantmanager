@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     const adminPb = new PocketBase(pbUrl);
     await adminPb.admins.authWithPassword(adminEmail, adminPassword);
 
-    // Check if customer exists
+    // Check if customer exists (by email)
     let customer;
     try {
       const customers = await adminPb.collection('customer').getList(1, 1, {
@@ -66,6 +66,18 @@ export async function POST(request: NextRequest) {
       if (customers.items.length > 0) {
         customer = customers.items[0];
       } else {
+        // Check if email is already used in users collection (backoffice)
+        const existingUsers = await adminPb.collection('users').getList(1, 1, {
+          filter: `email = "${email}"`,
+        });
+
+        if (existingUsers.items.length > 0) {
+          return NextResponse.json(
+            { error: 'This email is already registered as a backoffice user. Please use a different email or contact support.' },
+            { status: 400 }
+          );
+        }
+
         // Create new customer with a temporary password
         // We'll use Google OAuth for future logins, but need a password for PocketBase auth collection
         const tempPassword = `google_${Math.random().toString(36).slice(-16)}`;
@@ -84,6 +96,15 @@ export async function POST(request: NextRequest) {
       }
     } catch (error: any) {
       console.error('Error creating/fetching customer:', error);
+      
+      // Check if error is due to duplicate email
+      if (error.response?.data?.data?.email) {
+        return NextResponse.json(
+          { error: 'This email is already registered. Please use a different email or try logging in.' },
+          { status: 400 }
+        );
+      }
+      
       return NextResponse.json(
         { error: 'Failed to authenticate customer', details: error.message },
         { status: 500 }

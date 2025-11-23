@@ -64,6 +64,18 @@ export async function POST(request: NextRequest) {
           });
           console.log('Found existing customer:', customerId);
         } else {
+          // Check if email is already used in users collection (backoffice)
+          const existingUsers = await pb.collection('users').getList(1, 1, {
+            filter: `email = "${email}"`,
+          });
+
+          if (existingUsers.items.length > 0) {
+            return NextResponse.json(
+              { error: 'This email is already registered as a backoffice user. Please use a different email or contact support.' },
+              { status: 400 }
+            );
+          }
+
           // Create new customer
           const newCustomer = await pb.collection('customer').create({
             name,
@@ -75,7 +87,16 @@ export async function POST(request: NextRequest) {
         }
       } catch (e: any) {
         console.error('Error finding/creating customer:', e);
-        // Continue without customerId if customer creation fails
+        
+        // Check if error is due to duplicate email
+        if (e.response?.data?.data?.email) {
+          return NextResponse.json(
+            { error: 'This email is already registered. Please use a different email or try logging in.' },
+            { status: 400 }
+          );
+        }
+        
+        // Continue without customerId if customer creation fails for other reasons
       }
     }
 

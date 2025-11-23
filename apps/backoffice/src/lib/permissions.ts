@@ -45,7 +45,9 @@ export type Permission =
   // Users Management
   | 'users.view'
   | 'users.create'
+  | 'users.create.master' // Only master users can create master users
   | 'users.edit'
+  | 'users.edit.master' // Only master users can edit master status
   | 'users.delete'
   
   // Tenants Management
@@ -91,7 +93,9 @@ const ROLE_PERMISSIONS: Record<'admin' | 'manager' | 'staff', Permission[]> = {
     'floorplan.edit',
     'users.view',
     'users.create',
+    'users.create.master',
     'users.edit',
+    'users.edit.master',
     'users.delete',
     'tenants.view',
     'tenants.create',
