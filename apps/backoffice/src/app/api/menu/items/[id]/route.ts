@@ -224,9 +224,17 @@ export async function PUT(
     
     // Handle image update
     if (removeImage) {
+      console.log('[API] Removing image from menu item');
       itemData.append('image', '');
     } else if (imageFile && imageFile.size > 0) {
+      console.log('[API] Updating image in FormData:', {
+        name: imageFile.name,
+        size: imageFile.size,
+        type: imageFile.type,
+      });
       itemData.append('image', imageFile);
+    } else {
+      console.log('[API] No image change - keeping existing image');
     }
     // If neither, don't append image field (keeps existing image)
     }
@@ -243,14 +251,30 @@ export async function PUT(
     
     let item;
     try {
+      console.log('[API] Updating menu item with FormData, using PocketBase URL:', pbUrl);
       item = await adminPb.collection('menuItem').update(params.id, itemData);
       console.log('[API] Update response - availability:', item.availability);
+      console.log('[API] Update response - image:', item.image ? `Present (${item.image})` : 'Not present');
     } catch (updateError: any) {
       console.error('[API] Update error:', {
         message: updateError.message,
         status: updateError.status,
-        data: updateError.data || updateError.response
+        data: updateError.data || updateError.response?.data,
+        response: updateError.response,
+        pbUrl: pbUrl,
       });
+      
+      // If it's a file upload error, provide more specific message
+      if (updateError.data && typeof updateError.data === 'object') {
+        const errorData = updateError.data;
+        if (errorData.image) {
+          return NextResponse.json(
+            { error: `Image upload failed: ${JSON.stringify(errorData.image)}` },
+            { status: updateError.status || 400 }
+          );
+        }
+      }
+      
       throw updateError;
     }
     

@@ -64,11 +64,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
+    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
 
     // Use admin client to ensure we have access to all collections
     const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
     const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+
+    console.log('[API] GET menu items, using PocketBase URL:', pbUrl);
 
     const adminPb = new PocketBase(pbUrl);
     await adminPb.admins.authWithPassword(adminEmail, adminPassword);
@@ -303,13 +305,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
+    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
 
     // Use admin client to ensure we have access to all collections
     // Create admin client directly to avoid environment variable issues
     const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
     const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
 
+    console.log('[API] Creating menu item with image upload, using PocketBase URL:', pbUrl);
+    
     const adminPb = new PocketBase(pbUrl);
     await adminPb.admins.authWithPassword(adminEmail, adminPassword);
 
@@ -418,12 +422,58 @@ export async function POST(request: NextRequest) {
 
     // Add image if provided
     if (imageFile && imageFile.size > 0) {
+      console.log('[API] Adding image to FormData:', {
+        name: imageFile.name,
+        size: imageFile.size,
+        type: imageFile.type,
+      });
       itemData.append('image', imageFile);
+    } else {
+      console.log('[API] No image file provided or file is empty');
     }
 
-    const item = await adminPb.collection('menuItem').create(itemData);
+    console.log('[API] Creating menu item with FormData, entries:', Array.from(itemData.entries()).map(([key, value]) => {
+      if (value instanceof File) {
+        return `${key}: [File] ${value.name} (${value.size} bytes)`;
+      }
+      return `${key}: ${value}`;
+    }));
 
-    return NextResponse.json({ item });
+    let item;
+    try {
+      item = await adminPb.collection('menuItem').create(itemData);
+      
+      console.log('[API] Menu item created successfully:', {
+        id: item.id,
+        name: item.name,
+        hasImage: !!item.image,
+        image: item.image,
+        pbUrl: pbUrl,
+      });
+
+      return NextResponse.json({ item });
+    } catch (createError: any) {
+      console.error('[API] Error creating menu item in PocketBase:', {
+        message: createError.message,
+        status: createError.status,
+        data: createError.data || createError.response?.data,
+        response: createError.response,
+        pbUrl: pbUrl,
+      });
+      
+      // If it's a file upload error, provide more specific message
+      if (createError.data && typeof createError.data === 'object') {
+        const errorData = createError.data;
+        if (errorData.image) {
+          return NextResponse.json(
+            { error: `Image upload failed: ${JSON.stringify(errorData.image)}` },
+            { status: createError.status || 400 }
+          );
+        }
+      }
+      
+      throw createError;
+    }
   } catch (error: any) {
     console.error('Error creating item:', {
       message: error.message,
