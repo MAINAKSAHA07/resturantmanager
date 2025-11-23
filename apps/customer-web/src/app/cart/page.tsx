@@ -166,7 +166,7 @@ export default function CartPage() {
               <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-4 py-4 border-b last:border-b-0">
                 {menuItem.image && (
                   <img
-                    src={`${process.env.NEXT_PUBLIC_AWS_POCKETBASE_URL || process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://localhost:8090'}/api/files/menuItem/${menuItem.id}/${menuItem.image}`}
+                    src={`/api/images/menuItem/${menuItem.id}/${menuItem.image}`}
                     alt={menuItem.name}
                     className="w-full sm:w-24 h-40 sm:h-24 object-cover rounded-lg"
                   />
