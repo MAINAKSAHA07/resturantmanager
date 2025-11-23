@@ -1,9 +1,13 @@
 /**
  * Script to create coupon collection in PocketBase
  * Run with: node pocketbase/scripts/create-coupon-collection.js
+ * 
+ * Usage:
+ *   AWS_POCKETBASE_URL=http://your-aws-url:8090 PB_ADMIN_EMAIL=email PB_ADMIN_PASSWORD=password node pocketbase/scripts/create-coupon-collection.js
  */
 
-require('dotenv').config();
+// Load environment variables from .env file
+require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
 const PocketBase = require('pocketbase/cjs');
 
 const PB_URL = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
