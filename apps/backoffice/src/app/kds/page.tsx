@@ -133,10 +133,11 @@ export default function KDSPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 via-accent-purple/5 to-accent-green/5 p-4">
-      <h1 className="text-4xl font-bold mb-6 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">Kitchen Display System</h1>
+    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 via-accent-purple/5 to-accent-green/5 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">Kitchen Display System</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stations.map((station) => (
           <div key={station.key} className="card border-2 border-accent-blue/20">
             <h2 className="text-xl font-bold mb-4 text-accent-blue">{station.label}</h2>

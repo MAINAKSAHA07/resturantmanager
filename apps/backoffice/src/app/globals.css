@@ -18,13 +18,7 @@
   --background-end-rgb: 255, 255, 255;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 240, 240, 240;
-    --background-start-rgb: 20, 20, 25;
-    --background-end-rgb: 30, 30, 35;
-  }
-}
+/* Removed dark mode override to ensure consistent color scheme across all devices */
 
 body {
   color: rgb(var(--foreground-rgb));

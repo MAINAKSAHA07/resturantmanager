@@ -116,9 +116,9 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 via-accent-purple/5 to-accent-green/5">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-6 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">Orders</h1>
+    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 via-accent-purple/5 to-accent-green/5 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">Orders</h1>
 
         <div className="mb-4">
           <select
@@ -143,17 +143,17 @@ export default function OrdersPage() {
         )}
 
         {orders.length > 0 && (
-          <div className="card overflow-hidden">
-            <table className="w-full">
+          <div className="card overflow-hidden overflow-x-auto">
+            <table className="w-full min-w-[640px]">
               <thead className="bg-gradient-to-r from-accent-blue to-accent-purple text-white">
                 <tr>
-                  <th className="px-4 py-3 text-left">Order ID</th>
-                  <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-left">Items</th>
-                  <th className="px-4 py-3 text-left">Channel</th>
-                  <th className="px-4 py-3 text-left">Total</th>
-                  <th className="px-4 py-3 text-left">Created</th>
-                  <th className="px-4 py-3 text-left">Actions</th>
+                  <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm">Order ID</th>
+                  <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm">Status</th>
+                  <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm">Items</th>
+                  <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm hidden sm:table-cell">Channel</th>
+                  <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm">Total</th>
+                  <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm hidden md:table-cell">Created</th>
+                  <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm">Actions</th>
                 </tr>
               </thead>
               <tbody>

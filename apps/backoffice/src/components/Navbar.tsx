@@ -20,6 +20,7 @@ export default function Navbar() {
   const [userRole, setUserRole] = useState<string>('');
   const [userTenants, setUserTenants] = useState<string[]>([]);
   const [user, setUser] = useState<User | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     // Fetch user role first, then fetch tenant info
@@ -207,36 +208,53 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-accent-blue to-accent-purple shadow-lg">
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
-          <div className="flex gap-6 items-center">
-            <Link href="/dashboard" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20">
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex gap-4 xl:gap-6 items-center">
+            <Link href="/dashboard" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base">
               Dashboard
             </Link>
-            <Link href="/menu" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20">
+            <Link href="/menu" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base">
               Menu
             </Link>
-            <Link href="/orders" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20">
+            <Link href="/orders" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base">
               Orders
             </Link>
-            <Link href="/kds" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20">
+            <Link href="/kds" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base">
               KDS
             </Link>
-            <Link href="/reservations" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20">
+            <Link href="/reservations" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base">
               Reservations
             </Link>
-            <Link href="/floorplan" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20">
+            <Link href="/floorplan" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base">
               Floor Plan
             </Link>
-            <Link href="/locations" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20">
+            <Link href="/locations" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base">
               Locations
             </Link>
-            <Link href="/coupons" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20">
+            <Link href="/coupons" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base">
               Coupons
             </Link>
-            <Link href="/users" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20">
+            <Link href="/users" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base">
               Users
             </Link>
           </div>
-          <div className="flex items-center gap-4">
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden text-white p-2 rounded-lg hover:bg-white/20 transition-colors"
+            aria-label="Toggle menu"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {mobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
+
+          <div className="flex items-center gap-2 lg:gap-4">
             {/* Show tenant selector based on user role and tenant availability */}
             {(() => {
               // Check if user is master - use both user object and userRole as fallback
@@ -248,13 +266,14 @@ export default function Navbar() {
                   <div className="relative">
                     <button
                       onClick={() => setShowTenantSelector(!showTenantSelector)}
-                      className="px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 font-medium text-sm backdrop-blur-sm transition-all duration-200"
+                      className="px-2 sm:px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 font-medium text-xs sm:text-sm backdrop-blur-sm transition-all duration-200 truncate max-w-[120px] sm:max-w-none"
                     >
                       {currentTenant 
-                        ? `${currentTenant.name} ▼` 
+                        ? <span className="hidden sm:inline">{currentTenant.name} ▼</span>
                         : tenants.length > 0 
-                          ? `Select Restaurant (${tenants.length}) ▼` 
-                          : 'Select Restaurant ▼'}
+                          ? <span className="hidden sm:inline">Select Restaurant ({tenants.length}) ▼</span>
+                          : <span className="hidden sm:inline">Select Restaurant ▼</span>}
+                      <span className="sm:hidden">Restaurant ▼</span>
                     </button>
                     {showTenantSelector && tenants.length > 0 && (
                       <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
@@ -289,9 +308,10 @@ export default function Navbar() {
                   <div className="relative">
                     <button
                       onClick={() => setShowTenantSelector(!showTenantSelector)}
-                      className="px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 font-medium text-sm backdrop-blur-sm transition-all duration-200"
+                      className="px-2 sm:px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 font-medium text-xs sm:text-sm backdrop-blur-sm transition-all duration-200 truncate max-w-[120px] sm:max-w-none"
                     >
-                      {currentTenant.name} ▼
+                      <span className="hidden sm:inline">{currentTenant.name} ▼</span>
+                      <span className="sm:hidden">Restaurant ▼</span>
                     </button>
                     {showTenantSelector && (
                       <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
@@ -316,8 +336,9 @@ export default function Navbar() {
               // Show static badge if user has only one tenant
               if (currentTenant) {
                 return (
-                  <div className="px-4 py-2 bg-white/20 text-white rounded-lg font-medium text-sm backdrop-blur-sm">
-                    {currentTenant.name}
+                  <div className="px-2 sm:px-4 py-2 bg-white/20 text-white rounded-lg font-medium text-xs sm:text-sm backdrop-blur-sm truncate max-w-[120px] sm:max-w-none">
+                    <span className="hidden sm:inline">{currentTenant.name}</span>
+                    <span className="sm:hidden">Restaurant</span>
                   </div>
                 );
               }
@@ -327,6 +348,41 @@ export default function Navbar() {
             <LogoutButton />
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden mt-4 pb-4 border-t border-white/20">
+            <div className="flex flex-col gap-2 pt-4">
+              <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
+                Dashboard
+              </Link>
+              <Link href="/menu" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
+                Menu
+              </Link>
+              <Link href="/orders" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
+                Orders
+              </Link>
+              <Link href="/kds" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
+                KDS
+              </Link>
+              <Link href="/reservations" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
+                Reservations
+              </Link>
+              <Link href="/floorplan" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
+                Floor Plan
+              </Link>
+              <Link href="/locations" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
+                Locations
+              </Link>
+              <Link href="/coupons" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
+                Coupons
+              </Link>
+              <Link href="/users" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
+                Users
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );

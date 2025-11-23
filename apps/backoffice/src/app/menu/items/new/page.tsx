@@ -156,13 +156,13 @@ export default function NewMenuItemPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Add Menu Item</h1>
+    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 via-accent-purple/5 to-accent-green/5 bg-white">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-gray-900">Add Menu Item</h1>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-4 sm:p-6">
           <div className="mb-4">
-            <label className="block font-medium mb-2">Name *</label>
+            <label className="block font-medium mb-2 text-gray-900">Name *</label>
             <input
               type="text"
               value={formData.name}
@@ -222,7 +222,7 @@ export default function NewMenuItemPage() {
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block font-medium mb-2">Price (₹) *</label>
               <input
