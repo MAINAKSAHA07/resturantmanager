@@ -171,6 +171,16 @@ async function createCollections() {
             },
             { name: 'name', type: 'text', required: true },
             { name: 'description', type: 'text', required: false },
+            {
+              name: 'image',
+              type: 'file',
+              required: false,
+              options: {
+                maxSelect: 1,
+                maxSize: 5242880, // 5MB
+                mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+              },
+            },
             { name: 'basePrice', type: 'number', required: true },
             { name: 'taxRate', type: 'number', required: true, defaultValue: 5 },
             { name: 'hsnSac', type: 'text', required: false },

@@ -21,7 +21,8 @@
     "pb:check-duplicate-menu": "node pocketbase/scripts/check-duplicate-menu-items.js",
     "pb:cleanup-duplicate-menu": "node pocketbase/scripts/cleanup-duplicate-menu-items.js",
     "pb:check-duplicate-tables": "node pocketbase/scripts/check-duplicate-tables.js",
-    "pb:cleanup-duplicate-tables": "node pocketbase/scripts/cleanup-duplicate-tables.js"
+    "pb:cleanup-duplicate-tables": "node pocketbase/scripts/cleanup-duplicate-tables.js",
+    "pb:add-image-field": "node pocketbase/scripts/add-image-field-to-menuitem.js"
   },
   "devDependencies": {
     "dotenv": "^17.2.3",
