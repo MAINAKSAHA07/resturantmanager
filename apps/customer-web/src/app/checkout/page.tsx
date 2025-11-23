@@ -18,10 +18,7 @@ export default function CheckoutPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'cod'>('cod');
-  const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
-  const [couponError, setCouponError] = useState('');
-  const [validatingCoupon, setValidatingCoupon] = useState(false);
 
   useEffect(() => {
     // Check authentication
@@ -33,63 +30,22 @@ export default function CheckoutPage() {
     setIsAuthenticated(true);
     setCheckingAuth(false);
 
+    // Load applied coupon from localStorage (applied in cart)
+    const savedCoupon = localStorage.getItem('applied_coupon');
+    if (savedCoupon) {
+      try {
+        setAppliedCoupon(JSON.parse(savedCoupon));
+      } catch (e) {
+        console.error('Error loading coupon:', e);
+      }
+    }
+
     // Check if Razorpay script is loaded
     if (typeof window !== 'undefined' && window.Razorpay) {
       setRazorpayLoaded(true);
     }
   }, [router]);
 
-  const handleApplyCoupon = async () => {
-    if (!couponCode.trim()) {
-      setCouponError('Please enter a coupon code');
-      return;
-    }
-
-    setValidatingCoupon(true);
-    setCouponError('');
-
-    try {
-      // Calculate order amount from cart
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      const itemIds = cart.map((item: any) => item.menuItemId);
-      const itemsResponse = await fetch(`/api/menu-items?ids=${itemIds.join(',')}`);
-      const itemsData = await itemsResponse.json();
-      
-      let orderAmount = 0;
-      (itemsData.items || []).forEach((item: any) => {
-        const cartItem = cart.find((ci: any) => ci.menuItemId === item.id);
-        if (cartItem) {
-          orderAmount += item.basePrice * cartItem.quantity;
-        }
-      });
-
-      const response = await fetch('/api/coupons/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: couponCode, orderAmount }),
-      });
-
-      const data = await response.json();
-      if (response.ok && data.valid) {
-        setAppliedCoupon(data.coupon);
-        setCouponError('');
-      } else {
-        setCouponError(data.error || 'Invalid coupon code');
-        setAppliedCoupon(null);
-      }
-    } catch (error: any) {
-      setCouponError('Failed to validate coupon');
-      setAppliedCoupon(null);
-    } finally {
-      setValidatingCoupon(false);
-    }
-  };
-
-  const handleRemoveCoupon = () => {
-    setCouponCode('');
-    setAppliedCoupon(null);
-    setCouponError('');
-  };
 
   const handleCheckout = async () => {
     setLoading(true);
@@ -103,6 +59,27 @@ export default function CheckoutPage() {
         return;
       }
 
+      // Get coupon code from localStorage if not in state
+      const savedCoupon = localStorage.getItem('applied_coupon');
+      let couponCodeToSend = null;
+      if (appliedCoupon?.code) {
+        couponCodeToSend = appliedCoupon.code;
+      } else if (savedCoupon) {
+        try {
+          const parsedCoupon = JSON.parse(savedCoupon);
+          couponCodeToSend = parsedCoupon.code;
+        } catch (e) {
+          console.error('Error parsing saved coupon:', e);
+        }
+      }
+      
+      console.log('[Checkout] Creating order with:', {
+        itemsCount: cart.length,
+        couponCode: couponCodeToSend,
+        hasAppliedCoupon: !!appliedCoupon,
+        savedCoupon: !!savedCoupon,
+      });
+
       // Create order with coupon if applied
       const orderResponse = await fetch('/api/orders/create', {
         method: 'POST',
@@ -112,7 +89,7 @@ export default function CheckoutPage() {
         },
         body: JSON.stringify({ 
           items: cart,
-          couponCode: appliedCoupon?.code || null,
+          couponCode: couponCodeToSend,
         }),
       });
 
@@ -121,6 +98,25 @@ export default function CheckoutPage() {
       }
 
       const orderData = await orderResponse.json();
+      
+      console.log('[Checkout] Order creation response:', {
+        orderId: orderData.orderId,
+        amount: orderData.amount,
+        discountAmount: orderData.discountAmount,
+        couponId: orderData.couponId,
+        couponDebug: orderData.couponDebug,
+        fullResponse: orderData,
+      });
+      
+      // Log coupon debug info if discount is 0 but coupon was sent
+      if (couponCodeToSend && (!orderData.discountAmount || orderData.discountAmount === 0)) {
+        console.warn('[Checkout] ⚠️ Coupon was sent but discount is 0!', {
+          couponCode: couponCodeToSend,
+          couponDebug: orderData.couponDebug,
+          discountAmount: orderData.discountAmount,
+          couponId: orderData.couponId,
+        });
+      }
       
       if (!orderData.orderId) {
         const errorMsg = orderData.error || 'Failed to create order';
@@ -250,49 +246,25 @@ export default function CheckoutPage() {
           Choose your payment method
         </p>
 
-        {/* Coupon Section */}
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="font-semibold mb-3">Have a coupon code?</h3>
-          {!appliedCoupon ? (
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={couponCode}
-                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                placeholder="Enter coupon code"
-                className="flex-1 px-3 py-2 border rounded-lg"
-                disabled={validatingCoupon}
-              />
-              <button
-                type="button"
-                onClick={handleApplyCoupon}
-                disabled={validatingCoupon || !couponCode.trim()}
-                className="px-4 py-2 bg-accent-purple text-white rounded-lg hover:bg-accent-purple/90 disabled:opacity-50"
-              >
-                {validatingCoupon ? 'Applying...' : 'Apply'}
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+        {/* Applied Coupon Display */}
+        {appliedCoupon && (
+          <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
+            <div className="flex items-center justify-between">
               <div>
-                <span className="font-semibold text-green-800">{appliedCoupon.code}</span>
-                <span className="text-sm text-green-600 ml-2">
-                  - ₹{(appliedCoupon.discountAmount / 100).toFixed(2)} discount
+                <span className="font-semibold text-green-800">Coupon Applied: {appliedCoupon.code}</span>
+                <span className="text-sm text-green-600 ml-2 block mt-1">
+                  Discount: ₹{(appliedCoupon.discountAmount / 100).toFixed(2)}
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={handleRemoveCoupon}
-                className="text-red-600 hover:text-red-800 text-sm"
+              <Link
+                href="/cart"
+                className="text-blue-600 hover:text-blue-800 text-sm underline"
               >
-                Remove
-              </button>
+                Change
+              </Link>
             </div>
-          )}
-          {couponError && (
-            <p className="text-red-600 text-sm mt-2">{couponError}</p>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Payment Method Selection */}
         <div className="mb-6 space-y-3">

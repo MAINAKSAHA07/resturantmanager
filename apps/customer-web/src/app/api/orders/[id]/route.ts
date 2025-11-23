@@ -72,6 +72,32 @@ export async function GET(
       }
     }
 
+    // Normalize couponId - PocketBase returns empty array [] for null relation fields
+    const normalizedCouponId = Array.isArray(order.couponId) 
+      ? (order.couponId.length > 0 ? order.couponId[0] : null)
+      : (order.couponId || null);
+    
+    // Normalize discountAmount - ensure it's a number
+    const normalizedDiscountAmount = typeof order.discountAmount === 'number' 
+      ? order.discountAmount 
+      : (Number(order.discountAmount) || 0);
+
+    // Log order data for debugging
+    console.log(`[Order API] Order ${id.slice(0, 8)} data:`, {
+      total: order.total,
+      subtotal: order.subtotal,
+      taxCgst: order.taxCgst,
+      taxSgst: order.taxSgst,
+      taxIgst: order.taxIgst,
+      discountAmount: normalizedDiscountAmount,
+      couponId: normalizedCouponId,
+      rawDiscountAmount: order.discountAmount,
+      rawCouponId: order.couponId,
+      hasDiscountAmount: 'discountAmount' in order,
+      discountAmountType: typeof order.discountAmount,
+      couponIdIsArray: Array.isArray(order.couponId),
+    });
+
     // Return order with all data
     return NextResponse.json({ 
       order: {
@@ -79,9 +105,11 @@ export async function GET(
         status: order.status,
         total: order.total,
         subtotal: order.subtotal,
-        taxCgst: order.taxCgst,
-        taxSgst: order.taxSgst,
-        taxIgst: order.taxIgst,
+        taxCgst: order.taxCgst || 0,
+        taxSgst: order.taxSgst || 0,
+        taxIgst: order.taxIgst || 0,
+        discountAmount: normalizedDiscountAmount,
+        couponId: normalizedCouponId,
         channel: order.channel,
         created: order.created,
         updated: order.updated,

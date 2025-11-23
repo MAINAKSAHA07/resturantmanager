@@ -21,6 +21,7 @@ interface Coupon {
 export default function CouponsPage() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [formData, setFormData] = useState({
@@ -42,13 +43,33 @@ export default function CouponsPage() {
 
   const fetchCoupons = async () => {
     try {
+      setError(null);
+      console.log('[Coupons Page] Fetching coupons...');
       const response = await fetch('/api/coupons');
+      console.log('[Coupons Page] Response status:', response.status);
       const data = await response.json();
-      if (data.coupons) {
+      console.log('[Coupons Page] Response data:', data);
+      
+      if (data.coupons && Array.isArray(data.coupons)) {
+        console.log('[Coupons Page] Setting coupons:', data.coupons.length);
         setCoupons(data.coupons);
+      } else if (data.message) {
+        console.warn('[Coupons Page] Coupon collection message:', data.message);
+        setError(data.message);
+        setCoupons([]);
+      } else if (data.error) {
+        console.error('[Coupons Page] API error:', data.error);
+        setError(data.error);
+        setCoupons([]);
+      } else {
+        console.warn('[Coupons Page] Unexpected response format:', data);
+        setError('Unexpected response format from server');
+        setCoupons([]);
       }
-    } catch (error) {
-      console.error('Error fetching coupons:', error);
+    } catch (error: any) {
+      console.error('[Coupons Page] Error fetching coupons:', error);
+      setError(error.message || 'Failed to fetch coupons');
+      setCoupons([]);
     } finally {
       setLoading(false);
     }
@@ -149,7 +170,7 @@ export default function CouponsPage() {
   const isActive = (coupon: Coupon) => {
     if (!coupon.isActive) return false;
     if (isExpired(coupon.validUntil)) return false;
-    if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) return false;
+    if (coupon.usageLimit && (coupon.usedCount || 0) >= coupon.usageLimit) return false;
     return true;
   };
 
@@ -162,28 +183,29 @@ export default function CouponsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">
-          Coupons
-        </h1>
-        <button
-          onClick={() => {
-            resetForm();
-            setEditingCoupon(null);
-            setShowAddModal(true);
-          }}
-          className="px-4 py-2 bg-accent-blue text-white rounded-lg hover:bg-accent-blue/90 transition-colors"
-        >
-          Add Coupon
-        </button>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 via-accent-purple/5 to-accent-green/5 bg-white">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">
+            Coupons
+          </h1>
+          <button
+            onClick={() => {
+              resetForm();
+              setEditingCoupon(null);
+              setShowAddModal(true);
+            }}
+            className="px-4 py-2 bg-gradient-to-r from-accent-blue to-accent-purple text-white rounded-lg hover:from-accent-blue/90 hover:to-accent-purple/90 transition-all shadow-md hover:shadow-lg"
+          >
+            Add Coupon
+          </button>
+        </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {coupons.map((coupon) => (
           <div
             key={coupon.id}
-            className={`card ${!isActive(coupon) ? 'opacity-60' : ''}`}
+            className={`card hover:shadow-lg transition-shadow ${!isActive(coupon) ? 'opacity-60' : ''}`}
           >
             <div className="flex justify-between items-start mb-4">
               <div>
@@ -218,35 +240,43 @@ export default function CouponsPage() {
               <p className="text-sm text-gray-600 mb-2">{coupon.description}</p>
             )}
 
-            <div className="space-y-1 text-sm">
-              <div>
-                <span className="font-medium">Discount: </span>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-gray-700">Discount:</span>
                 {coupon.discountType === 'percentage' ? (
-                  <span>{coupon.discountValue / 100}%</span>
+                  <span className="text-accent-blue font-semibold">{(coupon.discountValue / 100).toFixed(0)}%</span>
                 ) : (
-                  <span>₹{(coupon.discountValue / 100).toFixed(2)}</span>
+                  <span className="text-accent-blue font-semibold">₹{(coupon.discountValue / 100).toFixed(2)}</span>
                 )}
               </div>
               {coupon.minOrderAmount > 0 && (
-                <div>
-                  <span className="font-medium">Min Order: </span>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-gray-700">Min Order:</span>
                   <span>₹{(coupon.minOrderAmount / 100).toFixed(2)}</span>
                 </div>
               )}
-              {coupon.maxDiscountAmount && (
-                <div>
-                  <span className="font-medium">Max Discount: </span>
+              {coupon.maxDiscountAmount && coupon.maxDiscountAmount > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-gray-700">Max Discount:</span>
                   <span>₹{(coupon.maxDiscountAmount / 100).toFixed(2)}</span>
                 </div>
               )}
-              <div>
-                <span className="font-medium">Valid: </span>
-                <span>{formatDate(coupon.validFrom)} - {formatDate(coupon.validUntil)}</span>
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-gray-700">Valid:</span>
+                <span className="text-gray-600">{formatDate(coupon.validFrom)} - {formatDate(coupon.validUntil)}</span>
               </div>
-              {coupon.usageLimit && (
-                <div>
-                  <span className="font-medium">Usage: </span>
-                  <span>{coupon.usedCount} / {coupon.usageLimit}</span>
+              {coupon.usageLimit && coupon.usageLimit > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-gray-700">Usage:</span>
+                  <span className={coupon.usedCount >= coupon.usageLimit ? 'text-red-600 font-semibold' : 'text-gray-600'}>
+                    {coupon.usedCount || 0} / {coupon.usageLimit}
+                  </span>
+                </div>
+              )}
+              {(!coupon.usageLimit || coupon.usageLimit === 0) && (
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-gray-700">Usage:</span>
+                  <span className="text-gray-600">{coupon.usedCount || 0} / Unlimited</span>
                 </div>
               )}
             </div>
@@ -254,9 +284,24 @@ export default function CouponsPage() {
         ))}
       </div>
 
-      {coupons.length === 0 && (
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800 font-medium">Error: {error}</p>
+          <button
+            onClick={fetchCoupons}
+            className="mt-2 text-red-600 hover:text-red-800 underline text-sm"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {coupons.length === 0 && !loading && !error && (
         <div className="text-center py-12">
-          <p className="text-gray-500">No coupons found. Create your first coupon!</p>
+          <div className="bg-white rounded-lg p-8 shadow-sm">
+            <p className="text-gray-500 text-lg">No coupons found.</p>
+            <p className="text-gray-400 text-sm mt-2">Create your first coupon to get started!</p>
+          </div>
         </div>
       )}
 
@@ -401,6 +446,7 @@ export default function CouponsPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

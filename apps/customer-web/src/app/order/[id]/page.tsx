@@ -22,6 +22,8 @@ interface Order {
   taxCgst: number;
   taxSgst: number;
   taxIgst: number;
+  discountAmount?: number;
+  couponId?: string | null;
   channel: string;
   created: string;
   timestamps: Record<string, string>;
@@ -64,7 +66,17 @@ export default function OrderTrackingPage() {
         
         // Always update to ensure latest data is shown
         setOrder(data.order);
-        console.log(`Order ${orderId} fetched: status=${data.order.status}, updated=${data.order.updated}`);
+        console.log(`[Order Details] Order ${orderId} fetched:`, {
+          status: data.order.status,
+          total: data.order.total,
+          subtotal: data.order.subtotal,
+          taxCgst: data.order.taxCgst,
+          taxSgst: data.order.taxSgst,
+          taxIgst: data.order.taxIgst,
+          discountAmount: data.order.discountAmount,
+          couponId: data.order.couponId,
+          hasDiscount: !!(data.order.discountAmount && data.order.discountAmount > 0),
+        });
         setError('');
       } catch (err: any) {
         console.error('Error fetching order:', err);
@@ -234,9 +246,15 @@ export default function OrderTrackingPage() {
                 <span>₹{(order.taxIgst / 100).toFixed(2)}</span>
               </div>
             )}
-            <div className="flex justify-between font-bold text-lg pt-2 border-t">
-              <span>Total</span>
-              <span>₹{(order.total / 100).toFixed(2)}</span>
+            {order.discountAmount !== undefined && order.discountAmount !== null && order.discountAmount > 0 && (
+              <div className="flex justify-between text-sm mb-2 text-green-600 font-medium">
+                <span>Coupon Discount</span>
+                <span>- ₹{(order.discountAmount / 100).toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-bold text-lg pt-2 border-t-2 border-gray-300 mt-2">
+              <span>Total Payable</span>
+              <span className="text-accent-blue">₹{(order.total / 100).toFixed(2)}</span>
             </div>
           </div>
         </div>

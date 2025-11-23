@@ -25,10 +25,25 @@ export default function CartPage() {
   const [items, setItems] = useState<Record<string, MenuItem>>({});
   const [loading, setLoading] = useState(true);
   const [locationStateCode, setLocationStateCode] = useState('MH');
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponError, setCouponError] = useState('');
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
 
   useEffect(() => {
     const cartData = JSON.parse(localStorage.getItem('cart') || '[]');
     setCart(cartData);
+    
+    // Load applied coupon from localStorage
+    const savedCoupon = localStorage.getItem('applied_coupon');
+    if (savedCoupon) {
+      try {
+        setAppliedCoupon(JSON.parse(savedCoupon));
+        setCouponCode(JSON.parse(savedCoupon).code);
+      } catch (e) {
+        console.error('Error loading coupon:', e);
+      }
+    }
 
     // Fetch menu items
     const fetchItems = async () => {
@@ -79,12 +94,79 @@ export default function CartPage() {
 
     const subtotal = itemTotals.reduce((sum, item) => sum + item.subtotal, 0);
     const gst = calculateGSTForItems(itemTotals, locationStateCode);
-    const total = subtotal + gst.totalTax;
+    let total = subtotal + gst.totalTax;
+    
+    // Apply coupon discount if available
+    let discountAmount = 0;
+    if (appliedCoupon && appliedCoupon.discountAmount) {
+      discountAmount = appliedCoupon.discountAmount;
+      total = Math.max(0, total - discountAmount);
+    }
 
-    return { subtotal, gst, total };
+    return { subtotal, gst, total, discountAmount };
   };
 
-  const { subtotal, gst, total } = calculateTotals();
+  const { subtotal, gst, total, discountAmount } = calculateTotals();
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError('Please enter a coupon code');
+      return;
+    }
+
+    setValidatingCoupon(true);
+    setCouponError('');
+
+    try {
+      // Calculate order amount from cart (in paise)
+      let orderAmount = 0;
+      cart.forEach((item) => {
+        const menuItem = items[item.menuItemId];
+        if (menuItem) {
+          orderAmount += menuItem.basePrice * item.quantity;
+        }
+      });
+
+      // Add GST to order amount for validation
+      const itemTotals = cart.map((item) => ({
+        subtotal: calculateItemTotal(item),
+        taxRate: items[item.menuItemId]?.taxRate || 5,
+      }));
+      const gst = calculateGSTForItems(itemTotals, locationStateCode);
+      orderAmount += gst.totalTax;
+
+      const response = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponCode, orderAmount }),
+      });
+
+      const data = await response.json();
+      if (response.ok && data.valid) {
+        setAppliedCoupon(data.coupon);
+        setCouponError('');
+        // Save to localStorage
+        localStorage.setItem('applied_coupon', JSON.stringify(data.coupon));
+      } else {
+        setCouponError(data.error || 'Invalid coupon code');
+        setAppliedCoupon(null);
+        localStorage.removeItem('applied_coupon');
+      }
+    } catch (error: any) {
+      setCouponError('Failed to validate coupon');
+      setAppliedCoupon(null);
+      localStorage.removeItem('applied_coupon');
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponCode('');
+    setAppliedCoupon(null);
+    setCouponError('');
+    localStorage.removeItem('applied_coupon');
+  };
 
   const updateQuantity = (index: number, delta: number) => {
     const newCart = [...cart];
@@ -211,6 +293,48 @@ export default function CartPage() {
         </div>
 
         <div className="card border-2 border-accent-blue/20">
+          {/* Coupon Code Section */}
+          <div className="mb-4 pb-4 border-b border-gray-200">
+            <label htmlFor="couponCode" className="block text-sm font-medium text-gray-700 mb-2">
+              Have a coupon code?
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                id="couponCode"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                placeholder="Enter coupon code"
+                className="flex-1 px-3 py-2 border rounded-lg focus:ring-accent-blue focus:border-accent-blue"
+                disabled={!!appliedCoupon}
+              />
+              {!appliedCoupon ? (
+                <button
+                  onClick={handleApplyCoupon}
+                  disabled={validatingCoupon || !couponCode.trim()}
+                  className="px-4 py-2 bg-accent-blue text-white rounded-lg hover:bg-accent-blue/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {validatingCoupon ? 'Applying...' : 'Apply'}
+                </button>
+              ) : (
+                <button
+                  onClick={handleRemoveCoupon}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+            {couponError && (
+              <p className="text-red-500 text-sm mt-1">{couponError}</p>
+            )}
+            {appliedCoupon && (
+              <p className="text-green-600 text-sm mt-1">
+                Coupon "{appliedCoupon.code}" applied! Discount: ₹{(appliedCoupon.discountAmount / 100).toFixed(2)}
+              </p>
+            )}
+          </div>
+
           <div className="space-y-2 mb-4">
             <div className="flex justify-between text-gray-700">
               <span>Subtotal:</span>
@@ -234,8 +358,14 @@ export default function CartPage() {
                 <span>₹{(gst.igst / 100).toFixed(2)}</span>
               </div>
             )}
+            {discountAmount > 0 && (
+              <div className="flex justify-between text-sm text-green-600 font-medium">
+                <span>Coupon Discount ({appliedCoupon?.code}):</span>
+                <span>- ₹{(discountAmount / 100).toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-xl font-bold pt-2 border-t-2 border-accent-blue/20">
-              <span className="text-accent-blue">Total:</span>
+              <span className="text-accent-blue">Total Payable:</span>
               <span className="text-accent-blue">₹{(total / 100).toFixed(2)}</span>
             </div>
           </div>

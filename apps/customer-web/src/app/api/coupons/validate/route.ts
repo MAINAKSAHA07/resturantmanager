@@ -49,10 +49,50 @@ export async function POST(request: NextRequest) {
 
     const tenantId = tenants.items[0].id;
 
-    // Find coupon
-    const coupons = await pb.collection('coupon').getList(1, 1, {
-      filter: `code = "${code.toUpperCase().trim()}" && tenantId = "${tenantId}"`,
+    console.log('[Coupon Validate] Looking for coupon:', {
+      code: code.toUpperCase().trim(),
+      tenantId,
+      brandKey,
     });
+
+    // Find coupon - try both relation and string matching
+    let coupons;
+    try {
+      coupons = await pb.collection('coupon').getList(1, 1, {
+        filter: `code = "${code.toUpperCase().trim()}" && (tenantId = "${tenantId}" || tenantId ~ "${tenantId}")`,
+      });
+    } catch (filterError: any) {
+      console.warn('[Coupon Validate] Filter error, trying alternative:', filterError.message);
+      // Fallback: fetch all matching codes and filter client-side
+      const allCoupons = await pb.collection('coupon').getList(1, 200, {
+        filter: `code = "${code.toUpperCase().trim()}"`,
+      });
+      coupons = {
+        items: allCoupons.items.filter((coupon: any) => {
+          const couponTenantId = Array.isArray(coupon.tenantId) ? coupon.tenantId[0] : coupon.tenantId;
+          return couponTenantId === tenantId;
+        }),
+      };
+    }
+
+    console.log('[Coupon Validate] Found coupons:', coupons.items.length);
+    if (coupons.items.length > 0) {
+      console.log('[Coupon Validate] Coupon details:', {
+        id: coupons.items[0].id,
+        code: coupons.items[0].code,
+        isActive: coupons.items[0].isActive,
+        tenantId: coupons.items[0].tenantId,
+      });
+    } else {
+      // Debug: check if any coupons exist for this tenant
+      const allTenantCoupons = await pb.collection('coupon').getFullList({
+        filter: `tenantId = "${tenantId}" || tenantId ~ "${tenantId}"`,
+      });
+      console.log('[Coupon Validate] Total coupons for tenant:', allTenantCoupons.length);
+      if (allTenantCoupons.length > 0) {
+        console.log('[Coupon Validate] Sample tenant coupon codes:', allTenantCoupons.slice(0, 3).map((c: any) => c.code));
+      }
+    }
 
     if (coupons.items.length === 0) {
       return NextResponse.json(
@@ -102,7 +142,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check usage limit
-    if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+    const usedCount = coupon.usedCount || 0;
+    if (coupon.usageLimit && usedCount >= coupon.usageLimit) {
       return NextResponse.json(
         { error: 'Coupon usage limit reached' },
         { status: 400 }
@@ -112,19 +153,28 @@ export async function POST(request: NextRequest) {
     // Calculate discount
     let discountAmount = 0;
     if (coupon.discountType === 'percentage') {
-      discountAmount = Math.round((orderAmount * coupon.discountValue) / 100);
+      // discountValue is stored as percentage * 100 (e.g., 10% = 1000)
+      discountAmount = Math.round((orderAmount * coupon.discountValue) / 10000);
       // Apply max discount if set
       if (coupon.maxDiscountAmount && discountAmount > coupon.maxDiscountAmount) {
         discountAmount = coupon.maxDiscountAmount;
       }
     } else {
-      // Fixed discount
+      // Fixed discount - already in paise
       discountAmount = coupon.discountValue;
       // Don't exceed order amount
       if (discountAmount > orderAmount) {
         discountAmount = orderAmount;
       }
     }
+
+    console.log('[Coupon Validate] Discount calculation:', {
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue,
+      orderAmount,
+      calculatedDiscount: discountAmount,
+      maxDiscountAmount: coupon.maxDiscountAmount,
+    });
 
     return NextResponse.json({
       valid: true,
