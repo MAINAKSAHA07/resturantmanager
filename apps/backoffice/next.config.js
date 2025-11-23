@@ -12,7 +12,18 @@ const nextConfig = {
         pathname: '/api/files/**',
       },
       {
+        protocol: 'http',
+        hostname: '18.218.140.182',
+        port: '8090',
+        pathname: '/api/files/**',
+      },
+      {
         protocol: 'https',
+        hostname: '**',
+        pathname: '/api/files/**',
+      },
+      {
+        protocol: 'http',
         hostname: '**',
         pathname: '/api/files/**',
       },

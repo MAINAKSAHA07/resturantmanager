@@ -259,7 +259,7 @@ export default async function HomePage({
                       {item.image && (
                         <div className="h-40 sm:h-48 bg-gray-200 overflow-hidden">
                           <img
-                            src={`${process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://localhost:8090'}/api/files/menuItem/${item.id}/${item.image}`}
+                            src={`${process.env.NEXT_PUBLIC_AWS_POCKETBASE_URL || process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://localhost:8090'}/api/files/menuItem/${item.id}/${item.image}`}
                             alt={item.name}
                             className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
                           />

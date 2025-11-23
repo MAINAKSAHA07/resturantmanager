@@ -1,8 +1,12 @@
 /**
  * Cleanup script to remove duplicate menu items and categories with the same name
  * for the same tenant/location. Keeps the oldest one and migrates references.
+ * 
+ * Usage:
+ *   node pocketbase/scripts/cleanup-duplicate-menu-items.js
  */
 
+require('dotenv').config();
 const PocketBase = require('pocketbase/cjs');
 
 const PB_URL = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
@@ -14,6 +18,7 @@ async function cleanupDuplicateMenuItems() {
   
   try {
     console.log('🔐 Authenticating as admin...');
+    console.log(`📍 Using PocketBase URL: ${PB_URL}`);
     await pb.admins.authWithPassword(ADMIN_EMAIL, ADMIN_PASSWORD);
     console.log('✅ Authenticated successfully\n');
 

@@ -121,7 +121,7 @@ export default function EditMenuItemPage() {
 
         // Set existing image if available
         if (item.image) {
-          const pbUrl = process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://localhost:8090';
+          const pbUrl = process.env.NEXT_PUBLIC_AWS_POCKETBASE_URL || process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://localhost:8090';
           setExistingImageUrl(`${pbUrl}/api/files/menuItem/${item.id}/${item.image}`);
         }
       } else {
