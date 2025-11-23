@@ -105,20 +105,20 @@ export default async function ItemPage({
   const { item, optionGroups } = data;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 to-accent-purple/5 bg-white">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <Link
           href="/"
-          className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-6"
+          className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4 sm:mb-6 text-sm sm:text-base"
         >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back to Menu
         </Link>
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           {item.image && (
-            <div className="h-96 bg-gray-200">
+            <div className="h-48 sm:h-64 lg:h-96 bg-gray-200">
               <img
                 src={`${process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://localhost:8090'}/api/files/menuItem/${item.id}/${item.image}`}
                 alt={item.name}
@@ -126,21 +126,21 @@ export default async function ItemPage({
               />
             </div>
           )}
-          <div className="p-6">
-            <h1 className="text-3xl font-bold mb-2">{item.name}</h1>
+          <div className="p-4 sm:p-6">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">{item.name}</h1>
             {item.description && (
-              <p className="text-gray-600 mb-4">{item.description}</p>
+              <p className="text-sm sm:text-base text-gray-600 mb-4">{item.description}</p>
             )}
-            <p className="text-2xl font-bold mb-6">
+            <p className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
               ₹{(item.basePrice / 100).toFixed(2)}
             </p>
 
             {optionGroups.length > 0 && (
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold mb-4">Customize</h2>
+              <div className="mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Customize</h2>
                 {optionGroups.map((group) => (
-                  <div key={group.id} className="mb-4">
-                    <label className="block font-medium mb-2">
+                  <div key={group.id} className="mb-3 sm:mb-4">
+                    <label className="block text-sm sm:text-base font-medium mb-2">
                       {group.name}
                       {group.required && <span className="text-red-500">*</span>}
                     </label>
@@ -148,7 +148,7 @@ export default async function ItemPage({
                       {group.values.map((value: any) => (
                         <label
                           key={value.id}
-                          className="flex items-center space-x-2 cursor-pointer"
+                          className="flex items-center space-x-2 cursor-pointer text-sm sm:text-base"
                         >
                           <input
                             type={
@@ -156,11 +156,11 @@ export default async function ItemPage({
                             }
                             name={group.id}
                             value={value.id}
-                            className="form-radio"
+                            className="form-radio w-4 h-4 sm:w-5 sm:h-5"
                           />
                           <span>{value.name}</span>
                           {value.priceDelta !== 0 && (
-                            <span className="text-sm text-gray-600">
+                            <span className="text-xs sm:text-sm text-gray-600">
                               (+₹{(value.priceDelta / 100).toFixed(2)})
                             </span>
                           )}

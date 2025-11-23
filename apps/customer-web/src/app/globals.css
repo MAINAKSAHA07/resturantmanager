@@ -3,14 +3,21 @@
 @tailwind utilities;
 
 :root {
-  /* D3 schemeAccent colors */
-  --accent-green: #7fc97f;
-  --accent-purple: #beaed4;
-  --accent-orange: #fdc086;
-  --accent-yellow: #ffff99;
-  --accent-blue: #386cb0;
-  --accent-pink: #f0027f;
-  --accent-brown: #bf5b17;
+  /* D3 schemeObservable10 colors */
+  --accent-blue: #4269D0;
+  --accent-red: #FF6B6B;
+  --accent-teal: #4ECDC4;
+  --accent-cyan: #45B7D1;
+  --accent-salmon: #FFA07A;
+  --accent-mint: #98D8C8;
+  --accent-yellow: #F7DC6F;
+  --accent-purple: #BB8FCE;
+  --accent-sky: #85C1E2;
+  --accent-orange: #F8B739;
+  /* Legacy names for backward compatibility */
+  --accent-green: #98D8C8; /* mint */
+  --accent-pink: #FF6B6B; /* red */
+  --accent-brown: #F8B739; /* orange */
   --accent-gray: #666666;
   
   --foreground-rgb: 30, 30, 30;
@@ -18,14 +25,7 @@
   --background-end-rgb: 255, 255, 255;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 240, 240, 240;
-    --background-start-rgb: 20, 20, 25;
-    --background-end-rgb: 30, 30, 35;
-  }
-}
-
+/* Force light mode for customer-facing app */
 body {
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
@@ -34,6 +34,8 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
+  /* Ensure light background always */
+  background-color: rgb(var(--background-start-rgb)) !important;
 }
 
 @layer components {
@@ -60,6 +62,26 @@ body {
   .card-accent {
     @apply bg-gradient-to-br from-accent-blue/10 to-accent-purple/10 rounded-xl shadow-md p-6 border border-accent-blue/20;
   }
+}
+
+/* Ensure text is always visible on light backgrounds */
+body {
+  color: rgb(30, 30, 30);
+}
+
+/* Ensure cards have dark text for readability */
+.card, .card-accent {
+  color: rgb(30, 30, 30);
+}
+
+.card h1, .card h2, .card h3, .card h4, .card h5, .card h6,
+.card-accent h1, .card-accent h2, .card-accent h3, .card-accent h4, .card-accent h5, .card-accent h6 {
+  color: rgb(30, 30, 30);
+}
+
+.card p, .card span, .card div,
+.card-accent p, .card-accent span, .card-accent div {
+  color: rgb(55, 65, 81); /* gray-700 */
 }
 
 

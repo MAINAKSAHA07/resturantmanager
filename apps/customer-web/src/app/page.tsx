@@ -188,21 +188,21 @@ export default async function HomePage({
   const tenants = await getTenants();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 via-accent-purple/5 to-accent-green/5">
+    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 via-accent-purple/5 to-accent-green/5 bg-white">
       <TenantSelector />
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Tenant Selector */}
         {tenants.length > 1 && (
-          <div className="mb-6 card border-2 border-accent-blue/20">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div>
-                <p className="text-sm text-gray-600 mb-2 font-medium">Switch Restaurant:</p>
+          <div className="mb-4 sm:mb-6 card border-2 border-accent-blue/20">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex-1">
+                <p className="text-xs sm:text-sm text-gray-600 mb-2 font-medium">Switch Restaurant:</p>
                 <div className="flex flex-wrap gap-2">
                   {tenants.map((tenant) => (
                     <Link
                       key={tenant.id}
                       href={`/?tenant=${tenant.key}`}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
                         tenant.key === brandKey
                           ? 'bg-accent-blue text-white shadow-md'
                           : 'bg-gray-100 text-gray-700 hover:bg-accent-purple/20 hover:border-2 hover:border-accent-purple/30'
@@ -215,7 +215,7 @@ export default async function HomePage({
               </div>
               <Link
                 href="/tenants"
-                className="text-sm text-accent-blue hover:text-accent-purple font-medium transition-colors duration-200"
+                className="text-xs sm:text-sm text-accent-blue hover:text-accent-purple font-medium transition-colors duration-200 self-start sm:self-auto"
               >
                 View All →
               </Link>
@@ -223,10 +223,10 @@ export default async function HomePage({
           </div>
         )}
 
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent mb-2">Our Menu</h1>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent mb-2">Our Menu</h1>
           {location && (
-            <p className="text-lg text-gray-600 font-medium">{location.name}</p>
+            <p className="text-sm sm:text-base lg:text-lg text-gray-600 font-medium">{location.name}</p>
           )}
         </div>
         {categories.length === 0 ? (
@@ -245,11 +245,11 @@ export default async function HomePage({
             if (categoryItems.length === 0) return null;
 
             return (
-              <section key={category.id} className="mb-16">
-                <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent border-b-2 border-accent-blue/30 pb-2">
+              <section key={category.id} className="mb-8 sm:mb-12 lg:mb-16">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent border-b-2 border-accent-blue/30 pb-2">
                   {category.name}
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {categoryItems.map((item) => (
                     <Link
                       key={item.id}
@@ -257,7 +257,7 @@ export default async function HomePage({
                       className="card overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 border-2 border-transparent hover:border-accent-blue/30"
                     >
                       {item.image && (
-                        <div className="h-48 bg-gray-200 overflow-hidden">
+                        <div className="h-40 sm:h-48 bg-gray-200 overflow-hidden">
                           <img
                             src={`${process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://localhost:8090'}/api/files/menuItem/${item.id}/${item.image}`}
                             alt={item.name}
@@ -265,16 +265,16 @@ export default async function HomePage({
                           />
                         </div>
                       )}
-                      <div className="p-5">
-                        <h3 className="text-xl font-semibold mb-2 text-gray-900">
+                      <div className="p-4 sm:p-5">
+                        <h3 className="text-lg sm:text-xl font-semibold mb-2 text-gray-900">
                           {item.name}
                         </h3>
                         {item.description && (
-                          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                          <p className="text-gray-600 text-xs sm:text-sm mb-3 line-clamp-2">
                             {item.description}
                           </p>
                         )}
-                        <p className="text-xl font-bold text-accent-blue">
+                        <p className="text-lg sm:text-xl font-bold text-accent-blue">
                           ₹{(item.basePrice / 100).toFixed(2)}
                         </p>
                       </div>

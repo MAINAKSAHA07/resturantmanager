@@ -153,28 +153,28 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 to-accent-purple/5">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">Shopping Cart</h1>
+    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 to-accent-purple/5 bg-white">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">Shopping Cart</h1>
 
-        <div className="card mb-6">
+        <div className="card mb-4 sm:mb-6">
           {cart.map((item, index) => {
             const menuItem = items[item.menuItemId];
             if (!menuItem) return null;
 
             return (
-              <div key={index} className="flex items-center space-x-4 py-4 border-b last:border-b-0">
+              <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-4 py-4 border-b last:border-b-0">
                 {menuItem.image && (
                   <img
                     src={`http://localhost:8090/api/files/menuItem/${menuItem.id}/${menuItem.image}`}
                     alt={menuItem.name}
-                    className="w-24 h-24 object-cover rounded-lg"
+                    className="w-full sm:w-24 h-40 sm:h-24 object-cover rounded-lg"
                   />
                 )}
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg text-gray-900 mb-1">{menuItem.name}</h3>
-                  <div className="flex items-center space-x-4 mt-2">
-                    <div className="flex items-center space-x-2 border-2 border-gray-200 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-base sm:text-lg text-gray-900 mb-2">{menuItem.name}</h3>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                    <div className="flex items-center space-x-2 border-2 border-gray-200 rounded-lg self-start">
                       <button
                         onClick={() => updateQuantity(index, -1)}
                         className="px-3 py-1 hover:bg-accent-blue/10 hover:border-accent-blue rounded-l-lg transition-all duration-200"
@@ -191,17 +191,17 @@ export default function CartPage() {
                     </div>
                     <button
                       onClick={() => removeItem(index)}
-                      className="text-accent-pink hover:text-accent-pink/80 text-sm font-medium transition-colors duration-200"
+                      className="text-accent-pink hover:text-accent-pink/80 text-sm font-medium transition-colors duration-200 self-start"
                     >
                       Remove
                     </button>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-lg text-gray-900">
+                <div className="text-left sm:text-right">
+                  <p className="font-bold text-base sm:text-lg text-gray-900">
                     ₹{(calculateItemTotal(item) / 100).toFixed(2)}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-xs sm:text-sm text-gray-500">
                     ₹{((calculateItemTotal(item) / item.quantity) / 100).toFixed(2)} each
                   </p>
                 </div>

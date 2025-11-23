@@ -103,7 +103,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-accent-blue via-accent-purple to-accent-green flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-accent-blue/10 via-accent-purple/10 to-accent-green/10 bg-white flex items-center justify-center p-4">
       <Script
         src="https://accounts.google.com/gsi/client"
         onLoad={() => {
@@ -112,10 +112,10 @@ export default function LoginPage() {
           }
         }}
       />
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 border border-accent-blue/20">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent mb-2">Login</h1>
-          <p className="text-gray-600">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-6 sm:p-8 border border-accent-blue/20">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent mb-2">Login</h1>
+          <p className="text-sm sm:text-base text-gray-600">
           Please login to continue with checkout
         </p>
         </div>

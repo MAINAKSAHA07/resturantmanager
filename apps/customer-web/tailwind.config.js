@@ -10,13 +10,20 @@ module.exports = {
     extend: {
       colors: {
         accent: {
-          green: '#7fc97f',
-          purple: '#beaed4',
-          orange: '#fdc086',
-          yellow: '#ffff99',
-          blue: '#386cb0',
-          pink: '#f0027f',
-          brown: '#bf5b17',
+          blue: '#4269D0',
+          red: '#FF6B6B',
+          teal: '#4ECDC4',
+          cyan: '#45B7D1',
+          salmon: '#FFA07A',
+          mint: '#98D8C8',
+          yellow: '#F7DC6F',
+          purple: '#BB8FCE',
+          sky: '#85C1E2',
+          orange: '#F8B739',
+          // Legacy names for backward compatibility
+          green: '#98D8C8', // mint
+          pink: '#FF6B6B', // red
+          brown: '#F8B739', // orange
           gray: '#666666',
         },
         primary: {
