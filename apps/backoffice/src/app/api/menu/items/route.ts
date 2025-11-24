@@ -12,8 +12,11 @@ export async function GET(request: NextRequest) {
     if (checkName) {
       // Check for duplicate
       const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-      const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-      const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+      const adminEmail = process.env.PB_ADMIN_EMAIL;
+      const adminPassword = process.env.PB_ADMIN_PASSWORD;
+      if (!adminEmail || !adminPassword) {
+        return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
+      }
 
       const adminPb = new PocketBase(pbUrl);
       await adminPb.admins.authWithPassword(adminEmail, adminPassword);
@@ -67,8 +70,11 @@ export async function GET(request: NextRequest) {
     const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
 
     // Use admin client to ensure we have access to all collections
-    const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-    const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+    const adminEmail = process.env.PB_ADMIN_EMAIL;
+    const adminPassword = process.env.PB_ADMIN_PASSWORD;
+    if (!adminEmail || !adminPassword) {
+      return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
+    }
 
     console.log('[API] GET menu items, using PocketBase URL:', pbUrl);
 
@@ -309,8 +315,11 @@ export async function POST(request: NextRequest) {
 
     // Use admin client to ensure we have access to all collections
     // Create admin client directly to avoid environment variable issues
-    const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-    const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+    const adminEmail = process.env.PB_ADMIN_EMAIL;
+    const adminPassword = process.env.PB_ADMIN_PASSWORD;
+    if (!adminEmail || !adminPassword) {
+      return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
+    }
 
     console.log('[API] Creating menu item with image upload, using PocketBase URL:', pbUrl);
     
@@ -419,6 +428,9 @@ export async function POST(request: NextRequest) {
     itemData.append('taxRate', (taxRate || 5).toString());
     itemData.append('hsnSac', hsnSac);
     itemData.append('availability', availability); // 'available' or 'not available'
+    // Map availability to isActive (required boolean field)
+    const isActive = availability === 'available';
+    itemData.append('isActive', isActive.toString());
 
     // Add image if provided
     if (imageFile && imageFile.size > 0) {

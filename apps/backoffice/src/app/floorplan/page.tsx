@@ -67,6 +67,7 @@ export default function FloorPlanPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [couponError, setCouponError] = useState('');
   const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [orderComment, setOrderComment] = useState('');
   const [currentOrder, setCurrentOrder] = useState<any>(null);
   const [allTableOrders, setAllTableOrders] = useState<any[]>([]);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
@@ -688,11 +689,14 @@ export default function FloorPlanPage() {
         body: JSON.stringify({ 
           items: normalizedItems,
           couponCode: appliedCoupon?.code || null,
+          comment: orderComment.trim() || null,
         }),
       });
 
       const data = await response.json();
       if (data.success) {
+        // Reset order comment after successful creation
+        setOrderComment('');
         // Update table status to 'seated' immediately for real-time UI
         if (selectedTable) {
           setTables(prevTables =>
@@ -1732,6 +1736,19 @@ export default function FloorPlanPage() {
                           </>
                         );
                       })()}
+                      {/* Order Comment Section */}
+                      <div className="mt-4 pt-4 border-t">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Order Note/Comment:
+                        </label>
+                        <textarea
+                          value={orderComment}
+                          onChange={(e) => setOrderComment(e.target.value)}
+                          placeholder="Add any special instructions or notes for this order..."
+                          className="w-full px-3 py-2 text-sm border rounded-lg resize-none"
+                          rows={3}
+                        />
+                      </div>
                       {currentOrder ? (
                         <button
                           onClick={addItemsToExistingOrder}

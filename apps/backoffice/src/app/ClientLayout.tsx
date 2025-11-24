@@ -18,7 +18,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   return (
     <>
       {showNavbar && <Navbar />}
-      <div className={showNavbar ? 'pt-20' : ''}>
+      <div className={showNavbar ? 'pt-16 sm:pt-20' : ''}>
         {children}
       </div>
     </>

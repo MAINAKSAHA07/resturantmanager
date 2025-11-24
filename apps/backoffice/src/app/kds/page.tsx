@@ -160,6 +160,12 @@ export default function KDSPage() {
                           {(ticket.ticketItems || ticket.items || []).length} item{((ticket.ticketItems || ticket.items || []).length !== 1) ? 's' : ''}
                         </p>
                       )}
+                      {ticket.orderComment && ticket.orderComment.trim() && (
+                        <div className="mt-2 p-2 bg-blue-50 border-l-4 border-blue-500 rounded">
+                          <p className="text-xs font-semibold text-blue-800 mb-1">Order Note:</p>
+                          <p className="text-xs text-blue-700 italic">{ticket.orderComment}</p>
+                        </div>
+                      )}
                     </div>
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -240,6 +246,7 @@ export default function KDSPage() {
             </div>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );

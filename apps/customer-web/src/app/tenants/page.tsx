@@ -5,9 +5,14 @@ async function getTenants() {
   try {
     // Direct PocketBase connection with explicit environment variable reading
     const PocketBase = (await import('pocketbase')).default;
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-    const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+    const pbUrl = process.env.POCKETBASE_URL || process.env.AWS_POCKETBASE_URL || 'http://localhost:8090';
+    const adminEmail = process.env.PB_ADMIN_EMAIL;
+    const adminPassword = process.env.PB_ADMIN_PASSWORD;
+    
+    if (!adminEmail || !adminPassword) {
+      console.error('[TenantsPage] PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set');
+      return [];
+    }
     
     console.log('[TenantsPage] Attempting connection:', {
       pbUrl,

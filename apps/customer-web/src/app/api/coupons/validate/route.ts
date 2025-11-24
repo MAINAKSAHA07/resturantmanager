@@ -28,32 +28,48 @@ export async function POST(request: NextRequest) {
     const extractedBrandKey = extractBrandKey(hostname);
     const brandKey = tenantCookie || extractedBrandKey || 'saffron';
 
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-    const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
-    
+
+    const pbUrl = process.env.POCKETBASE_URL || process.env.AWS_POCKETBASE_URL || 'http://localhost:8090';
+    const adminEmail = process.env.PB_ADMIN_EMAIL;
+    const adminPassword = process.env.PB_ADMIN_PASSWORD;
+
+    if (!adminEmail || !adminPassword) {
+      return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
+    }
+
     const pb = new PocketBase(pbUrl);
     await pb.admins.authWithPassword(adminEmail, adminPassword);
 
-    // Get tenant ID
-    const tenants = await pb.collection('tenant').getList(1, 1, {
+    // Get tenant ID - try exact match first, then case-insensitive
+    let tenants = await pb.collection('tenant').getList(1, 1, {
       filter: `key = "${brandKey}"`,
     });
 
+    // If not found, try case-insensitive search
     if (tenants.items.length === 0) {
+      const allTenants = await pb.collection('tenant').getList(1, 100);
+      const matchingTenant = allTenants.items.find((t: any) => 
+        t.key?.toLowerCase() === brandKey.toLowerCase()
+      );
+      if (matchingTenant) {
+        tenants = { items: [matchingTenant] };
+      }
+    }
+
+    if (tenants.items.length === 0) {
+      console.error('[Coupon Validate] Tenant not found:', {
+        brandKey,
+        availableTenants: (await pb.collection('tenant').getList(1, 100)).items.map((t: any) => t.key),
+      });
       return NextResponse.json(
-        { error: 'Tenant not found' },
+        { 
+          error: `Tenant not found for key: ${brandKey}. Please check your tenant configuration.`,
+        },
         { status: 404 }
       );
     }
 
     const tenantId = tenants.items[0].id;
-
-    console.log('[Coupon Validate] Looking for coupon:', {
-      code: code.toUpperCase().trim(),
-      tenantId,
-      brandKey,
-    });
 
     // Find coupon - try both relation and string matching
     let coupons;
@@ -61,9 +77,8 @@ export async function POST(request: NextRequest) {
       coupons = await pb.collection('coupon').getList(1, 1, {
         filter: `code = "${code.toUpperCase().trim()}" && (tenantId = "${tenantId}" || tenantId ~ "${tenantId}")`,
       });
-    } catch (filterError: any) {
-      console.warn('[Coupon Validate] Filter error, trying alternative:', filterError.message);
-      // Fallback: fetch all matching codes and filter client-side
+        } catch (filterError: any) {
+          // Fallback: fetch all matching codes and filter client-side
       const allCoupons = await pb.collection('coupon').getList(1, 200, {
         filter: `code = "${code.toUpperCase().trim()}"`,
       });
@@ -75,24 +90,6 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    console.log('[Coupon Validate] Found coupons:', coupons.items.length);
-    if (coupons.items.length > 0) {
-      console.log('[Coupon Validate] Coupon details:', {
-        id: coupons.items[0].id,
-        code: coupons.items[0].code,
-        isActive: coupons.items[0].isActive,
-        tenantId: coupons.items[0].tenantId,
-      });
-    } else {
-      // Debug: check if any coupons exist for this tenant
-      const allTenantCoupons = await pb.collection('coupon').getFullList({
-        filter: `tenantId = "${tenantId}" || tenantId ~ "${tenantId}"`,
-      });
-      console.log('[Coupon Validate] Total coupons for tenant:', allTenantCoupons.length);
-      if (allTenantCoupons.length > 0) {
-        console.log('[Coupon Validate] Sample tenant coupon codes:', allTenantCoupons.slice(0, 3).map((c: any) => c.code));
-      }
-    }
 
     if (coupons.items.length === 0) {
       return NextResponse.json(
@@ -167,14 +164,6 @@ export async function POST(request: NextRequest) {
         discountAmount = orderAmount;
       }
     }
-
-    console.log('[Coupon Validate] Discount calculation:', {
-      discountType: coupon.discountType,
-      discountValue: coupon.discountValue,
-      orderAmount,
-      calculatedDiscount: discountAmount,
-      maxDiscountAmount: coupon.maxDiscountAmount,
-    });
 
     return NextResponse.json({
       valid: true,

@@ -4,10 +4,14 @@ import PocketBase from 'pocketbase';
 export async function GET() {
   try {
     // Direct PocketBase connection with explicit environment variable reading
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-    const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
-    
+    const pbUrl = process.env.POCKETBASE_URL || process.env.AWS_POCKETBASE_URL || 'http://localhost:8090';
+    const adminEmail = process.env.PB_ADMIN_EMAIL;
+    const adminPassword = process.env.PB_ADMIN_PASSWORD;
+
+    if (!adminEmail || !adminPassword) {
+      return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
+    }
+
     const pb = new PocketBase(pbUrl);
     await pb.admins.authWithPassword(adminEmail, adminPassword);
     

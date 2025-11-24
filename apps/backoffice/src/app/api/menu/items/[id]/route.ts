@@ -19,9 +19,13 @@ export async function GET(
     }
 
     const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-    const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+    const adminEmail = process.env.PB_ADMIN_EMAIL;
+    const adminPassword = process.env.PB_ADMIN_PASSWORD;
     
+    if (!adminEmail || !adminPassword) {
+      return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
+    }
+
     const adminPb = new PocketBase(pbUrl);
     await adminPb.admins.authWithPassword(adminEmail, adminPassword);
 
@@ -79,9 +83,13 @@ export async function PUT(
     }
 
     const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-    const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+    const adminEmail = process.env.PB_ADMIN_EMAIL;
+    const adminPassword = process.env.PB_ADMIN_PASSWORD;
     
+    if (!adminEmail || !adminPassword) {
+      return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
+    }
+
     const adminPb = new PocketBase(pbUrl);
     await adminPb.admins.authWithPassword(adminEmail, adminPassword);
 
@@ -187,12 +195,14 @@ export async function PUT(
     if (duplicates.length > 0) {
       console.log(`[API] Found ${duplicates.length} duplicate items with same name, updating availability to match`);
       // Update all duplicates to have the same availability - use FormData to ensure it saves
+      const isActive = availability === 'available';
       for (const duplicate of duplicates) {
         try {
           const duplicateData = new FormData();
           duplicateData.append('availability', availability);
+          duplicateData.append('isActive', isActive.toString());
           await adminPb.collection('menuItem').update(duplicate.id, duplicateData);
-          console.log(`[API] Updated duplicate ${duplicate.id} (${duplicate.name}) to availability: ${availability}`);
+          console.log(`[API] Updated duplicate ${duplicate.id} (${duplicate.name}) to availability: ${availability}, isActive: ${isActive}`);
         } catch (error: any) {
           console.error(`[API] Error updating duplicate ${duplicate.id}:`, error.message);
         }
@@ -205,10 +215,14 @@ export async function PUT(
     itemData.append('tenantId', itemTenantId);
     itemData.append('locationId', itemLocationId);
     
+    // Map availability to isActive (required boolean field)
+    const isActive = availability === 'available';
+    
     // Staff can only update availability - preserve other fields
     if (isStaffOnly) {
       itemData.append('availability', availability);
-      console.log('[API] Staff user - only updating availability:', availability);
+      itemData.append('isActive', isActive.toString());
+      console.log('[API] Staff user - only updating availability:', availability, 'isActive:', isActive);
     } else {
       // Managers/admins can update all fields
     itemData.append('categoryId', categoryId);
@@ -219,6 +233,7 @@ export async function PUT(
     itemData.append('hsnSac', hsnSac);
     // Send availability as string: 'available' or 'not available'
     itemData.append('availability', availability);
+    itemData.append('isActive', isActive.toString());
     
     console.log('[API] Using FormData with availability:', availability);
     
@@ -282,9 +297,11 @@ export async function PUT(
     // This is a workaround for PocketBase FormData issues with text fields
     try {
       const availabilityData = new FormData();
+      const isActive = availability === 'available';
       availabilityData.append('availability', availability);
+      availabilityData.append('isActive', isActive.toString());
       await adminPb.collection('menuItem').update(params.id, availabilityData);
-      console.log('[API] Availability updated separately to:', availability);
+      console.log('[API] Availability updated separately to:', availability, 'isActive:', isActive);
     } catch (availabilityError: any) {
       console.error('[API] Failed to update availability separately:', availabilityError.message);
       // Continue anyway - we'll force it in the response
@@ -361,9 +378,13 @@ export async function DELETE(
     }
 
     const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-    const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+    const adminEmail = process.env.PB_ADMIN_EMAIL;
+    const adminPassword = process.env.PB_ADMIN_PASSWORD;
     
+    if (!adminEmail || !adminPassword) {
+      return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
+    }
+
     const adminPb = new PocketBase(pbUrl);
     await adminPb.admins.authWithPassword(adminEmail, adminPassword);
 

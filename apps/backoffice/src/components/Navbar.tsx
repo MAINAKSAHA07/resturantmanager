@@ -206,37 +206,42 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-accent-blue to-accent-purple shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 py-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
         <div className="flex justify-between items-center">
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex gap-4 xl:gap-6 items-center">
-            <Link href="/dashboard" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base">
+          <div className="hidden lg:flex gap-2 xl:gap-4 items-center flex-wrap">
+            <Link href="/dashboard" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
               Dashboard
             </Link>
-            <Link href="/menu" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base">
+            <Link href="/menu" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
               Menu
             </Link>
-            <Link href="/orders" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base">
+            <Link href="/orders" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
               Orders
             </Link>
-            <Link href="/kds" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base">
+            <Link href="/kds" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
               KDS
             </Link>
-            <Link href="/reservations" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base">
+            <Link href="/reservations" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
               Reservations
             </Link>
-            <Link href="/floorplan" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base">
+            <Link href="/floorplan" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
               Floor Plan
             </Link>
-            <Link href="/locations" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base">
+            <Link href="/locations" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
               Locations
             </Link>
-            <Link href="/coupons" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base">
+            <Link href="/coupons" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
               Coupons
             </Link>
-            <Link href="/users" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base">
+            <Link href="/users" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
               Users
             </Link>
+            {(isMasterUser(user) || userRole === 'admin') && (
+              <Link href="/tenants" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
+                Tenants
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -380,6 +385,11 @@ export default function Navbar() {
               <Link href="/users" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
                 Users
               </Link>
+              {(isMasterUser(user) || userRole === 'admin') && (
+                <Link href="/tenants" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
+                  Tenants
+                </Link>
+              )}
             </div>
           </div>
         )}

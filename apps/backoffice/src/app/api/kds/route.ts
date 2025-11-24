@@ -5,18 +5,12 @@ import { cookies } from 'next/headers';
 export async function GET(request: NextRequest) {
   try {
     const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-    const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+    const adminEmail = process.env.PB_ADMIN_EMAIL;
+    const adminPassword = process.env.PB_ADMIN_PASSWORD;
 
     // Validate environment variables
-    if (!pbUrl || pbUrl === 'http://localhost:8090') {
-      console.warn('[KDS API] Warning: Using default PocketBase URL. Set AWS_POCKETBASE_URL or POCKETBASE_URL environment variable.');
-    }
-    if (!adminEmail || adminEmail === 'mainaksaha0807@gmail.com') {
-      console.warn('[KDS API] Warning: Using default admin email. Set PB_ADMIN_EMAIL environment variable.');
-    }
-    if (!adminPassword || adminPassword === '8104760831') {
-      console.warn('[KDS API] Warning: Using default admin password. Set PB_ADMIN_PASSWORD environment variable.');
+    if (!adminEmail || !adminPassword) {
+      return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
     }
 
     const pb = new PocketBase(pbUrl);
@@ -139,9 +133,24 @@ export async function GET(request: NextRequest) {
         // ticketItems contains station-specific items, but we need to merge with fresh orderItem data for comments
         let items: any[] = [];
         
-        if (ticket.ticketItems && ticket.ticketItems.length > 0) {
+        // Parse ticketItems if it's a string (JSON stored in PocketBase)
+        let parsedTicketItems: any[] = [];
+        if (ticket.ticketItems) {
+          if (typeof ticket.ticketItems === 'string') {
+            try {
+              parsedTicketItems = JSON.parse(ticket.ticketItems);
+            } catch (e) {
+              console.warn(`Failed to parse ticketItems as JSON for ticket ${ticket.id}:`, e);
+              parsedTicketItems = Array.isArray(ticket.ticketItems) ? ticket.ticketItems : [];
+            }
+          } else if (Array.isArray(ticket.ticketItems)) {
+            parsedTicketItems = ticket.ticketItems;
+          }
+        }
+        
+        if (parsedTicketItems.length > 0) {
           // Use ticketItems as base, but merge with fresh orderItem data to get latest comments
-          items = ticket.ticketItems.map((ticketItem: any, ticketItemIndex: number) => {
+          items = parsedTicketItems.map((ticketItem: any, ticketItemIndex: number) => {
             // Find matching orderItem to get latest comment
             // Strategy: Match by menuItemId first, then by qty if multiple matches
             const matchingOrderItems = orderItems.filter((oi: any) => oi.menuItemId === ticketItem.menuItemId);
@@ -168,11 +177,12 @@ export async function GET(request: NextRequest) {
             const commentFromOrderItem = matchingOrderItem?.comment || '';
             const commentFromTicketItem = ticketItem.comment || '';
             // Prioritize comment from orderItem (source of truth), fallback to ticketItem
+            // Use ticketItem comment if orderItem comment is empty (ticketItem was created with comment)
             const finalComment = (commentFromOrderItem || commentFromTicketItem || '').trim();
             
             // Log for debugging
             if (matchingOrderItem) {
-              console.log(`Ticket ${ticket.id.slice(0, 8)} (${ticket.station}): Item "${ticketItem.name || ticketItem.menuItemId}" (qty: ${ticketItem.qty}): Found matching orderItem (${matchingOrderItem.id.slice(0, 8)}), comment="${finalComment}" (from orderItem: ${!!commentFromOrderItem}, from ticketItem: ${!!commentFromTicketItem})`);
+              console.log(`Ticket ${ticket.id.slice(0, 8)} (${ticket.station}): Item "${ticketItem.name || ticketItem.menuItemId}" (qty: ${ticketItem.qty}): Found matching orderItem (${matchingOrderItem.id.slice(0, 8)}), comment="${finalComment}" (from orderItem: "${commentFromOrderItem}", from ticketItem: "${commentFromTicketItem}")`);
             } else {
               console.log(`Ticket ${ticket.id.slice(0, 8)} (${ticket.station}): Item "${ticketItem.name || ticketItem.menuItemId}": No matching orderItem found (${orderItems.length} total orderItems), using ticketItem.comment="${commentFromTicketItem}"`);
             }
@@ -184,7 +194,7 @@ export async function GET(request: NextRequest) {
               qty: ticketItem.qty,
               options: ticketItem.options || ticketItem.optionsSnapshot || [],
               unitPrice: ticketItem.unitPrice,
-              // Always include comment, prioritizing orderItem data
+              // Always include comment, prioritizing orderItem data, but keep ticketItem comment as fallback
               comment: finalComment,
             };
           });
@@ -217,10 +227,31 @@ export async function GET(request: NextRequest) {
           console.log(`Ticket ${ticket.id.slice(0, 8)}: No items have comments`);
         }
 
+        // Get order comment from expanded order data or fetch it directly
+        let orderComment = '';
+        try {
+          if (ticket.expand?.orderId?.comment) {
+            orderComment = ticket.expand.orderId.comment;
+          } else {
+            // Fallback: fetch order directly to get comment
+            const orderId = Array.isArray(ticket.orderId) ? ticket.orderId[0] : ticket.orderId;
+            if (orderId) {
+              const order = await pb.collection('orders').getOne(orderId, {
+                fields: 'id,comment',
+              });
+              orderComment = order.comment || '';
+            }
+          }
+        } catch (e) {
+          // If fetching order fails, continue without comment
+          console.warn(`Could not fetch order comment for ticket ${ticket.id}:`, e);
+        }
+        
         return {
           ...ticket,
           items: finalItems,
           ticketItems: finalItems, // Keep both for compatibility
+          orderComment: (orderComment || '').trim(), // Include order-level comment
         };
       })
     );
@@ -261,8 +292,8 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-    const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+    const adminEmail = process.env.PB_ADMIN_EMAIL;
+    const adminPassword = process.env.PB_ADMIN_PASSWORD;
 
     const pb = new PocketBase(pbUrl);
     await pb.admins.authWithPassword(adminEmail, adminPassword);

@@ -25,9 +25,9 @@ export async function GET(
     const recordId = pathSegments[1];
     const filename = pathSegments.slice(2).join('/'); // In case filename has slashes
 
-    // Get PocketBase URL
-    const pbUrl = process.env.AWS_POCKETBASE_URL || 
-                  process.env.POCKETBASE_URL || 
+    // Get PocketBase URL - prioritize local for development
+    const pbUrl = process.env.POCKETBASE_URL || 
+                  process.env.AWS_POCKETBASE_URL || 
                   'http://localhost:8090';
 
     // Construct the full URL

@@ -3,7 +3,12 @@ const pb = new PocketBase('http://localhost:8090');
 
 async function run() {
     try {
-        await pb.admins.authWithPassword('mainaksaha0807@gmail.com', '8104760831');
+        const adminEmail = process.env.PB_ADMIN_EMAIL;
+        const adminPassword = process.env.PB_ADMIN_PASSWORD;
+        if (!adminEmail || !adminPassword) {
+            throw new Error('PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set in environment variables');
+        }
+        await pb.admins.authWithPassword(adminEmail, adminPassword);
 
         const collections = ['menuItem', 'tenant'];
         for (const name of collections) {

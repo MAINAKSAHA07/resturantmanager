@@ -10,8 +10,8 @@ const path = require('path');
 const { collections } = require('./001_create_collections');
 
 const PB_URL = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-const ADMIN_EMAIL = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-const ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD || '8104760831';
+const ADMIN_EMAIL = process.env.PB_ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD;
 
 function normalizeCollection(collection, nameToIdMap) {
   const copy = JSON.parse(JSON.stringify(collection));

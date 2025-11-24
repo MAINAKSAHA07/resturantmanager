@@ -18,8 +18,8 @@ export async function GET(request: NextRequest) {
 
     // Use admin client to ensure we have access to all collections
     // Create admin client directly to avoid environment variable issues
-    const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-    const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+    const adminEmail = process.env.PB_ADMIN_EMAIL;
+    const adminPassword = process.env.PB_ADMIN_PASSWORD;
 
     const adminPb = new PocketBase(pbUrl);
     await adminPb.admins.authWithPassword(adminEmail, adminPassword);
@@ -159,8 +159,8 @@ export async function POST(request: NextRequest) {
 
     // Use admin client to ensure we have access to all collections
     // Create admin client directly to avoid environment variable issues
-    const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-    const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+    const adminEmail = process.env.PB_ADMIN_EMAIL;
+    const adminPassword = process.env.PB_ADMIN_PASSWORD;
 
     const adminPb = new PocketBase(pbUrl);
     await adminPb.admins.authWithPassword(adminEmail, adminPassword);

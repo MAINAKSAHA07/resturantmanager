@@ -25,7 +25,8 @@
     "pb:add-image-field": "node pocketbase/scripts/add-image-field-to-menuitem.js",
     "pb:check-duplicate-menu-aws": "node pocketbase/scripts/check-duplicate-menu-aws.js",
     "pb:create-coupon-collection": "node pocketbase/scripts/create-coupon-collection.js",
-    "pb:add-coupon-fields-to-orders": "node pocketbase/scripts/add-coupon-fields-to-orders.js"
+    "pb:add-coupon-fields-to-orders": "node pocketbase/scripts/add-coupon-fields-to-orders.js",
+    "pb:add-comment-to-orderitem": "node pocketbase/scripts/add-comment-field-to-orderitem.js"
   },
   "devDependencies": {
     "dotenv": "^17.2.3",

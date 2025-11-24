@@ -10,8 +10,12 @@ export async function POST(
   try {
     // Use direct PocketBase connection like other endpoints
     const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-    const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+    const adminEmail = process.env.PB_ADMIN_EMAIL;
+    const adminPassword = process.env.PB_ADMIN_PASSWORD;
+
+    if (!adminEmail || !adminPassword) {
+      return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
+    }
 
     const pb = new PocketBase(pbUrl);
     await pb.admins.authWithPassword(adminEmail, adminPassword);
@@ -27,7 +31,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { items, couponCode } = body;
+    const { items, couponCode, comment } = body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
@@ -213,6 +217,7 @@ export async function POST(
       total: finalTotal,
       ...(couponId && { couponId }),
       ...(discountAmountPaise > 0 && { discountAmount: discountAmountPaise }),
+      ...(comment && comment.trim() && { comment: comment.trim() }),
       timestamps: {
         placedAt: now,
         acceptedAt: now, // Set accepted timestamp immediately

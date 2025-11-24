@@ -34,16 +34,8 @@ export default function CartPage() {
     const cartData = JSON.parse(localStorage.getItem('cart') || '[]');
     setCart(cartData);
     
-    // Load applied coupon from localStorage
-    const savedCoupon = localStorage.getItem('applied_coupon');
-    if (savedCoupon) {
-      try {
-        setAppliedCoupon(JSON.parse(savedCoupon));
-        setCouponCode(JSON.parse(savedCoupon).code);
-      } catch (e) {
-        console.error('Error loading coupon:', e);
-      }
-    }
+    // Don't auto-load coupon from localStorage - user must manually apply
+    // This prevents auto-application of coupons
 
     // Fetch menu items
     const fetchItems = async () => {

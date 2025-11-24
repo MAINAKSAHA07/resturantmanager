@@ -17,10 +17,14 @@ export async function GET(
     const brandKey = tenantCookie || extractedBrandKey || 'saffron';
     
     // Direct PocketBase connection
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-    const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
-    
+    const pbUrl = process.env.POCKETBASE_URL || process.env.AWS_POCKETBASE_URL || 'http://localhost:8090';
+    const adminEmail = process.env.PB_ADMIN_EMAIL;
+    const adminPassword = process.env.PB_ADMIN_PASSWORD;
+
+    if (!adminEmail || !adminPassword) {
+      return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
+    }
+
     const pb = new PocketBase(pbUrl);
     await pb.admins.authWithPassword(adminEmail, adminPassword);
 
@@ -59,8 +63,6 @@ export async function GET(
       return itemOrderId === id;
     });
     
-    console.log(`Order ${id.slice(0, 8)}: Found ${orderItems.length} items`);
-
     // Fetch location separately if needed
     let location = null;
     if (order.locationId) {
@@ -81,22 +83,6 @@ export async function GET(
     const normalizedDiscountAmount = typeof order.discountAmount === 'number' 
       ? order.discountAmount 
       : (Number(order.discountAmount) || 0);
-
-    // Log order data for debugging
-    console.log(`[Order API] Order ${id.slice(0, 8)} data:`, {
-      total: order.total,
-      subtotal: order.subtotal,
-      taxCgst: order.taxCgst,
-      taxSgst: order.taxSgst,
-      taxIgst: order.taxIgst,
-      discountAmount: normalizedDiscountAmount,
-      couponId: normalizedCouponId,
-      rawDiscountAmount: order.discountAmount,
-      rawCouponId: order.couponId,
-      hasDiscountAmount: 'discountAmount' in order,
-      discountAmountType: typeof order.discountAmount,
-      couponIdIsArray: Array.isArray(order.couponId),
-    });
 
     // Return order with all data
     return NextResponse.json({ 

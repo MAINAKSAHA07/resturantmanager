@@ -20,8 +20,8 @@ export async function GET(request: NextRequest) {
 
         // Set up admin client for fallback
         const adminPb = new PocketBase(pbUrl);
-        const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-        const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+        const adminEmail = process.env.PB_ADMIN_EMAIL;
+        const adminPassword = process.env.PB_ADMIN_PASSWORD;
         
         let user = null;
         let isAdminToken = false;

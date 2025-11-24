@@ -33,19 +33,40 @@ export async function POST(request: NextRequest) {
     const brandKey = tenantCookie || extractedBrandKey || 'saffron';
 
     // Direct PocketBase connection
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-    const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+    const pbUrl = process.env.POCKETBASE_URL || process.env.AWS_POCKETBASE_URL || 'http://localhost:8090';
+    const adminEmail = process.env.PB_ADMIN_EMAIL;
+    const adminPassword = process.env.PB_ADMIN_PASSWORD;
+
+    if (!adminEmail || !adminPassword) {
+      return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
+    }
 
     const pb = new PocketBase(pbUrl);
     await pb.admins.authWithPassword(adminEmail, adminPassword);
 
-    // Get tenant
-    const tenants = await pb.collection('tenant').getList(1, 1, {
+    // Get tenant - try exact match first, then case-insensitive
+    let tenants = await pb.collection('tenant').getList(1, 1, {
       filter: `key = "${brandKey}"`,
     });
+
+    // If not found, try case-insensitive search
+    if (tenants.items.length === 0) {
+      console.log('[Order Create] Exact match failed, trying case-insensitive search');
+      const allTenants = await pb.collection('tenant').getList(1, 100);
+      const matchingTenant = allTenants.items.find((t: any) => 
+        t.key?.toLowerCase() === brandKey.toLowerCase()
+      );
+      if (matchingTenant) {
+        tenants = { items: [matchingTenant] };
+        console.log('[Order Create] Found tenant with case-insensitive match:', matchingTenant.key);
+      }
+    }
     
     if (tenants.items.length === 0) {
+      console.error('[Order Create] Tenant not found:', {
+        brandKey,
+        availableTenants: (await pb.collection('tenant').getList(1, 100)).items.map((t: any) => t.key),
+      });
       return NextResponse.json({ error: 'Brand not found' }, { status: 404 });
     }
 
@@ -130,37 +151,32 @@ export async function POST(request: NextRequest) {
 
     if (couponCode) {
       try {
-        // Get tenant
-        const tenants = await pb.collection('tenant').getList(1, 1, {
-          filter: `key = "${brandKey}"`,
-        });
+        // Use the tenant we already found above
+        const tenantId = tenant.id;
+
+        // Find and validate coupon
+        const couponCodeUpper = couponCode.toUpperCase().trim();
         
-        if (tenants.items.length > 0) {
-          const tenantId = tenants.items[0].id;
+        // Try robust filter first (handles relation fields)
+        let coupons;
+        try {
+          coupons = await pb.collection('coupon').getList(1, 10, {
+            filter: `code = "${couponCodeUpper}" && (tenantId = "${tenantId}" || tenantId ~ "${tenantId}")`,
+          });
+        } catch (filterError: any) {
+          // Fallback: fetch all matching codes and filter client-side
+          const allCoupons = await pb.collection('coupon').getList(1, 200, {
+            filter: `code = "${couponCodeUpper}"`,
+          });
+          coupons = {
+            items: allCoupons.items.filter((coupon: any) => {
+              const couponTenantId = Array.isArray(coupon.tenantId) ? coupon.tenantId[0] : coupon.tenantId;
+              return couponTenantId === tenantId;
+            }),
+          };
+        }
 
-          // Find and validate coupon
-          const couponCodeUpper = couponCode.toUpperCase().trim();
-          
-          // Try robust filter first (handles relation fields)
-          let coupons;
-          try {
-            coupons = await pb.collection('coupon').getList(1, 10, {
-              filter: `code = "${couponCodeUpper}" && (tenantId = "${tenantId}" || tenantId ~ "${tenantId}")`,
-            });
-          } catch (filterError: any) {
-            // Fallback: fetch all matching codes and filter client-side
-            const allCoupons = await pb.collection('coupon').getList(1, 200, {
-              filter: `code = "${couponCodeUpper}"`,
-            });
-            coupons = {
-              items: allCoupons.items.filter((coupon: any) => {
-                const couponTenantId = Array.isArray(coupon.tenantId) ? coupon.tenantId[0] : coupon.tenantId;
-                return couponTenantId === tenantId;
-              }),
-            };
-          }
-
-          if (coupons.items.length > 0) {
+        if (coupons.items.length > 0) {
             const coupon = coupons.items[0];
             const now = new Date();
             const validFrom = new Date(coupon.validFrom);
@@ -178,6 +194,7 @@ export async function POST(request: NextRequest) {
 
             if (isActive && isValidDate && !usageLimitReached && minOrderMet) {
               // Calculate discount on total (subtotal + tax)
+              const totalBeforeDiscount = total;
               if (coupon.discountType === 'percentage') {
                 // discountValue is stored as percentage * 100 (e.g., 10% = 1000)
                 discountAmount = Math.round((total * coupon.discountValue) / 10000);
@@ -200,31 +217,83 @@ export async function POST(request: NextRequest) {
 
               // Increment used count safely
               try {
-                const currentCount = Number(coupon.usedCount) || 0;
-                await pb.collection('coupon').update(coupon.id, {
-                  usedCount: currentCount + 1,
-                });
+                // First, check if usedCount field exists in the coupon schema
+                let usedCountFieldExists = true;
+                try {
+                  const couponCollection = await pb.collections.getOne('coupon');
+                  usedCountFieldExists = couponCollection.schema.some((field: any) => field.name === 'usedCount');
+                } catch (schemaError: any) {
+                  // Assume field exists if we can't check
+                }
+
+                if (!usedCountFieldExists) {
+                  console.error('❌ CRITICAL: usedCount field does not exist in coupon collection!');
+                  console.error('[Order Create] Cannot update coupon usage count - field missing from schema');
+                  couponDebug = { 
+                    error: 'usedCount field does not exist in coupon collection',
+                    action: 'Please add usedCount field to coupon collection schema',
+                  };
+                } else {
+                  const currentCount = Number(coupon.usedCount) || 0;
+                  const newCount = currentCount + 1;
+
+                  const updatedCoupon = await pb.collection('coupon').update(coupon.id, {
+                    usedCount: newCount,
+                  });
+
+                  // Verify the update succeeded
+                  const savedCount = Number(updatedCoupon.usedCount) || 0;
+                  
+                  // Verify by fetching the coupon again
+                  try {
+                    const verifiedCoupon = await pb.collection('coupon').getOne(coupon.id);
+                    const dbCount = Number(verifiedCoupon.usedCount) || 0;
+                    
+                    if (dbCount !== newCount) {
+                      console.error('❌ Coupon usedCount was not saved to database', {
+                        couponId: coupon.id,
+                        expected: newCount,
+                        dbValue: dbCount,
+                      });
+                      couponDebug = {
+                        error: 'usedCount not saved to database',
+                        expected: newCount,
+                        dbValue: dbCount,
+                      };
+                    }
+                  } catch (verifyError: any) {
+                    // Only log if update response doesn't match
+                    if (savedCount !== newCount) {
+                      console.error('⚠️ Coupon usedCount update may have failed', {
+                        couponId: coupon.id,
+                        expected: newCount,
+                        saved: savedCount,
+                      });
+                    }
+                  }
+                }
               } catch (updateError: any) {
-                console.error('Failed to update coupon usage count:', updateError);
+                console.error('Failed to update coupon usage count:', updateError.message);
                 // Don't fail the order if usage count update fails
-                couponDebug = { error: 'Failed to update usage count', details: updateError.message };
+                couponDebug = { 
+                  error: 'Failed to update usage count', 
+                  details: updateError.message,
+                };
               }
             } else {
-              console.warn('[Order Create] Coupon validation failed:', {
-                code: coupon.code,
-                isActive,
-                isValidDate,
-                usageLimitReached,
-                minOrderMet,
-                orderTotal: orderTotalForValidation,
-                minOrder: coupon.minOrderAmount
-              });
+              console.warn('[Order Create] Coupon validation failed:', coupon.code);
               couponDebug = {
                 validationFailed: true,
-                reasons: { isActive, isValidDate, usageLimitReached, minOrderMet }
+                reasons: { 
+                  isActive, 
+                  isValidDate, 
+                  usageLimitReached, 
+                  minOrderMet,
+                }
               };
             }
           } else {
+            console.error('[Order Create] Coupon not found:', couponCodeUpper);
             couponDebug = { 
               notFound: true, 
               code: couponCodeUpper,
@@ -232,22 +301,10 @@ export async function POST(request: NextRequest) {
               message: `Coupon "${couponCodeUpper}" not found for tenant ${tenantId}`,
             };
           }
-        } else {
-          couponDebug = { 
-            tenantNotFound: true, 
-            brandKey,
-            message: `Tenant not found for brand key "${brandKey}"`,
-          };
-        }
       } catch (couponError: any) {
-        console.error('[Order Create] ❌ Error applying coupon:', {
-          error: couponError.message,
-          stack: couponError.stack,
-          couponCode: couponCode,
-        });
+        console.error('[Order Create] Error applying coupon:', couponError.message);
         couponDebug = { 
           error: couponError.message,
-          stack: couponError.stack,
           code: couponCode,
         };
         // Continue without coupon if there's an error
@@ -264,7 +321,18 @@ export async function POST(request: NextRequest) {
         const token = authHeader.replace('Bearer ', '');
         const session = JSON.parse(Buffer.from(token, 'base64').toString());
         if (session.customerId && session.exp > Date.now()) {
-          customerId = session.customerId;
+          // Validate that customer exists in local PocketBase
+          try {
+            await pb.collection('customer').getOne(session.customerId);
+            customerId = session.customerId;
+          } catch (customerError: any) {
+            // Customer doesn't exist in local DB, skip customerId (guest checkout)
+            console.warn('[Order Create] Customer ID from session does not exist in local DB:', {
+              customerId: session.customerId,
+              error: customerError.message,
+            });
+            // Don't set customerId - allow guest checkout
+          }
         }
       } catch (e) {
         // Invalid token, continue without customer ID (guest checkout)
@@ -278,6 +346,8 @@ export async function POST(request: NextRequest) {
     const finalTaxSgst = (typeof taxSgst === 'number' && !isNaN(taxSgst)) ? taxSgst : 0;
     const finalTaxIgst = (typeof taxIgst === 'number' && !isNaN(taxIgst)) ? taxIgst : 0;
     const finalSubtotal = (typeof subtotal === 'number' && !isNaN(subtotal)) ? Math.round(subtotal) : 0;
+    // IMPORTANT: 'total' variable already has discount applied (line 218: total = Math.max(0, total - discountAmount))
+    // So finalTotal should use this discounted total
     const finalTotal = (typeof total === 'number' && !isNaN(total)) ? Math.round(total) : 0;
 
     // Ensure discountAmount and couponId are properly set
@@ -294,7 +364,7 @@ export async function POST(request: NextRequest) {
       taxCgst: finalTaxCgst,
       taxSgst: finalTaxSgst,
       taxIgst: finalTaxIgst,
-      total: finalTotal,
+      total: finalTotal, // This already has discount applied
       discountAmount: finalDiscountAmount, // Always include, even if 0
       timestamps: {
         placedAt: new Date().toISOString(),
@@ -346,6 +416,33 @@ export async function POST(request: NextRequest) {
     
 
 
+
+    // Ensure taxIgst is set (required field)
+    if (orderData.taxIgst === undefined || orderData.taxIgst === null) {
+      orderData.taxIgst = 0;
+      console.warn('[Order Create] taxIgst was missing, setting to 0');
+    }
+
+    // Check if discountAmount field exists in the schema before creating order
+    let discountAmountFieldExists = true;
+    try {
+      const ordersCollection = await pb.collections.getOne('orders');
+      discountAmountFieldExists = ordersCollection.schema.some((field: any) => field.name === 'discountAmount');
+      console.log('[Order Create] discountAmount field check:', {
+        exists: discountAmountFieldExists,
+        fieldNames: ordersCollection.schema.map((f: any) => f.name),
+      });
+      
+      if (!discountAmountFieldExists) {
+        console.warn('[Order Create] ⚠️  WARNING: discountAmount field does not exist in orders collection!');
+        console.warn('[Order Create] Run: node pocketbase/scripts/add-coupon-fields-to-orders.js');
+        // Remove discountAmount from orderData if field doesn't exist
+        delete orderData.discountAmount;
+      }
+    } catch (schemaError: any) {
+      console.warn('[Order Create] Could not check schema, assuming discountAmount exists:', schemaError.message);
+    }
+
     let order;
     try {
       order = await pb.collection('orders').create(orderData);
@@ -356,13 +453,22 @@ export async function POST(request: NextRequest) {
 
 
       // Warn if discount wasn't saved correctly
-      if (finalDiscountAmount > 0 && savedDiscount !== finalDiscountAmount) {
-        console.error('⚠️  WARNING: Discount amount was not saved correctly!', {
-          expected: finalDiscountAmount,
-          saved: savedDiscount,
-          difference: finalDiscountAmount - savedDiscount,
-          couponCode: couponCode || 'NONE',
-        });
+      if (finalDiscountAmount > 0) {
+        if (!discountAmountFieldExists) {
+          console.error('❌ CRITICAL: Discount amount field does not exist in database!', {
+            expected: finalDiscountAmount,
+            saved: savedDiscount,
+            couponCode: couponCode || 'NONE',
+            action: 'Run: node pocketbase/scripts/add-coupon-fields-to-orders.js',
+          });
+        } else if (savedDiscount !== finalDiscountAmount) {
+          console.error('⚠️  WARNING: Discount amount was not saved correctly!', {
+            expected: finalDiscountAmount,
+            saved: savedDiscount,
+            difference: finalDiscountAmount - savedDiscount,
+            couponCode: couponCode || 'NONE',
+          });
+        }
       }
 
       if (finalCouponId && savedCoupon !== finalCouponId) {
@@ -464,6 +570,25 @@ export async function POST(request: NextRequest) {
         ? `Validation failed: ${errorMessages.join('; ')}`
         : (error.response?.data?.message || error.message || 'Order creation failed');
 
+      console.error('[Order Create] Full error details:', {
+        errorMsg,
+        errorMessages,
+        orderData: JSON.stringify(orderData, null, 2),
+        errorResponse: error.response?.data,
+        errorStatus: error.status,
+        tenantId: orderData.tenantId,
+        locationId: orderData.locationId,
+        hasRequiredFields: {
+          tenantId: !!orderData.tenantId,
+          locationId: !!orderData.locationId,
+          channel: !!orderData.channel,
+          status: !!orderData.status,
+          subtotal: orderData.subtotal !== undefined,
+          taxIgst: orderData.taxIgst !== undefined,
+          total: orderData.total !== undefined,
+        },
+      });
+
       // Re-throw with better error message
       const enhancedError = new Error(errorMsg);
       (enhancedError as any).status = error.status || 400;
@@ -530,7 +655,6 @@ export async function POST(request: NextRequest) {
       ? (order.couponId.length > 0 ? order.couponId[0] : null)
       : (order.couponId || null);
     
-    
     return NextResponse.json({
       orderId: order.id,
       total: order.total,
@@ -540,15 +664,7 @@ export async function POST(request: NextRequest) {
       couponDebug, // Include debug info
     });
   } catch (error: any) {
-    console.error('Error creating order:', {
-      message: error.message,
-      stack: error.stack,
-      status: error.status,
-      code: error.code,
-      response: error.response?.data || error.data,
-      name: error.name,
-      fullError: JSON.stringify(error, Object.getOwnPropertyNames(error), 2),
-    });
+    console.error('Error creating order:', error.message);
 
     // Extract detailed error message
     let errorMessage = error.message || 'Failed to create order';

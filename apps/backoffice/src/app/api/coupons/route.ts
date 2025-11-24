@@ -10,8 +10,8 @@ export async function GET(request: NextRequest) {
     }
 
     const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-    const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+    const adminEmail = process.env.PB_ADMIN_EMAIL;
+    const adminPassword = process.env.PB_ADMIN_PASSWORD;
     
     console.log('[Coupons API GET] Using PocketBase URL:', pbUrl);
     console.log('[Coupons API GET] Environment check:', {
@@ -194,8 +194,8 @@ export async function POST(request: NextRequest) {
     const formattedValidUntil = untilDate.toISOString();
 
     const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-    const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+    const adminEmail = process.env.PB_ADMIN_EMAIL;
+    const adminPassword = process.env.PB_ADMIN_PASSWORD;
     
     console.log('[Coupons API] Using PocketBase URL:', pbUrl);
     

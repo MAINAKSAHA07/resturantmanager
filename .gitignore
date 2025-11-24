@@ -48,7 +48,7 @@ backups/
 
 
 
-
+/pocketbase/scripts/
 # Local Netlify folder
 .netlify
 *.pem

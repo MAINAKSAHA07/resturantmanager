@@ -30,13 +30,14 @@ export default function CheckoutPage() {
     setIsAuthenticated(true);
     setCheckingAuth(false);
 
-    // Load applied coupon from localStorage (applied in cart)
+    // Load applied coupon from localStorage (set by cart page)
     const savedCoupon = localStorage.getItem('applied_coupon');
     if (savedCoupon) {
       try {
-        setAppliedCoupon(JSON.parse(savedCoupon));
-      } catch (e) {
-        console.error('Error loading coupon:', e);
+        const coupon = JSON.parse(savedCoupon);
+        setAppliedCoupon(coupon);
+      } catch (error) {
+        localStorage.removeItem('applied_coupon');
       }
     }
 
@@ -59,26 +60,11 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Get coupon code from localStorage if not in state
-      const savedCoupon = localStorage.getItem('applied_coupon');
+      // Only use coupon if explicitly applied by user (from state)
       let couponCodeToSend = null;
       if (appliedCoupon?.code) {
         couponCodeToSend = appliedCoupon.code;
-      } else if (savedCoupon) {
-        try {
-          const parsedCoupon = JSON.parse(savedCoupon);
-          couponCodeToSend = parsedCoupon.code;
-        } catch (e) {
-          console.error('Error parsing saved coupon:', e);
-        }
       }
-      
-      console.log('[Checkout] Creating order with:', {
-        itemsCount: cart.length,
-        couponCode: couponCodeToSend,
-        hasAppliedCoupon: !!appliedCoupon,
-        savedCoupon: !!savedCoupon,
-      });
 
       // Create order with coupon if applied
       const orderResponse = await fetch('/api/orders/create', {
@@ -94,28 +80,20 @@ export default function CheckoutPage() {
       });
 
       if (!orderResponse.ok) {
-        throw new Error('Failed to create order');
+        const errorData = await orderResponse.json().catch(() => ({}));
+        console.error('[Checkout] Order creation failed:', {
+          status: orderResponse.status,
+          error: errorData.error || errorData.message || 'Unknown error',
+          details: errorData,
+        });
+        throw new Error(errorData.error || errorData.message || 'Failed to create order');
       }
 
       const orderData = await orderResponse.json();
       
-      console.log('[Checkout] Order creation response:', {
-        orderId: orderData.orderId,
-        amount: orderData.amount,
-        discountAmount: orderData.discountAmount,
-        couponId: orderData.couponId,
-        couponDebug: orderData.couponDebug,
-        fullResponse: orderData,
-      });
-      
-      // Log coupon debug info if discount is 0 but coupon was sent
+      // Warn if coupon was sent but discount is 0
       if (couponCodeToSend && (!orderData.discountAmount || orderData.discountAmount === 0)) {
-        console.warn('[Checkout] ⚠️ Coupon was sent but discount is 0!', {
-          couponCode: couponCodeToSend,
-          couponDebug: orderData.couponDebug,
-          discountAmount: orderData.discountAmount,
-          couponId: orderData.couponId,
-        });
+        console.warn('[Checkout] Coupon was sent but discount is 0');
       }
       
       if (!orderData.orderId) {
@@ -128,6 +106,7 @@ export default function CheckoutPage() {
       // If Cash on Delivery, skip payment and redirect
       if (paymentMethod === 'cod') {
         localStorage.removeItem('cart');
+        localStorage.removeItem('applied_coupon'); // Clear applied coupon after order
         window.dispatchEvent(new Event('cartUpdated'));
         router.push(`/order/${orderId}`);
         return;
@@ -151,6 +130,7 @@ export default function CheckoutPage() {
           // Razorpay not configured, fallback to COD
           alert('Online payment is not available. Placing order without payment.');
           localStorage.removeItem('cart');
+          localStorage.removeItem('applied_coupon'); // Clear applied coupon after order
           window.dispatchEvent(new Event('cartUpdated'));
           router.push(`/order/${orderId}`);
           return;
@@ -188,6 +168,7 @@ export default function CheckoutPage() {
 
             if (captureResponse.ok) {
               localStorage.removeItem('cart');
+              localStorage.removeItem('applied_coupon'); // Clear applied coupon after order
               window.dispatchEvent(new Event('cartUpdated'));
               router.push(`/order/${orderId}`);
             } else {
@@ -209,9 +190,10 @@ export default function CheckoutPage() {
 
       const razorpay = new window.Razorpay(options);
       razorpay.open();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Checkout error:', error);
-      alert('Checkout failed. Please try again.');
+      const errorMessage = error?.message || error?.error || 'Checkout failed. Please try again.';
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }

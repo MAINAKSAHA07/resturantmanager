@@ -35,10 +35,14 @@ export async function GET(request: NextRequest) {
         }
 
         const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-        const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-        const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+        const adminEmail = process.env.PB_ADMIN_EMAIL;
+        const adminPassword = process.env.PB_ADMIN_PASSWORD;
 
-        const pb = new PocketBase(pbUrl);
+    if (!adminEmail || !adminPassword) {
+      return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
+    }
+
+    const pb = new PocketBase(pbUrl);
         await pb.admins.authWithPassword(adminEmail, adminPassword);
 
         const users = await pb.collection('users').getFullList({
@@ -77,8 +81,8 @@ export async function POST(request: NextRequest) {
         }
 
         const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-        const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-        const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
+        const adminEmail = process.env.PB_ADMIN_EMAIL;
+        const adminPassword = process.env.PB_ADMIN_PASSWORD;
 
         const pb = new PocketBase(pbUrl);
         await pb.admins.authWithPassword(adminEmail, adminPassword);

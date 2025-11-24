@@ -39,27 +39,103 @@ export async function GET(request: NextRequest) {
     const extractedBrandKey = extractBrandKey(hostname);
     const brandKey = tenantCookie || extractedBrandKey || 'saffron';
 
+    console.log('[My Orders API] Tenant lookup:', {
+      tenantCookie,
+      hostname,
+      extractedBrandKey,
+      brandKey,
+      customerId,
+    });
+
     // Connect to PocketBase
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL || 'mainaksaha0807@gmail.com';
-    const adminPassword = process.env.PB_ADMIN_PASSWORD || '8104760831';
-    
+    const pbUrl = process.env.POCKETBASE_URL || process.env.AWS_POCKETBASE_URL || 'http://localhost:8090';
+    const adminEmail = process.env.PB_ADMIN_EMAIL;
+    const adminPassword = process.env.PB_ADMIN_PASSWORD;
+
+    if (!adminEmail || !adminPassword) {
+      return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
+    }
+
     const pb = new PocketBase(pbUrl);
     await pb.admins.authWithPassword(adminEmail, adminPassword);
 
-    // Get tenant ID
-    const tenants = await pb.collection('tenant').getList(1, 1, {
+    // Get tenant ID - try exact match first, then case-insensitive
+    let tenants = await pb.collection('tenant').getList(1, 1, {
       filter: `key = "${brandKey}"`,
     });
 
+    // If not found, try case-insensitive search
     if (tenants.items.length === 0) {
-      return NextResponse.json(
-        { error: 'Tenant not found' },
-        { status: 404 }
+      console.log('[My Orders API] Exact match failed, trying case-insensitive search');
+      const allTenants = await pb.collection('tenant').getList(1, 100);
+      const matchingTenant = allTenants.items.find((t: any) => 
+        t.key?.toLowerCase() === brandKey.toLowerCase()
       );
+      if (matchingTenant) {
+        tenants = { items: [matchingTenant] };
+        console.log('[My Orders API] Found tenant with case-insensitive match:', matchingTenant.key);
+      }
     }
 
-    const tenantId = tenants.items[0].id;
+    let tenantId: string | null = null;
+    
+    if (tenants.items.length === 0) {
+      console.warn('[My Orders API] Tenant not found by key, trying to get tenant from customer orders');
+      
+      // Fallback: Try to get tenant from customer's most recent order
+      try {
+        const allOrders = await pb.collection('orders').getList(1, 100, {
+          sort: '-created',
+        });
+        
+        // Find the most recent order for this customer
+        const customerOrder = allOrders.items.find((order: any) => {
+          const orderCustomerId = Array.isArray(order.customerId) ? order.customerId[0] : order.customerId;
+          return orderCustomerId === customerId;
+        });
+        
+        if (customerOrder) {
+          const orderTenantId = Array.isArray(customerOrder.tenantId) 
+            ? customerOrder.tenantId[0] 
+            : customerOrder.tenantId;
+          
+          if (orderTenantId) {
+            // Get tenant by ID
+            try {
+              const tenant = await pb.collection('tenant').getOne(orderTenantId);
+              tenantId = tenant.id;
+              console.log('[My Orders API] Found tenant from customer order:', tenant.key, tenantId);
+            } catch (e: any) {
+              console.error('[My Orders API] Failed to get tenant by ID:', e.message);
+            }
+          }
+        }
+      } catch (fallbackError: any) {
+        console.error('[My Orders API] Fallback tenant lookup failed:', fallbackError.message);
+      }
+      
+      if (!tenantId) {
+        console.error('[My Orders API] Tenant not found:', {
+          brandKey,
+          availableTenants: (await pb.collection('tenant').getList(1, 100)).items.map((t: any) => t.key),
+        });
+        return NextResponse.json(
+          { 
+            error: `Tenant not found for key: ${brandKey}. Please check your tenant configuration.`,
+            debug: {
+              brandKey,
+              tenantCookie,
+              extractedBrandKey,
+              hostname,
+            }
+          },
+          { status: 404 }
+        );
+      }
+    } else {
+      tenantId = tenants.items[0].id;
+    }
+    
     console.log('Filtering orders for tenant:', tenantId, 'and customer:', customerId);
 
     // Fetch orders for this customer - don't use expand as it might not work reliably
