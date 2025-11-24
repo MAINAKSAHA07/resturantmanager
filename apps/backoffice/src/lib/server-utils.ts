@@ -29,6 +29,11 @@ export async function getCurrentUser(request: NextRequest): Promise<User | null>
         const adminEmail = process.env.PB_ADMIN_EMAIL;
         const adminPassword = process.env.PB_ADMIN_PASSWORD;
 
+        if (!adminEmail || !adminPassword) {
+            console.error('getCurrentUser: PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set');
+            return null;
+        }
+
         // First, check if this is an admin token
         try {
             const adminAuthData = await pb.admins.authRefresh();

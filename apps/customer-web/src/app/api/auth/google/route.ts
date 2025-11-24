@@ -53,6 +53,13 @@ export async function POST(request: NextRequest) {
     const adminEmail = process.env.PB_ADMIN_EMAIL;
     const adminPassword = process.env.PB_ADMIN_PASSWORD;
     
+    if (!adminEmail || !adminPassword) {
+      return NextResponse.json(
+        { error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' },
+        { status: 500 }
+      );
+    }
+    
     const adminPb = new PocketBase(pbUrl);
     await adminPb.admins.authWithPassword(adminEmail, adminPassword);
 

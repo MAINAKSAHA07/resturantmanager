@@ -206,39 +206,39 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-accent-blue to-accent-purple shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-        <div className="flex justify-between items-center">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+        <div className="flex justify-between items-center gap-4">
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex gap-2 xl:gap-4 items-center flex-wrap">
-            <Link href="/dashboard" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
+          <div className="hidden lg:flex gap-1 xl:gap-2 2xl:gap-3 items-center flex-1 min-w-0">
+            <Link href="/dashboard" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
               Dashboard
             </Link>
-            <Link href="/menu" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
+            <Link href="/menu" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
               Menu
             </Link>
-            <Link href="/orders" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
+            <Link href="/orders" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
               Orders
             </Link>
-            <Link href="/kds" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
+            <Link href="/kds" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
               KDS
             </Link>
-            <Link href="/reservations" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
+            <Link href="/reservations" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
               Reservations
             </Link>
-            <Link href="/floorplan" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
+            <Link href="/floorplan" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
               Floor Plan
             </Link>
-            <Link href="/locations" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
+            <Link href="/locations" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
               Locations
             </Link>
-            <Link href="/coupons" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
+            <Link href="/coupons" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
               Coupons
             </Link>
-            <Link href="/users" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
+            <Link href="/users" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
               Users
             </Link>
             {(isMasterUser(user) || userRole === 'admin') && (
-              <Link href="/tenants" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-2 xl:px-3 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
+              <Link href="/tenants" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
                 Tenants
               </Link>
             )}
@@ -259,7 +259,7 @@ export default function Navbar() {
             </svg>
           </button>
 
-          <div className="flex items-center gap-2 lg:gap-4">
+          <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
             {/* Show tenant selector based on user role and tenant availability */}
             {(() => {
               // Check if user is master - use both user object and userRole as fallback
@@ -357,7 +357,7 @@ export default function Navbar() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="lg:hidden mt-4 pb-4 border-t border-white/20">
-            <div className="flex flex-col gap-2 pt-4">
+            <div className="flex flex-col gap-1 pt-4">
               <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
                 Dashboard
               </Link>

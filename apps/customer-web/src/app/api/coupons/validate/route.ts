@@ -52,7 +52,13 @@ export async function POST(request: NextRequest) {
         t.key?.toLowerCase() === brandKey.toLowerCase()
       );
       if (matchingTenant) {
-        tenants = { items: [matchingTenant] };
+        tenants = {
+          page: 1,
+          perPage: 1,
+          totalItems: 1,
+          totalPages: 1,
+          items: [matchingTenant],
+        };
       }
     }
 

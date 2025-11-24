@@ -23,6 +23,13 @@ export async function GET(request: NextRequest) {
         const adminEmail = process.env.PB_ADMIN_EMAIL;
         const adminPassword = process.env.PB_ADMIN_PASSWORD;
         
+        if (!adminEmail || !adminPassword) {
+            return NextResponse.json(
+                { error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' },
+                { status: 500 }
+            );
+        }
+        
         let user = null;
         let isAdminToken = false;
 

@@ -51,14 +51,18 @@ export async function POST(request: NextRequest) {
 
     // If not found, try case-insensitive search
     if (tenants.items.length === 0) {
-      console.log('[Order Create] Exact match failed, trying case-insensitive search');
       const allTenants = await pb.collection('tenant').getList(1, 100);
       const matchingTenant = allTenants.items.find((t: any) => 
         t.key?.toLowerCase() === brandKey.toLowerCase()
       );
       if (matchingTenant) {
-        tenants = { items: [matchingTenant] };
-        console.log('[Order Create] Found tenant with case-insensitive match:', matchingTenant.key);
+        tenants = {
+          page: 1,
+          perPage: 1,
+          totalItems: 1,
+          totalPages: 1,
+          items: [matchingTenant],
+        };
       }
     }
     
