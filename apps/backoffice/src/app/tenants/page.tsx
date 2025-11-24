@@ -52,13 +52,28 @@ export default function TenantsPage() {
         const isMaster = data.user.isMaster === true || data.user.role === 'admin';
         setIsMasterUser(isMaster);
         
-        // Redirect non-master users
+        // Redirect non-master users immediately
         if (!isMaster) {
-          window.location.href = '/dashboard';
+          // Redirect immediately without delay
+          window.location.replace('/dashboard');
+          return;
+        }
+      } else {
+        // If not authenticated, redirect to login
+        if (response.status === 401) {
+          window.location.replace('/login');
+          return;
+        }
+        // If forbidden, redirect to dashboard
+        if (response.status === 403) {
+          window.location.replace('/dashboard');
+          return;
         }
       }
     } catch (err) {
       console.error('Error fetching current user:', err);
+      // On error, redirect to dashboard for safety
+      window.location.replace('/dashboard');
     }
   };
 

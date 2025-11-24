@@ -21,6 +21,7 @@ export default function Navbar() {
   const [userTenants, setUserTenants] = useState<string[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userLoaded, setUserLoaded] = useState(false);
 
   useEffect(() => {
     // Fetch user role first, then fetch tenant info
@@ -60,6 +61,7 @@ export default function Navbar() {
         setUserRole(role);
         setUserTenants(userTenantIds);
         setUser(data.user);
+        setUserLoaded(true);
 
         // Fetch tenants after we know user's access
         // Master users should see all tenants
@@ -237,7 +239,7 @@ export default function Navbar() {
             <Link href="/users" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
               Users
             </Link>
-            {(isMasterUser(user) || userRole === 'admin') && (
+            {userLoaded && user && (user.isMaster === true || user.role === 'admin') && (
               <Link href="/tenants" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
                 Tenants
               </Link>
@@ -385,7 +387,7 @@ export default function Navbar() {
               <Link href="/users" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
                 Users
               </Link>
-              {(isMasterUser(user) || userRole === 'admin') && (
+              {userLoaded && user && (user.isMaster === true || user.role === 'admin') && (
                 <Link href="/tenants" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
                   Tenants
                 </Link>

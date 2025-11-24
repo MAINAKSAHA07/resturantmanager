@@ -6,24 +6,55 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // Note: Tenants API is accessible to all authenticated users
-    // Permission filtering happens on the frontend based on user role
-    // We use admin client to fetch all tenants, then frontend filters based on user permissions
+    // Verify authentication
+    const user = await getCurrentUser(request);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Please log in to view tenants' },
+        { status: 401 }
+      );
+    }
 
     const adminPb = await getAdminPb();
+    const isMaster = isMasterUser(user);
 
-    const tenants = await adminPb.collection('tenant').getList(1, 100, {
-      sort: 'name',
-    });
+    // Master users can see all tenants
+    // Non-master users can only see their assigned tenants (for tenant selector)
+    let tenants;
+    if (isMaster) {
+      tenants = await adminPb.collection('tenant').getList(1, 100, {
+        sort: 'name',
+      });
+    } else {
+      // For non-master users, only return their assigned tenants
+      const userTenantIds = user.tenants || [];
+      if (userTenantIds.length === 0) {
+        return NextResponse.json({
+          success: true,
+          tenants: []
+        });
+      }
+      
+      // Fetch only the tenants the user has access to
+      const allTenants = await adminPb.collection('tenant').getList(1, 100, {
+        sort: 'name',
+      });
+      
+      tenants = {
+        ...allTenants,
+        items: allTenants.items.filter((t: any) => userTenantIds.includes(t.id))
+      };
+    }
 
     console.log('Tenants API - Fetched tenants:', {
       count: tenants.items.length,
-      tenantIds: tenants.items.map(t => ({ id: t.id, name: t.name })),
+      isMaster,
+      tenantIds: tenants.items.map((t: any) => ({ id: t.id, name: t.name })),
     });
 
     return NextResponse.json({
       success: true,
-      tenants: tenants.items.map(t => ({
+      tenants: tenants.items.map((t: any) => ({
         id: t.id,
         name: t.name,
         key: t.key,
