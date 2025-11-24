@@ -11,6 +11,7 @@ interface KDSTicket {
   ticketItems?: any[];
   priority: boolean;
   created: string;
+  orderComment?: string;
   expand?: {
     orderId?: {
       id: string;
@@ -59,13 +60,6 @@ export default function KDSPage() {
     };
 
     fetchTickets();
-
-    // Poll for updates (can be replaced with WebSocket/SSE in production)
-    const interval = setInterval(fetchTickets, 5000);
-
-    return () => {
-      clearInterval(interval);
-    };
   }, []);
 
   const updateTicketStatus = async (ticketId: string, newStatus: string) => {

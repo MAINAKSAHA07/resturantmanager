@@ -1,20 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import PocketBase from 'pocketbase';
 import { cookies } from 'next/headers';
+import { getAdminPb } from '@/lib/server-utils';
 
 export async function GET(request: NextRequest) {
   try {
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL;
-    const adminPassword = process.env.PB_ADMIN_PASSWORD;
-
-    // Validate environment variables
-    if (!adminEmail || !adminPassword) {
-      return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
-    }
-
-    const pb = new PocketBase(pbUrl);
-    await pb.admins.authWithPassword(adminEmail, adminPassword);
+    const pb = await getAdminPb();
 
     const searchParams = request.nextUrl.searchParams;
     const filterStatus = searchParams.get('status') || 'all';
@@ -263,7 +253,6 @@ export async function GET(request: NextRequest) {
       status: error.status,
       response: error.response?.data || error.response,
       stack: error.stack,
-      pbUrl: process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL,
       hasEmail: !!process.env.PB_ADMIN_EMAIL,
       hasPassword: !!process.env.PB_ADMIN_PASSWORD,
     });
@@ -291,12 +280,7 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL;
-    const adminPassword = process.env.PB_ADMIN_PASSWORD;
-
-    const pb = new PocketBase(pbUrl);
-    await pb.admins.authWithPassword(adminEmail, adminPassword);
+    const pb = await getAdminPb();
 
     const body = await request.json();
     const { ticketId, status, orderId } = body;
@@ -315,7 +299,6 @@ export async function PATCH(request: NextRequest) {
       status: error.status,
       response: error.response?.data || error.response,
       stack: error.stack,
-      pbUrl: process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL,
       hasEmail: !!process.env.PB_ADMIN_EMAIL,
       hasPassword: !!process.env.PB_ADMIN_PASSWORD,
     });

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import PocketBase from 'pocketbase';
-import { getCurrentUser } from '@/lib/server-utils';
+import { getCurrentUser, getAdminPb } from '@/lib/server-utils';
 import { canPerformAction, hasPermission } from '@/lib/permissions';
 
 export async function GET(
@@ -18,16 +17,7 @@ export async function GET(
       );
     }
 
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL;
-    const adminPassword = process.env.PB_ADMIN_PASSWORD;
-    
-    if (!adminEmail || !adminPassword) {
-      return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
-    }
-
-    const adminPb = new PocketBase(pbUrl);
-    await adminPb.admins.authWithPassword(adminEmail, adminPassword);
+    const adminPb = await getAdminPb();
 
     const item = await adminPb.collection('menuItem').getOne(params.id, {
       expand: 'categoryId,tenantId,locationId',
@@ -82,16 +72,7 @@ export async function PUT(
       );
     }
 
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL;
-    const adminPassword = process.env.PB_ADMIN_PASSWORD;
-    
-    if (!adminEmail || !adminPassword) {
-      return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
-    }
-
-    const adminPb = new PocketBase(pbUrl);
-    await adminPb.admins.authWithPassword(adminEmail, adminPassword);
+    const adminPb = await getAdminPb();
 
     // Handle FormData for file upload
     const formData = await request.formData();
@@ -266,7 +247,7 @@ export async function PUT(
     
     let item;
     try {
-      console.log('[API] Updating menu item with FormData, using PocketBase URL:', pbUrl);
+      console.log('[API] Updating menu item with FormData');
       item = await adminPb.collection('menuItem').update(params.id, itemData);
       console.log('[API] Update response - availability:', item.availability);
       console.log('[API] Update response - image:', item.image ? `Present (${item.image})` : 'Not present');
@@ -276,7 +257,6 @@ export async function PUT(
         status: updateError.status,
         data: updateError.data || updateError.response?.data,
         response: updateError.response,
-        pbUrl: pbUrl,
       });
       
       // If it's a file upload error, provide more specific message
@@ -377,16 +357,7 @@ export async function DELETE(
       );
     }
 
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL;
-    const adminPassword = process.env.PB_ADMIN_PASSWORD;
-    
-    if (!adminEmail || !adminPassword) {
-      return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
-    }
-
-    const adminPb = new PocketBase(pbUrl);
-    await adminPb.admins.authWithPassword(adminEmail, adminPassword);
+    const adminPb = await getAdminPb();
 
     // Check if item exists
     try {

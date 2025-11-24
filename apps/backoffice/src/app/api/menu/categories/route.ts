@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import PocketBase from 'pocketbase';
+import { getAdminPb } from '@/lib/server-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,15 +14,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-
     // Use admin client to ensure we have access to all collections
-    // Create admin client directly to avoid environment variable issues
-    const adminEmail = process.env.PB_ADMIN_EMAIL;
-    const adminPassword = process.env.PB_ADMIN_PASSWORD;
-
-    const adminPb = new PocketBase(pbUrl);
-    await adminPb.admins.authWithPassword(adminEmail, adminPassword);
+    const adminPb = await getAdminPb();
 
     // Get selected tenant from cookie, or fallback to first tenant
     const selectedTenantId = request.cookies.get('selected_tenant_id')?.value;
@@ -155,15 +148,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-
     // Use admin client to ensure we have access to all collections
-    // Create admin client directly to avoid environment variable issues
-    const adminEmail = process.env.PB_ADMIN_EMAIL;
-    const adminPassword = process.env.PB_ADMIN_PASSWORD;
-
-    const adminPb = new PocketBase(pbUrl);
-    await adminPb.admins.authWithPassword(adminEmail, adminPassword);
+    const adminPb = await getAdminPb();
 
     const body = await request.json();
     const { name, sort } = body;

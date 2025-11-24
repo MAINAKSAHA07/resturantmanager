@@ -30,15 +30,6 @@ export default function OrdersPage() {
 
   useEffect(() => {
     fetchOrders();
-    
-    // Auto-refresh orders every 10 seconds to get new orders and updated items
-    const interval = setInterval(() => {
-      fetchOrders();
-    }, 10000);
-    
-    return () => {
-      clearInterval(interval);
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterStatus]);
 

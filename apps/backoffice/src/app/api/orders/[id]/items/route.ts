@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import PocketBase from 'pocketbase';
+import { getAdminPb } from '@/lib/server-utils';
 import { cookies } from 'next/headers';
 import { calculateGSTForItems, rupeesToPaise } from '@restaurant/lib';
 
@@ -8,16 +8,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL;
-    const adminPassword = process.env.PB_ADMIN_PASSWORD;
-
-    if (!adminEmail || !adminPassword) {
-      return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
-    }
-
-    const pb = new PocketBase(pbUrl);
-    await pb.admins.authWithPassword(adminEmail, adminPassword);
+    const pb = await getAdminPb();
 
     // Fetch order items for this order
     const orderItems = await pb.collection('orderItem').getFullList({
@@ -39,12 +30,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL;
-    const adminPassword = process.env.PB_ADMIN_PASSWORD;
-
-    const pb = new PocketBase(pbUrl);
-    await pb.admins.authWithPassword(adminEmail, adminPassword);
+    const pb = await getAdminPb();
 
     const cookieStore = cookies();
     const tenantId = cookieStore.get('selected_tenant_id')?.value;

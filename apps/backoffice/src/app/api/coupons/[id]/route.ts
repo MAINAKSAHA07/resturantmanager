@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import PocketBase from 'pocketbase';
-import { getCurrentUser } from '@/lib/server-utils';
+import { getCurrentUser, getAdminPb } from '@/lib/server-utils';
 
 export async function GET(
   request: NextRequest,
@@ -13,14 +12,7 @@ export async function GET(
     }
 
     const { id } = await params;
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL;
-    const adminPassword = process.env.PB_ADMIN_PASSWORD;
-    
-    console.log('[Coupons API] Using PocketBase URL:', pbUrl);
-    
-    const pb = new PocketBase(pbUrl);
-    await pb.admins.authWithPassword(adminEmail, adminPassword);
+    const pb = await getAdminPb();
 
     const coupon = await pb.collection('coupon').getOne(id);
     return NextResponse.json({ coupon });
@@ -64,14 +56,7 @@ export async function PUT(
       isActive,
     } = body;
 
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL;
-    const adminPassword = process.env.PB_ADMIN_PASSWORD;
-    
-    console.log('[Coupons API] Using PocketBase URL:', pbUrl);
-    
-    const pb = new PocketBase(pbUrl);
-    await pb.admins.authWithPassword(adminEmail, adminPassword);
+    const pb = await getAdminPb();
 
     // Get selected tenant from cookie
     const selectedTenantId = request.cookies.get('selected_tenant_id')?.value;
@@ -148,14 +133,7 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL;
-    const adminPassword = process.env.PB_ADMIN_PASSWORD;
-    
-    console.log('[Coupons API] Using PocketBase URL:', pbUrl);
-    
-    const pb = new PocketBase(pbUrl);
-    await pb.admins.authWithPassword(adminEmail, adminPassword);
+    const pb = await getAdminPb();
 
     // Get selected tenant from cookie
     const selectedTenantId = request.cookies.get('selected_tenant_id')?.value;

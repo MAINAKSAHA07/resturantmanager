@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import PocketBase from 'pocketbase';
-import { getCurrentUser } from '@/lib/server-utils';
+import { getCurrentUser, getAdminPb } from '@/lib/server-utils';
 import { canPerformAction, hasPermission } from '@/lib/permissions';
 
 export async function GET(
@@ -25,16 +24,7 @@ export async function GET(
             );
         }
 
-        const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-        const adminEmail = process.env.PB_ADMIN_EMAIL;
-        const adminPassword = process.env.PB_ADMIN_PASSWORD;
-
-    if (!adminEmail || !adminPassword) {
-      return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
-    }
-
-    const pb = new PocketBase(pbUrl);
-        await pb.admins.authWithPassword(adminEmail, adminPassword);
+        const pb = await getAdminPb();
 
         const userData = await pb.collection('users').getOne(params.id, {
             expand: 'tenants',
@@ -71,12 +61,7 @@ export async function PATCH(
             );
         }
 
-        const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-        const adminEmail = process.env.PB_ADMIN_EMAIL;
-        const adminPassword = process.env.PB_ADMIN_PASSWORD;
-
-        const pb = new PocketBase(pbUrl);
-        await pb.admins.authWithPassword(adminEmail, adminPassword);
+        const pb = await getAdminPb();
 
         const body = await request.json();
 

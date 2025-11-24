@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import PocketBase from 'pocketbase';
-import { getCurrentUser } from '@/lib/server-utils';
+import { getCurrentUser, getAdminPb } from '@/lib/server-utils';
 import { isMasterUser } from '@/lib/user-utils';
 
 export const dynamic = 'force-dynamic';
@@ -32,26 +31,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify tenant exists - use direct authentication
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL;
-    const adminPassword = process.env.PB_ADMIN_PASSWORD;
-
-    console.log('Select tenant request:', { tenantId, pbUrl, hasEmail: !!adminEmail, hasPassword: !!adminPassword });
-
-    const adminPb = new PocketBase(pbUrl);
-    try {
-      await adminPb.admins.authWithPassword(adminEmail, adminPassword);
-      console.log('Admin authenticated successfully');
-    } catch (error: any) {
-      console.error('Failed to authenticate as admin in select-tenant route:', {
-        email: adminEmail,
-        url: pbUrl,
-        error: error.message,
-        status: error.status || error.response?.status,
-      });
-      throw error;
-    }
+    const adminPb = await getAdminPb();
 
     try {
       console.log('Fetching tenant:', tenantId);
@@ -125,7 +105,6 @@ export async function POST(request: NextRequest) {
         error: error.message,
         status: error.status,
         response: error.response?.data,
-        pbUrl,
       });
 
       if (error.status === 404) {

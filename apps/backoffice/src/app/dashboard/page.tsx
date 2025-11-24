@@ -38,9 +38,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchStats();
-    // Refresh every 10 seconds
-    const interval = setInterval(fetchStats, 10000);
-    return () => clearInterval(interval);
   }, [timeRange]);
 
   if (loading) {

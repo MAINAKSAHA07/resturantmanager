@@ -3,6 +3,24 @@ import PocketBase from 'pocketbase';
 import { User } from './user-utils';
 
 /**
+ * Get an authenticated PocketBase admin client
+ * Throws an error if admin credentials are not configured
+ */
+export async function getAdminPb(): Promise<PocketBase> {
+  const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
+  const adminEmail = process.env.PB_ADMIN_EMAIL;
+  const adminPassword = process.env.PB_ADMIN_PASSWORD;
+
+  if (!adminEmail || !adminPassword) {
+    throw new Error('PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set in environment variables');
+  }
+
+  const pb = new PocketBase(pbUrl);
+  await pb.admins.authWithPassword(adminEmail, adminPassword);
+  return pb;
+}
+
+/**
  * Get the current user from the request
  * This verifies the token and fetches the user record
  */

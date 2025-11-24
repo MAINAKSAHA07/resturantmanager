@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import PocketBase from 'pocketbase';
 import { cookies } from 'next/headers';
+import PocketBase from 'pocketbase';
+import { getAdminPb } from '@/lib/server-utils';
 
 export async function GET(request: NextRequest) {
     try {
@@ -19,16 +20,7 @@ export async function GET(request: NextRequest) {
         pb.authStore.save(token, null);
 
         // Set up admin client for fallback
-        const adminPb = new PocketBase(pbUrl);
-        const adminEmail = process.env.PB_ADMIN_EMAIL;
-        const adminPassword = process.env.PB_ADMIN_PASSWORD;
-        
-        if (!adminEmail || !adminPassword) {
-            return NextResponse.json(
-                { error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' },
-                { status: 500 }
-            );
-        }
+        // Note: getAdminPb will be called only if needed in the catch block
         
         let user = null;
         let isAdminToken = false;
@@ -41,6 +33,7 @@ export async function GET(request: NextRequest) {
             const admin = adminAuthData.admin;
             
             // Create a virtual user object for admin
+            const adminEmail = process.env.PB_ADMIN_EMAIL || '';
             user = {
                 id: admin?.id || 'admin',
                 email: admin?.email || adminEmail,
@@ -61,7 +54,7 @@ export async function GET(request: NextRequest) {
                 console.warn('Auth refresh failed, trying to get user from token:', refreshError.message);
                 
                 try {
-                    await adminPb.admins.authWithPassword(adminEmail, adminPassword);
+                    const adminPb = await getAdminPb();
                     
                     // Try to parse token to get user ID
                     try {
@@ -107,7 +100,7 @@ export async function GET(request: NextRequest) {
             if (isAdminToken) {
                 try {
                     // Get all tenants for admin user
-                    await adminPb.admins.authWithPassword(adminEmail, adminPassword);
+                    const adminPb = await getAdminPb();
                     const tenants = await adminPb.collection('tenant').getList(1, 100, {
                         sort: 'name',
                     });
@@ -128,10 +121,8 @@ export async function GET(request: NextRequest) {
             
             // For regular users, get full data with expanded tenants
             try {
-                // Make sure admin client is authenticated
-                if (!adminPb.authStore.isValid) {
-                    await adminPb.admins.authWithPassword(adminEmail, adminPassword);
-                }
+                // Get authenticated admin client
+                const adminPb = await getAdminPb();
                 
                 // Get user with expanded tenants
                 try {

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import PocketBase from 'pocketbase';
-import { getCurrentUser } from '@/lib/server-utils';
+import { getCurrentUser, getAdminPb } from '@/lib/server-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,19 +8,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL;
-    const adminPassword = process.env.PB_ADMIN_PASSWORD;
-    
-    console.log('[Coupons API GET] Using PocketBase URL:', pbUrl);
-    console.log('[Coupons API GET] Environment check:', {
-      hasAWS: !!process.env.AWS_POCKETBASE_URL,
-      hasPOCKETBASE: !!process.env.POCKETBASE_URL,
-      using: pbUrl.includes('localhost') ? 'LOCAL' : 'AWS',
-    });
-    
-    const pb = new PocketBase(pbUrl);
-    await pb.admins.authWithPassword(adminEmail, adminPassword);
+    const pb = await getAdminPb();
 
     // Get selected tenant from cookie
     const selectedTenantId = request.cookies.get('selected_tenant_id')?.value;
@@ -193,14 +180,7 @@ export async function POST(request: NextRequest) {
     const formattedValidFrom = fromDate.toISOString();
     const formattedValidUntil = untilDate.toISOString();
 
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL;
-    const adminPassword = process.env.PB_ADMIN_PASSWORD;
-    
-    console.log('[Coupons API] Using PocketBase URL:', pbUrl);
-    
-    const pb = new PocketBase(pbUrl);
-    await pb.admins.authWithPassword(adminEmail, adminPassword);
+    const pb = await getAdminPb();
 
     // Check if coupon collection exists
     try {
@@ -303,7 +283,6 @@ export async function POST(request: NextRequest) {
       message: error.message,
       status: error.status,
       url: error.url,
-      pbUrl: process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090',
     };
 
     // Log PocketBase validation errors

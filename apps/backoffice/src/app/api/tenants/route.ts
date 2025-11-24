@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import PocketBase from 'pocketbase';
-import { getCurrentUser } from '@/lib/server-utils';
+import { getCurrentUser, getAdminPb } from '@/lib/server-utils';
 import { isMasterUser } from '@/lib/user-utils';
 
 export const dynamic = 'force-dynamic';
@@ -11,39 +10,7 @@ export async function GET(request: NextRequest) {
     // Permission filtering happens on the frontend based on user role
     // We use admin client to fetch all tenants, then frontend filters based on user permissions
 
-    // Use admin client to fetch all tenants
-    // No need to check user auth here - we'll filter on frontend based on user role
-    // Create admin client directly to ensure environment variables are used
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL;
-    const adminPassword = process.env.PB_ADMIN_PASSWORD;
-
-    console.log('Tenants API - Connecting to:', {
-      pbUrl,
-      hasAwsUrl: !!process.env.AWS_POCKETBASE_URL,
-      hasPocketbaseUrl: !!process.env.POCKETBASE_URL,
-      hasEmail: !!process.env.PB_ADMIN_EMAIL,
-      hasPassword: !!process.env.PB_ADMIN_PASSWORD,
-    });
-
-    if (!adminEmail || !adminPassword) {
-      throw new Error('PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set in environment variables');
-    }
-
-    const adminPb = new PocketBase(pbUrl);
-    try {
-      await adminPb.admins.authWithPassword(adminEmail, adminPassword);
-    } catch (error: any) {
-      console.error('Failed to authenticate as admin in tenants route:', {
-        email: adminEmail,
-        url: pbUrl,
-        error: error.message,
-        status: error.status || error.response?.status,
-        envEmail: process.env.PB_ADMIN_EMAIL ? 'set' : 'not set',
-        envPassword: process.env.PB_ADMIN_PASSWORD ? 'set' : 'not set',
-      });
-      throw error;
-    }
+    const adminPb = await getAdminPb();
 
     const tenants = await adminPb.collection('tenant').getList(1, 100, {
       sort: 'name',
@@ -92,16 +59,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const pbUrl = process.env.AWS_POCKETBASE_URL || process.env.POCKETBASE_URL || 'http://localhost:8090';
-    const adminEmail = process.env.PB_ADMIN_EMAIL;
-    const adminPassword = process.env.PB_ADMIN_PASSWORD;
-
-    if (!adminEmail || !adminPassword) {
-      throw new Error('PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set in environment variables');
-    }
-
-    const adminPb = new PocketBase(pbUrl);
-    await adminPb.admins.authWithPassword(adminEmail, adminPassword);
+    const adminPb = await getAdminPb();
 
     const body = await request.json();
     const { 
