@@ -139,14 +139,23 @@ export async function POST(
         
         if (coupons.items.length > 0) {
           const coupon = coupons.items[0];
-          const now = new Date();
-          const validFrom = new Date(coupon.validFrom);
-          const validUntil = new Date(coupon.validUntil);
           
-          // Validate coupon
-          if (coupon.isActive && now >= validFrom && now <= validUntil) {
-            if (!coupon.usageLimit || coupon.usedCount < coupon.usageLimit) {
-              if (subtotalPaise >= (coupon.minOrderAmount || 0)) {
+          // Check if coupon is active for floor plan
+          // Default to true if field doesn't exist (for backward compatibility)
+          const activeForFloorPlan = coupon.activeForFloorPlan !== undefined ? coupon.activeForFloorPlan : true;
+          
+          if (!activeForFloorPlan) {
+            console.warn('Coupon is not active for floor plan orders');
+            // Continue without coupon
+          } else {
+            const now = new Date();
+            const validFrom = new Date(coupon.validFrom);
+            const validUntil = new Date(coupon.validUntil);
+            
+            // Validate coupon
+            if (coupon.isActive && now >= validFrom && now <= validUntil) {
+              if (!coupon.usageLimit || coupon.usedCount < coupon.usageLimit) {
+                if (subtotalPaise >= (coupon.minOrderAmount || 0)) {
                 // Calculate discount
                 if (coupon.discountType === 'percentage') {
                   discountAmountPaise = Math.round((subtotalPaise * coupon.discountValue) / 100);
@@ -162,13 +171,14 @@ export async function POST(
                   discountAmountPaise = totalPaise;
                 }
                 
-                totalPaise = Math.max(0, totalPaise - discountAmountPaise);
-                couponId = coupon.id;
-                
-                // Increment used count
-                await pb.collection('coupon').update(coupon.id, {
-                  usedCount: coupon.usedCount + 1,
-                });
+                  totalPaise = Math.max(0, totalPaise - discountAmountPaise);
+                  couponId = coupon.id;
+                  
+                  // Increment used count
+                  await pb.collection('coupon').update(coupon.id, {
+                    usedCount: coupon.usedCount + 1,
+                  });
+                }
               }
             }
           }

@@ -16,6 +16,8 @@ interface Coupon {
   usageLimit?: number;
   usedCount: number;
   isActive: boolean;
+  activeForCustomerEnd?: boolean;
+  activeForFloorPlan?: boolean;
 }
 
 export default function CouponsPage() {
@@ -35,6 +37,8 @@ export default function CouponsPage() {
     validUntil: '',
     usageLimit: '',
     isActive: true,
+    activeForCustomerEnd: true,
+    activeForFloorPlan: true,
   });
 
   useEffect(() => {
@@ -122,6 +126,8 @@ export default function CouponsPage() {
       validUntil: coupon.validUntil.split('T')[0],
       usageLimit: coupon.usageLimit?.toString() || '',
       isActive: coupon.isActive,
+      activeForCustomerEnd: coupon.activeForCustomerEnd !== undefined ? coupon.activeForCustomerEnd : true,
+      activeForFloorPlan: coupon.activeForFloorPlan !== undefined ? coupon.activeForFloorPlan : true,
     });
     setShowAddModal(true);
   };
@@ -156,6 +162,8 @@ export default function CouponsPage() {
       validUntil: '',
       usageLimit: '',
       isActive: true,
+      activeForCustomerEnd: true,
+      activeForFloorPlan: true,
     });
   };
 
@@ -279,6 +287,25 @@ export default function CouponsPage() {
                   <span className="text-gray-600">{coupon.usedCount || 0} / Unlimited</span>
                 </div>
               )}
+              <div className="flex items-center gap-4 pt-2 border-t">
+                <span className="font-medium text-gray-700 text-xs">Available For:</span>
+                <div className="flex gap-3">
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    coupon.activeForCustomerEnd !== false 
+                      ? 'bg-blue-100 text-blue-800' 
+                      : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    Customer End
+                  </span>
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    coupon.activeForFloorPlan !== false 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    Floor Plan
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         ))}
@@ -422,6 +449,29 @@ export default function CouponsPage() {
                   className="mr-2"
                 />
                 <label htmlFor="isActive" className="font-medium">Active</label>
+              </div>
+              <div className="border-t pt-4 space-y-3">
+                <h3 className="font-semibold text-gray-700">Available For:</h3>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="activeForCustomerEnd"
+                    checked={formData.activeForCustomerEnd}
+                    onChange={(e) => setFormData({ ...formData, activeForCustomerEnd: e.target.checked })}
+                    className="mr-2"
+                  />
+                  <label htmlFor="activeForCustomerEnd" className="font-medium">Customer End (Online Orders)</label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="activeForFloorPlan"
+                    checked={formData.activeForFloorPlan}
+                    onChange={(e) => setFormData({ ...formData, activeForFloorPlan: e.target.checked })}
+                    className="mr-2"
+                  />
+                  <label htmlFor="activeForFloorPlan" className="font-medium">Floor Plan (Table Orders)</label>
+                </div>
               </div>
               <div className="flex gap-3">
                 <button

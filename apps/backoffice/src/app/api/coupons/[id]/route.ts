@@ -54,6 +54,8 @@ export async function PUT(
       validUntil,
       usageLimit,
       isActive,
+      activeForCustomerEnd,
+      activeForFloorPlan,
     } = body;
 
     const pb = await getAdminPb();
@@ -104,6 +106,8 @@ export async function PUT(
     if (validUntil !== undefined) updateData.validUntil = validUntil;
     if (usageLimit !== undefined) updateData.usageLimit = usageLimit || null;
     if (isActive !== undefined) updateData.isActive = isActive;
+    if (activeForCustomerEnd !== undefined) updateData.activeForCustomerEnd = activeForCustomerEnd;
+    if (activeForFloorPlan !== undefined) updateData.activeForFloorPlan = activeForFloorPlan;
 
     const coupon = await pb.collection('coupon').update(id, updateData);
     return NextResponse.json({ coupon });

@@ -106,6 +106,17 @@ export async function POST(request: NextRequest) {
 
     const coupon = coupons.items[0];
 
+    // Check if coupon is active for customer end
+    // Default to true if field doesn't exist (for backward compatibility)
+    const activeForCustomerEnd = coupon.activeForCustomerEnd !== undefined ? coupon.activeForCustomerEnd : true;
+    
+    if (!activeForCustomerEnd) {
+      return NextResponse.json(
+        { error: 'This coupon is not available for online orders' },
+        { status: 400 }
+      );
+    }
+
     // Validate coupon
     const now = new Date();
     const validFrom = new Date(coupon.validFrom);

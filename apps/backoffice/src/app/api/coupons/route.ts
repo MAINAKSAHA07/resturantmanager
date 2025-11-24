@@ -115,6 +115,8 @@ export async function POST(request: NextRequest) {
       validFrom,
       validUntil,
       usageLimit,
+      activeForCustomerEnd,
+      activeForFloorPlan,
     } = body;
 
     // Validation
@@ -226,6 +228,9 @@ export async function POST(request: NextRequest) {
       validUntil: formattedValidUntil,
       usedCount: 0, // Explicitly set to 0 (number, not string)
       isActive: true,
+      // Channel-specific activation (default to true for backward compatibility)
+      activeForCustomerEnd: activeForCustomerEnd !== undefined ? activeForCustomerEnd : true,
+      activeForFloorPlan: activeForFloorPlan !== undefined ? activeForFloorPlan : true,
     };
 
     // Ensure usedCount is explicitly set as a number (PocketBase may reject 0 if not properly typed)
