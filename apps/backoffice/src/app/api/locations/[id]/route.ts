@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getAdminPb } from '@/lib/server-utils';
+import { getAdminPb, safeSerializeErrorDetails } from '@/lib/server-utils';
 
 export async function GET(
   request: NextRequest,
@@ -269,10 +269,13 @@ export async function DELETE(
         );
       }
       
+      // Safely serialize error details
+      const safeErrorData = errorData ? safeSerializeErrorDetails(errorData) : undefined;
+      
       return NextResponse.json(
         { 
           error: errorMessage,
-          details: errorData,
+          ...(safeErrorData && { details: safeErrorData }),
           checks: checks,
           suggestion: 'This location may be referenced by other records. Please check all related data and remove references first.'
         },

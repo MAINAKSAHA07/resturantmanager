@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify authentication
@@ -26,9 +26,10 @@ export async function GET(
       );
     }
 
+    const { id } = await params;
     const adminPb = await getAdminPb();
 
-    const tenant = await adminPb.collection('tenant').getOne(params.id);
+    const tenant = await adminPb.collection('tenant').getOne(id);
 
     return NextResponse.json({
       success: true,
@@ -38,6 +39,7 @@ export async function GET(
         key: tenant.key,
         primaryDomain: tenant.primaryDomain,
         adminDomain: tenant.adminDomain,
+        customerUrl: tenant.customerUrl || tenant.primaryDomain,
         theme: tenant.theme,
       }
     });
@@ -58,7 +60,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify authentication
@@ -78,11 +80,12 @@ export async function PUT(
       );
     }
 
+    const { id } = await params;
     const adminPb = await getAdminPb();
 
     // Check if tenant exists
     try {
-      await adminPb.collection('tenant').getOne(params.id);
+      await adminPb.collection('tenant').getOne(id);
     } catch (error: any) {
       if (error.status === 404) {
         return NextResponse.json(
@@ -94,7 +97,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { key, name, primaryDomain, adminDomain, theme } = body;
+    const { key, name, primaryDomain, adminDomain, theme, customerUrl } = body;
 
     // Validate required fields
     if (key !== undefined && (!key || typeof key !== 'string' || key.trim() === '')) {
@@ -129,7 +132,7 @@ export async function PUT(
     if (key !== undefined) {
       try {
         const existingTenants = await adminPb.collection('tenant').getList(1, 1, {
-          filter: `key = "${key.trim()}" && id != "${params.id}"`,
+          filter: `key = "${key.trim()}" && id != "${id}"`,
         });
 
         if (existingTenants.items.length > 0) {
@@ -143,16 +146,31 @@ export async function PUT(
       }
     }
 
+    // Generate customer URL if not provided and primaryDomain is being updated
+    let finalCustomerUrl = customerUrl;
+    if (customerUrl === undefined && primaryDomain !== undefined) {
+      const newPrimaryDomain = primaryDomain.trim();
+      if (!newPrimaryDomain || (!newPrimaryDomain.startsWith('http://') && !newPrimaryDomain.startsWith('https://'))) {
+        // Auto-generate URL based on tenant key
+        const baseUrl = process.env.CUSTOMER_WEB_URL || 'https://restaurant-customer-web.netlify.app';
+        const tenantKey = key !== undefined ? key.trim() : (await adminPb.collection('tenant').getOne(id)).key;
+        finalCustomerUrl = `${baseUrl}/${tenantKey}`;
+      } else {
+        finalCustomerUrl = newPrimaryDomain;
+      }
+    }
+
     // Build update data
     const updateData: any = {};
     if (key !== undefined) updateData.key = key.trim();
     if (name !== undefined) updateData.name = name.trim();
     if (primaryDomain !== undefined) updateData.primaryDomain = primaryDomain.trim();
     if (adminDomain !== undefined) updateData.adminDomain = adminDomain.trim();
+    if (finalCustomerUrl !== undefined) updateData.customerUrl = finalCustomerUrl;
     if (theme !== undefined) updateData.theme = theme;
 
     // Update the tenant
-    const updatedTenant = await adminPb.collection('tenant').update(params.id, updateData);
+    const updatedTenant = await adminPb.collection('tenant').update(id, updateData);
 
     console.log('Tenants API - Updated tenant:', {
       id: updatedTenant.id,
@@ -168,6 +186,7 @@ export async function PUT(
         key: updatedTenant.key,
         primaryDomain: updatedTenant.primaryDomain,
         adminDomain: updatedTenant.adminDomain,
+        customerUrl: updatedTenant.customerUrl || updatedTenant.primaryDomain,
         theme: updatedTenant.theme,
       }
     });
@@ -197,7 +216,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify authentication
@@ -217,12 +236,13 @@ export async function DELETE(
       );
     }
 
+    const { id } = await params;
     const adminPb = await getAdminPb();
 
     // Check if tenant exists
     let tenant;
     try {
-      tenant = await adminPb.collection('tenant').getOne(params.id);
+      tenant = await adminPb.collection('tenant').getOne(id);
     } catch (error: any) {
       if (error.status === 404) {
         return NextResponse.json(
@@ -244,13 +264,13 @@ export async function DELETE(
       tables: 0,
     };
 
-    console.log(`[DELETE Tenant] Checking references for tenant: ${params.id}`);
+    console.log(`[DELETE Tenant] Checking references for tenant: ${id}`);
 
     try {
       // Check locations
       try {
         const locations = await adminPb.collection('location').getList(1, 1, {
-          filter: `tenantId = "${params.id}" || tenantId ~ "${params.id}"`,
+          filter: `tenantId = "${id}" || tenantId ~ "${id}"`,
         });
         checks.locations = locations.totalItems;
         console.log(`[DELETE Tenant] Locations check: ${checks.locations} found`);
@@ -261,7 +281,7 @@ export async function DELETE(
       // Check users (tenants field)
       try {
         const users = await adminPb.collection('users').getList(1, 1, {
-          filter: `tenants ~ "${params.id}"`,
+          filter: `tenants ~ "${id}"`,
         });
         checks.users = users.totalItems;
         console.log(`[DELETE Tenant] Users check: ${checks.users} found`);
@@ -272,7 +292,7 @@ export async function DELETE(
       // Check orders
       try {
         const orders = await adminPb.collection('orders').getList(1, 1, {
-          filter: `tenantId = "${params.id}" || tenantId ~ "${params.id}"`,
+          filter: `tenantId = "${id}" || tenantId ~ "${id}"`,
         });
         checks.orders = orders.totalItems;
         console.log(`[DELETE Tenant] Orders check: ${checks.orders} found`);
@@ -283,7 +303,7 @@ export async function DELETE(
       // Check menu categories
       try {
         const menuCategories = await adminPb.collection('menuCategory').getList(1, 1, {
-          filter: `tenantId = "${params.id}" || tenantId ~ "${params.id}"`,
+          filter: `tenantId = "${id}" || tenantId ~ "${id}"`,
         });
         checks.menuCategories = menuCategories.totalItems;
         console.log(`[DELETE Tenant] Menu categories check: ${checks.menuCategories} found`);
@@ -294,7 +314,7 @@ export async function DELETE(
       // Check menu items
       try {
         const menuItems = await adminPb.collection('menuItem').getList(1, 1, {
-          filter: `tenantId = "${params.id}" || tenantId ~ "${params.id}"`,
+          filter: `tenantId = "${id}" || tenantId ~ "${id}"`,
         });
         checks.menuItems = menuItems.totalItems;
         console.log(`[DELETE Tenant] Menu items check: ${checks.menuItems} found`);
@@ -305,7 +325,7 @@ export async function DELETE(
       // Check reservations
       try {
         const reservations = await adminPb.collection('reservation').getList(1, 1, {
-          filter: `tenantId = "${params.id}" || tenantId ~ "${params.id}"`,
+          filter: `tenantId = "${id}" || tenantId ~ "${id}"`,
         });
         checks.reservations = reservations.totalItems;
         console.log(`[DELETE Tenant] Reservations check: ${checks.reservations} found`);
@@ -316,7 +336,7 @@ export async function DELETE(
       // Check tables
       try {
         const tables = await adminPb.collection('tables').getList(1, 1, {
-          filter: `tenantId = "${params.id}" || tenantId ~ "${params.id}"`,
+          filter: `tenantId = "${id}" || tenantId ~ "${id}"`,
         });
         checks.tables = tables.totalItems;
         console.log(`[DELETE Tenant] Tables check: ${checks.tables} found`);
@@ -354,10 +374,10 @@ export async function DELETE(
     }
 
     // All checks passed, proceed with deletion
-    console.log(`[DELETE Tenant] All checks passed, attempting deletion of tenant: ${params.id}`);
+    console.log(`[DELETE Tenant] All checks passed, attempting deletion of tenant: ${id}`);
     try {
-      await adminPb.collection('tenant').delete(params.id);
-      console.log(`[DELETE Tenant] Successfully deleted tenant: ${params.id}`);
+      await adminPb.collection('tenant').delete(id);
+      console.log(`[DELETE Tenant] Successfully deleted tenant: ${id}`);
       return NextResponse.json({ success: true, message: 'Tenant deleted successfully' });
     } catch (deleteError: any) {
       console.error('[DELETE Tenant] PocketBase delete error:', {

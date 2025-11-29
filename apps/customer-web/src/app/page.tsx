@@ -194,6 +194,18 @@ export default async function HomePage({
   // Use the selected tenant (query param takes precedence, then cookie, then subdomain)
   const selectedTenant = brandKey || 'saffron';
 
+  // Read table context from cookie
+  let tableContext: { tableName: string; tableId: string } | null = null;
+  try {
+    const tableContextCookie = cookieStore.get('tableContext')?.value;
+    if (tableContextCookie) {
+      tableContext = JSON.parse(decodeURIComponent(tableContextCookie));
+    }
+  } catch (e) {
+    // Ignore parse errors
+    console.error('Error parsing table context cookie:', e);
+  }
+
   const { categories, items, location } = await getMenu(selectedTenant);
   const tenants = await getTenants();
 
@@ -234,7 +246,17 @@ export default async function HomePage({
         )}
 
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent mb-2">Our Menu</h1>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">Our Menu</h1>
+            {tableContext && (
+              <div className="inline-flex items-center px-4 py-2 rounded-lg bg-accent-blue/10 border-2 border-accent-blue/30">
+                <span className="text-lg mr-2">🪑</span>
+                <span className="text-sm sm:text-base font-semibold text-accent-blue">
+                  Table: {tableContext.tableName}
+                </span>
+              </div>
+            )}
+          </div>
           {location && (
             <p className="text-sm sm:text-base lg:text-lg text-gray-600 font-medium">{location.name}</p>
           )}

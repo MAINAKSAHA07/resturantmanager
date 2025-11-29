@@ -20,6 +20,8 @@ interface Order {
   channel: string;
   created: string;
   timestamps: Record<string, string>;
+  tableId?: string;
+  tableLabel?: string;
   items?: OrderItem[];
 }
 
@@ -145,7 +147,11 @@ export default function OrdersPage() {
         />
 
         <div className="mb-6">
-          <Tabs value={filterStatus} onChange={(value) => setFilterStatus(value)}>
+          <Tabs 
+            defaultValue={filterStatus}
+            value={filterStatus} 
+            onChange={(value) => setFilterStatus(value)}
+          >
             <TabsList className="bg-white border border-brand-200 shadow-sm">
               <TabsTrigger value="all">All</TabsTrigger>
               {ORDER_STATUSES.map((status) => (
@@ -176,6 +182,7 @@ export default function OrdersPage() {
                   <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm">Status</th>
                   <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm">Items</th>
                   <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm hidden sm:table-cell">Channel</th>
+                  <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm">Table</th>
                   <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm">Total</th>
                   <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm hidden md:table-cell">Created</th>
                   <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm">Actions</th>
@@ -226,7 +233,20 @@ export default function OrdersPage() {
                             <span className="text-sm text-brand-400 italic">No items</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-brand-700">{order.channel}</td>
+                        <td className="px-4 py-3 text-brand-700 hidden sm:table-cell">{order.channel}</td>
+                        <td className="px-4 py-3 text-brand-700">
+                          {order.tableLabel ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-md bg-accent-100 text-accent-700 text-xs font-medium">
+                              🪑 {order.tableLabel}
+                            </span>
+                          ) : order.tableId ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-md bg-brand-100 text-brand-600 text-xs font-medium">
+                              Table ID: {order.tableId.slice(0, 8)}
+                            </span>
+                          ) : (
+                            <span className="text-brand-400 text-xs">—</span>
+                          )}
+                        </td>
                         <td className="px-4 py-3 font-semibold text-brand-900">
                           ₹{((order.total || 0) / 100).toFixed(2)}
                         </td>
@@ -247,7 +267,7 @@ export default function OrdersPage() {
                       </tr>
                       {isExpanded && orderItems.length > 0 && (
                         <tr key={`${order.id}-items`} className="bg-brand-50">
-                          <td colSpan={7} className="px-4 py-3">
+                          <td colSpan={8} className="px-4 py-3">
                             <div className="ml-6">
                               <h4 className="font-semibold mb-3 text-sm text-brand-800">Order Items Details ({orderItems.length}):</h4>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -284,7 +304,7 @@ export default function OrdersPage() {
                       )}
                       {isExpanded && orderItems.length === 0 && (
                         <tr key={`${order.id}-no-items`} className="bg-brand-50">
-                          <td colSpan={7} className="px-4 py-3">
+                          <td colSpan={8} className="px-4 py-3">
                             <div className="ml-6 text-sm text-brand-500 italic">
                               No items found for this order
                             </div>

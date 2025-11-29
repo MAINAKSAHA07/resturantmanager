@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
         key: t.key,
         primaryDomain: t.primaryDomain,
         adminDomain: t.adminDomain,
+        customerUrl: t.customerUrl || t.primaryDomain,
       }))
     });
   } catch (error: any) {
@@ -175,12 +176,23 @@ export async function POST(request: NextRequest) {
       console.error('Error checking for existing tenant:', checkError);
     }
 
+    // Generate customer URL if not provided
+    // Use primaryDomain if it's a full URL, otherwise generate one based on tenant key
+    let customerUrl = primaryDomain.trim();
+    if (!customerUrl || (!customerUrl.startsWith('http://') && !customerUrl.startsWith('https://'))) {
+      // Auto-generate URL based on tenant key
+      // In production, this would use the actual domain, but for now we'll use a pattern
+      const baseUrl = process.env.CUSTOMER_WEB_URL || 'https://restaurant-customer-web.netlify.app';
+      customerUrl = `${baseUrl}/${key.trim()}`;
+    }
+
     // Create tenant data
     const tenantData: any = {
       key: key.trim(),
       name: name.trim(),
       primaryDomain: primaryDomain.trim(),
       adminDomain: adminDomain.trim(),
+      customerUrl: customerUrl,
     };
 
     // Add theme if provided

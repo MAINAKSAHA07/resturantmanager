@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { QRTableCode } from '@restaurant/ui';
 
 interface Table {
   id: string;
@@ -14,6 +15,7 @@ interface Table {
   locationId: string;
   activeOrders?: number;
   orderTotal?: number;
+  qrToken?: string;
 }
 
 interface Location {
@@ -56,6 +58,9 @@ export default function FloorPlanPage() {
 
   const [showAddTable, setShowAddTable] = useState(false);
   const [showOrderModal, setShowOrderModal] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [qrTable, setQrTable] = useState<Table | null>(null);
+  const [tenantDomain, setTenantDomain] = useState<string>('');
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string>('');
   const [newTableName, setNewTableName] = useState('');
@@ -76,7 +81,47 @@ export default function FloorPlanPage() {
 
   useEffect(() => {
     fetchData();
+    fetchTenantDomain();
   }, []);
+
+  const fetchTenantDomain = async () => {
+    try {
+      const cookieStore = document.cookie.split(';');
+      const tenantIdCookie = cookieStore.find(c => c.trim().startsWith('selected_tenant_id='));
+      if (!tenantIdCookie) return;
+      
+      const tenantId = tenantIdCookie.split('=')[1];
+      const response = await fetch(`/api/tenants/${tenantId}`);
+      const data = await response.json();
+      // Use customerUrl if available, otherwise fallback to primaryDomain
+      let customerUrl = data.tenant?.customerUrl || data.tenant?.primaryDomain;
+      if (customerUrl) {
+        // If it's not a full URL, construct one
+        if (!customerUrl.startsWith('http://') && !customerUrl.startsWith('https://')) {
+          customerUrl = `https://${customerUrl}`;
+        }
+        // Extract base URL (remove trailing slash and path)
+        try {
+          const url = new URL(customerUrl);
+          setTenantDomain(url.origin + url.pathname.replace(/\/$/, ''));
+        } catch (e) {
+          // If URL parsing fails, use as-is
+          setTenantDomain(customerUrl);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching tenant domain:', error);
+    }
+  };
+
+  const handleShowQR = (table: Table) => {
+    if (!table.qrToken) {
+      alert('This table does not have a QR token. Please contact support.');
+      return;
+    }
+    setQrTable(table);
+    setShowQRModal(true);
+  };
 
   // Global mouse event listeners for dragging
   useEffect(() => {
@@ -1495,6 +1540,25 @@ export default function FloorPlanPage() {
               <h2 className="text-2xl font-bold bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">
                 {selectedTable.name}
               </h2>
+              <div className="flex gap-2">
+                {selectedTable.qrToken && (
+                  <button
+                    onClick={() => handleShowQR(selectedTable)}
+                    className="px-4 py-2 bg-accent-500 text-white rounded-lg hover:bg-accent-600 transition-colors text-sm font-medium"
+                  >
+                    Show QR
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setShowOrderModal(false);
+                    setSelectedTable(null);
+                  }}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
               <button
                 onClick={() => {
                   setShowOrderModal(false);
@@ -2037,6 +2101,64 @@ export default function FloorPlanPage() {
                 </div>
               )
             )}
+          </div>
+        </div>
+      )}
+
+      {/* QR Code Modal */}
+      {showQRModal && qrTable && qrTable.qrToken && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="card max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">
+                QR Code - {qrTable.name}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowQRModal(false);
+                  setQrTable(null);
+                }}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="space-y-4">
+              <QRTableCode
+                url={`${tenantDomain || 'https://example.com'}/t/${qrTable.qrToken}`}
+                size={256}
+              />
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    const url = `${tenantDomain || 'https://example.com'}/t/${qrTable.qrToken}`;
+                    const canvas = document.querySelector('canvas');
+                    if (canvas) {
+                      canvas.toBlob((blob) => {
+                        if (blob) {
+                          const link = document.createElement('a');
+                          link.download = `QR-${qrTable.name}.png`;
+                          link.href = URL.createObjectURL(blob);
+                          link.click();
+                        }
+                      });
+                    }
+                  }}
+                  className="btn-primary flex-1"
+                >
+                  Download PNG
+                </button>
+                <button
+                  onClick={() => {
+                    setShowQRModal(false);
+                    setQrTable(null);
+                  }}
+                  className="btn-secondary flex-1"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

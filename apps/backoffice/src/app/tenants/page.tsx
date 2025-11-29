@@ -29,6 +29,7 @@ export default function TenantsPage() {
     name: '',
     primaryDomain: '',
     adminDomain: '',
+    customerUrl: '',
     // Location fields (only for new tenants)
     locationName: '',
     locationStateCode: '',
@@ -49,12 +50,11 @@ export default function TenantsPage() {
       const data = await response.json();
       if (response.ok && data.user) {
         setCurrentUser(data.user);
-        // Only master users (isMaster === true) can access tenant management
-        // Admins are assigned to specific tenants and cannot manage tenants
-        const isMaster = data.user.isMaster === true;
+        // Master users (isMaster === true OR role === 'admin') can access tenant management
+        const isMaster = data.user.isMaster === true || data.user.role === 'admin';
         setIsMasterUser(isMaster);
         
-        // Redirect non-master users immediately (including admins)
+        // Redirect non-master users immediately
         if (!isMaster) {
           // Redirect immediately without delay
           window.location.replace('/dashboard');
@@ -122,6 +122,7 @@ export default function TenantsPage() {
             name: formData.name,
             primaryDomain: formData.primaryDomain,
             adminDomain: formData.adminDomain,
+            customerUrl: formData.customerUrl || undefined,
           }
         : formData;
 
@@ -143,6 +144,7 @@ export default function TenantsPage() {
         name: '',
         primaryDomain: '',
         adminDomain: '',
+        customerUrl: '',
         locationName: '',
         locationStateCode: '',
         locationGstin: '',
@@ -175,6 +177,7 @@ export default function TenantsPage() {
           name: data.tenant.name || '',
           primaryDomain: data.tenant.primaryDomain || '',
           adminDomain: data.tenant.adminDomain || '',
+          customerUrl: data.tenant.customerUrl || data.tenant.primaryDomain || '',
           locationName: '',
           locationStateCode: '',
           locationGstin: '',
@@ -356,6 +359,7 @@ export default function TenantsPage() {
                         name: '',
                         primaryDomain: '',
                         adminDomain: '',
+                        customerUrl: '',
                         locationName: '',
                         locationStateCode: '',
                         locationGstin: '',
@@ -446,6 +450,25 @@ export default function TenantsPage() {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-blue focus:border-transparent"
                         placeholder="e.g., admin.restaurant1.example.com"
                       />
+                    </div>
+
+                    <div>
+                      <label htmlFor="customerUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                        Customer URL <span className="text-gray-400">(Optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="customerUrl"
+                        value={formData.customerUrl}
+                        onChange={(e) => setFormData({ ...formData, customerUrl: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-blue focus:border-transparent"
+                        placeholder="e.g., https://restaurant-customer-web.netlify.app/restaurant-1"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">
+                        {formData.customerUrl 
+                          ? 'Custom URL will be used for customer access'
+                          : 'Leave empty to auto-generate URL based on tenant key'}
+                      </p>
                     </div>
 
                     {/* Location Section - Only show for new tenants */}
@@ -549,6 +572,7 @@ export default function TenantsPage() {
                           name: '',
                           primaryDomain: '',
                           adminDomain: '',
+                          customerUrl: '',
                           locationName: '',
                           locationStateCode: '',
                           locationGstin: '',

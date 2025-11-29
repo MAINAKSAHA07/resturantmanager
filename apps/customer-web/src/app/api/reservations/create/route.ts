@@ -172,10 +172,44 @@ export async function POST(request: NextRequest) {
     console.error('Error creating reservation:', {
       message: error.message,
       name: error.name,
-      response: error.response?.data || error.response,
       status: error.status || error.response?.status,
-      stack: error.stack,
     });
+    
+    // Helper to safely serialize error details
+    const safeSerialize = (obj: any): any => {
+      if (obj === null || obj === undefined) return null;
+      if (typeof obj !== 'object') return obj;
+      if (obj instanceof Error) return { message: obj.message, name: obj.name };
+      
+      try {
+        const seen = new WeakSet();
+        const serialize = (val: any): any => {
+          if (val === null || val === undefined) return null;
+          if (typeof val !== 'object') return val;
+          if (seen.has(val)) return '[Circular]';
+          if (val instanceof Error) return { message: val.message, name: val.name };
+          if (val instanceof Date) return val.toISOString();
+          if (Array.isArray(val)) return val.map(serialize);
+          
+          seen.add(val);
+          const result: any = {};
+          for (const key in val) {
+            if (Object.prototype.hasOwnProperty.call(val, key)) {
+              try {
+                result[key] = serialize(val[key]);
+              } catch {
+                result[key] = '[Unable to serialize]';
+              }
+            }
+          }
+          seen.delete(val);
+          return result;
+        };
+        return serialize(obj);
+      } catch {
+        return { message: 'Unable to serialize error details' };
+      }
+    };
     
     // Extract more detailed error information
     let errorMessage = error.message || 'Failed to create reservation';
@@ -198,12 +232,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Safely serialize error details
+    const safeDetails = errorDetails ? safeSerialize(errorDetails) : undefined;
+
     return NextResponse.json(
       { 
         error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? errorDetails : undefined
+        ...(safeDetails && process.env.NODE_ENV === 'development' && { details: safeDetails }),
       },
-      { status: 500 }
+      { status: error.status || 500 }
     );
   }
 }

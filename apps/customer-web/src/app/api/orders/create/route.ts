@@ -5,8 +5,17 @@ import PocketBase from 'pocketbase';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { items, couponCode } = body;
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError: any) {
+      return NextResponse.json(
+        { error: 'Invalid request body. Expected JSON.' },
+        { status: 400 }
+      );
+    }
+    
+    const { items, couponCode, tableContext: tableContextFromBody } = body;
 
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -359,10 +368,64 @@ export async function POST(request: NextRequest) {
     const finalCouponId = couponId || null;
 
 
+    // Check for table context from cookie or request body
+    let tableId: string | null = null;
+    let tableLabel: string | null = null;
+    let channel = 'pickup'; // Default
+
+    // Try to get table context from request body first (more reliable)
+    let tableContext: any = null;
+    if (tableContextFromBody && tableContextFromBody.tableId && tableContextFromBody.tableName) {
+      tableContext = tableContextFromBody;
+      console.log('[Order Create] Table context from request body:', tableContext);
+    } else {
+      // Fallback to cookie
+      const tableContextCookie = cookies.get('tableContext')?.value;
+      console.log('[Order Create] Table context cookie:', tableContextCookie ? 'Found' : 'Not found');
+      
+      if (tableContextCookie) {
+        try {
+          tableContext = JSON.parse(decodeURIComponent(tableContextCookie));
+          console.log('[Order Create] Parsed table context from cookie:', tableContext);
+        } catch (e) {
+          console.error('[Order Create] ❌ Failed to parse table context cookie:', e);
+        }
+      }
+    }
+    
+    if (tableContext && tableContext.tableId && tableContext.tableName) {
+      // Verify table belongs to current tenant and location
+      const tableTenantId = Array.isArray(tableContext.tenantId) 
+        ? tableContext.tenantId[0] 
+        : tableContext.tenantId;
+      const tableLocationId = Array.isArray(tableContext.locationId)
+        ? tableContext.locationId[0]
+        : tableContext.locationId;
+
+      console.log('[Order Create] Comparing tenant/location:', {
+        tableTenantId,
+        currentTenantId: tenant.id,
+        tableLocationId,
+        currentLocationId: location.id,
+        match: tableTenantId === tenant.id && tableLocationId === location.id,
+      });
+
+      if (tableTenantId === tenant.id && tableLocationId === location.id) {
+        tableId = tableContext.tableId;
+        tableLabel = tableContext.tableName;
+        channel = 'dine_in';
+        console.log('[Order Create] ✅ Table context validated - setting dine_in with table:', tableLabel);
+      } else {
+        console.warn('[Order Create] ⚠️ Table context tenant/location mismatch - using pickup');
+      }
+    } else {
+      console.log('[Order Create] No valid table context found - using pickup');
+    }
+
     const orderData: any = {
       tenantId: tenant.id,
       locationId: location.id,
-      channel: 'pickup', // Default, can be made configurable
+      channel: channel,
       status: 'placed',
       subtotal: finalSubtotal,
       taxCgst: finalTaxCgst,
@@ -381,10 +444,25 @@ export async function POST(request: NextRequest) {
     }
     // If no coupon, don't set couponId - PocketBase will default to null for relation fields
 
-
     if (customerId) {
       orderData.customerId = customerId;
     }
+
+    // Add table information if available
+    if (tableId) {
+      orderData.tableId = tableId;
+      console.log('[Order Create] ✅ Added tableId to order:', tableId);
+    }
+    if (tableLabel) {
+      orderData.tableLabel = tableLabel;
+      console.log('[Order Create] ✅ Added tableLabel to order:', tableLabel);
+    }
+    
+    console.log('[Order Create] Final order data:', {
+      channel: orderData.channel,
+      tableId: orderData.tableId || 'none',
+      tableLabel: orderData.tableLabel || 'none',
+    });
 
     // Double-check: ensure tax fields are definitely in the object as numbers
     // Sometimes JavaScript can have weird issues with object property assignment
@@ -670,6 +748,43 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error creating order:', error.message);
 
+    // Helper to safely serialize error details
+    const safeSerialize = (obj: any): any => {
+      if (obj === null || obj === undefined) return null;
+      if (typeof obj !== 'object') return obj;
+      if (obj instanceof Error) return { message: obj.message, name: obj.name };
+      
+      try {
+        // Try to serialize, but catch circular references
+        const seen = new WeakSet();
+        const serialize = (val: any): any => {
+          if (val === null || val === undefined) return null;
+          if (typeof val !== 'object') return val;
+          if (seen.has(val)) return '[Circular]';
+          if (val instanceof Error) return { message: val.message, name: val.name };
+          if (val instanceof Date) return val.toISOString();
+          if (Array.isArray(val)) return val.map(serialize);
+          
+          seen.add(val);
+          const result: any = {};
+          for (const key in val) {
+            if (Object.prototype.hasOwnProperty.call(val, key)) {
+              try {
+                result[key] = serialize(val[key]);
+              } catch {
+                result[key] = '[Unable to serialize]';
+              }
+            }
+          }
+          seen.delete(val);
+          return result;
+        };
+        return serialize(obj);
+      } catch {
+        return { message: 'Unable to serialize error details' };
+      }
+    };
+
     // Extract detailed error message
     let errorMessage = error.message || 'Failed to create order';
     if (error.response?.data?.data) {
@@ -688,10 +803,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Safely serialize error details
+    const errorDetails = error.response?.data || error.data;
+    const safeDetails = errorDetails ? safeSerialize(errorDetails) : undefined;
+
     return NextResponse.json(
       {
         error: errorMessage,
-        details: error.response?.data || error.data,
+        ...(safeDetails && { details: safeDetails }),
       },
       { status: error.status || 500 }
     );

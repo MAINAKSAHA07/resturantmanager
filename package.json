@@ -27,6 +27,9 @@
     "pb:create-coupon-collection": "node pocketbase/scripts/create-coupon-collection.js",
     "pb:add-coupon-fields-to-orders": "node pocketbase/scripts/add-coupon-fields-to-orders.js",
     "pb:add-comment-to-orderitem": "node pocketbase/scripts/add-comment-field-to-orderitem.js",
+    "pb:add-qr-token-to-tables": "node pocketbase/scripts/add-qr-token-to-tables.js",
+    "pb:add-table-label-to-orders": "node pocketbase/scripts/add-table-label-to-orders.js",
+    "pb:backfill-qr-tokens": "node pocketbase/scripts/backfill-qr-tokens.js",
     "design:tokens": "tsx scripts/generate-design-tokens.ts"
   },
   "devDependencies": {

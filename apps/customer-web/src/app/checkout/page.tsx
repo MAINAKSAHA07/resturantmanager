@@ -66,6 +66,20 @@ export default function CheckoutPage() {
         couponCodeToSend = appliedCoupon.code;
       }
 
+      // Get table context from cookie to pass in request
+      let tableContextFromCookie = null;
+      try {
+        const cookies = document.cookie.split(';');
+        const tableContextCookie = cookies.find(c => c.trim().startsWith('tableContext='));
+        if (tableContextCookie) {
+          const value = tableContextCookie.split('=').slice(1).join('=');
+          tableContextFromCookie = JSON.parse(decodeURIComponent(value));
+          console.log('[Checkout] Found table context:', tableContextFromCookie);
+        }
+      } catch (e) {
+        console.warn('[Checkout] Failed to read table context from cookie:', e);
+      }
+
       // Create order with coupon if applied
       const orderResponse = await fetch('/api/orders/create', {
         method: 'POST',
@@ -76,6 +90,8 @@ export default function CheckoutPage() {
         body: JSON.stringify({ 
           items: cart,
           couponCode: couponCodeToSend,
+          // Pass table context explicitly in body as fallback
+          tableContext: tableContextFromCookie,
         }),
       });
 

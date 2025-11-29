@@ -251,8 +251,6 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching KDS tickets:', {
       message: error.message,
       status: error.status,
-      response: error.response?.data || error.response,
-      stack: error.stack,
       hasEmail: !!process.env.PB_ADMIN_EMAIL,
       hasPassword: !!process.env.PB_ADMIN_PASSWORD,
     });
@@ -262,16 +260,18 @@ export async function GET(request: NextRequest) {
       ? error.message || 'Failed to fetch KDS tickets'
       : 'Failed to fetch KDS tickets';
     
+    // Safely serialize error details
+    const errorDetails = process.env.NODE_ENV === 'development' 
+      ? { 
+          message: error.message,
+          status: error.status,
+        }
+      : undefined;
+    
     return NextResponse.json(
       { 
         error: errorMessage,
-        details: process.env.NODE_ENV === 'development' 
-          ? { 
-              message: error.message,
-              status: error.status,
-              response: error.response?.data || error.response,
-            }
-          : undefined
+        ...(errorDetails && { details: errorDetails }),
       },
       { status: error.status || 500 }
     );

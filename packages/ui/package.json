@@ -8,6 +8,7 @@
     "dev": "tsc --watch"
   },
   "dependencies": {
+    "qrcode.react": "^4.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -20,6 +21,3 @@
     "tailwindcss": "^3.3.0"
   }
 }
-
-
-

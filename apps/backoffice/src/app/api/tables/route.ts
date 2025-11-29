@@ -138,6 +138,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Generate qrToken if not provided
+    const crypto = require('crypto');
+    const qrToken = crypto.randomBytes(16).toString('hex');
+
     const tableData: any = {
       tenantId,
       locationId,
@@ -146,6 +150,7 @@ export async function POST(request: NextRequest) {
       status: 'available',
       x: x || 0,
       y: y || 0,
+      qrToken, // Auto-generate QR token for new tables
     };
 
     const newTable = await pb.collection('tables').create(tableData);

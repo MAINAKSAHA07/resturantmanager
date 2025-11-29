@@ -3,6 +3,45 @@ import PocketBase from 'pocketbase';
 import { User } from './user-utils';
 
 /**
+ * Safely serialize error details to prevent circular references
+ * and non-serializable objects from causing JSON encoding failures
+ */
+export function safeSerializeErrorDetails(obj: any): any {
+  if (obj === null || obj === undefined) return null;
+  if (typeof obj !== 'object') return obj;
+  if (obj instanceof Error) return { message: obj.message, name: obj.name };
+  
+  try {
+    const seen = new WeakSet();
+    const serialize = (val: any): any => {
+      if (val === null || val === undefined) return null;
+      if (typeof val !== 'object') return val;
+      if (seen.has(val)) return '[Circular]';
+      if (val instanceof Error) return { message: val.message, name: val.name };
+      if (val instanceof Date) return val.toISOString();
+      if (Array.isArray(val)) return val.map(serialize);
+      
+      seen.add(val);
+      const result: any = {};
+      for (const key in val) {
+        if (Object.prototype.hasOwnProperty.call(val, key)) {
+          try {
+            result[key] = serialize(val[key]);
+          } catch {
+            result[key] = '[Unable to serialize]';
+          }
+        }
+      }
+      seen.delete(val);
+      return result;
+    };
+    return serialize(obj);
+  } catch {
+    return { message: 'Unable to serialize error details' };
+  }
+}
+
+/**
  * Get an authenticated PocketBase admin client
  * Throws an error if admin credentials are not configured
  */

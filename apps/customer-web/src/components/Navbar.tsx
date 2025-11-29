@@ -10,6 +10,7 @@ export default function Navbar() {
   const [cartCount, setCartCount] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [customerName, setCustomerName] = useState('');
+  const [tableContext, setTableContext] = useState<{ tableName: string } | null>(null);
 
   useEffect(() => {
     const updateCartCount = () => {
@@ -32,14 +33,40 @@ export default function Navbar() {
       }
     };
 
+    const checkTableContext = () => {
+      // Read table context from cookie
+      const cookies = document.cookie.split(';');
+      const tableContextCookie = cookies.find(c => c.trim().startsWith('tableContext='));
+      if (tableContextCookie) {
+        try {
+          const value = tableContextCookie.split('=').slice(1).join('=');
+          const context = JSON.parse(decodeURIComponent(value));
+          if (context.tableName) {
+            setTableContext({ tableName: context.tableName });
+          } else {
+            setTableContext(null);
+          }
+        } catch (e) {
+          setTableContext(null);
+        }
+      } else {
+        setTableContext(null);
+      }
+    };
+
     updateCartCount();
     checkAuth();
+    checkTableContext();
     
     // Listen for storage changes (when cart is updated in another tab)
     window.addEventListener('storage', () => {
       updateCartCount();
       checkAuth();
+      checkTableContext();
     });
+    
+    // Check table context periodically (in case cookie is set from QR scan)
+    const tableContextInterval = setInterval(checkTableContext, 1000);
     
     // Custom event for cart updates in same tab
     window.addEventListener('cartUpdated', updateCartCount);
@@ -49,11 +76,19 @@ export default function Navbar() {
       checkAuth();
     };
     window.addEventListener('customerDataUpdated', handleCustomerDataUpdate);
+    
+    // Listen for table context updates
+    const handleTableContextUpdate = () => {
+      checkTableContext();
+    };
+    window.addEventListener('tableContextUpdated', handleTableContextUpdate);
 
     return () => {
       window.removeEventListener('storage', updateCartCount);
       window.removeEventListener('cartUpdated', updateCartCount);
       window.removeEventListener('customerDataUpdated', handleCustomerDataUpdate);
+      window.removeEventListener('tableContextUpdated', handleTableContextUpdate);
+      clearInterval(tableContextInterval);
     };
   }, []);
 
@@ -88,9 +123,16 @@ export default function Navbar() {
     <nav className="bg-gradient-to-r from-accent-blue to-accent-purple shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link href="/" className="text-xl sm:text-2xl font-bold text-white hover:text-accent-yellow transition-colors duration-200">
-            Restaurant
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/" className="text-xl sm:text-2xl font-bold text-white hover:text-accent-yellow transition-colors duration-200">
+              Restaurant
+            </Link>
+            {tableContext && (
+              <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-md bg-white/20 text-white text-xs sm:text-sm font-medium">
+                🪑 Table: {tableContext.tableName}
+              </span>
+            )}
+          </div>
           
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-4 lg:space-x-6">

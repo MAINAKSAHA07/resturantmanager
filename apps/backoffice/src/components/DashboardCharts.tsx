@@ -188,8 +188,8 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
       .style('z-index', '1000');
 
     // Add hover interactions
-    g.selectAll('.dot')
-      .on('mouseover', function (event, d) {
+    g.selectAll<SVGCircleElement, { date: Date; total: number }>('.dot')
+      .on('mouseover', function (event: MouseEvent, d) {
         d3.select(this).attr('r', 6);
         tooltip
           .transition()

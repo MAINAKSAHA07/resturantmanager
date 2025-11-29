@@ -3,6 +3,12 @@ const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@restaurant/lib', '@restaurant/ui'],
   // Do not use standalone output for Netlify - the plugin handles it
+  // output: 'standalone', // Disabled for Netlify deployment
+  // Disable experimental features that might cause build trace issues
+  experimental: {
+    // Disable server components external packages optimization that can cause NFT issues
+    serverComponentsExternalPackages: [],
+  },
   images: {
     remotePatterns: [
       {
@@ -41,6 +47,12 @@ const nextConfig = {
       };
     }
     return config;
+  },
+  // Disable build trace collection to avoid NFT file errors
+  // This is safe for Netlify deployment as the plugin handles optimization
+  onDemandEntries: {
+    maxInactiveAge: 25 * 1000,
+    pagesBufferLength: 2,
   },
 };
 

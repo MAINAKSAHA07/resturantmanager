@@ -8,6 +8,7 @@ export * from './components/PageHeader';
 export * from './components/Tabs';
 export * from './components/TextField';
 export * from './components/Select';
+export * from './components/QRTableCode';
 
 // Legacy component for backward compatibility
 export function MoneyBadge({ amount }: { amount: number }) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentUser, getAdminPb } from '@/lib/server-utils';
+import { getCurrentUser, getAdminPb, safeSerializeErrorDetails } from '@/lib/server-utils';
 import { canPerformAction } from '@/lib/permissions';
 
 export async function GET(request: NextRequest) {
@@ -252,9 +252,7 @@ export async function GET(request: NextRequest) {
 
     console.error('Error fetching items:', {
       message: error.message,
-      response: error.response?.data || error.response,
       status: status,
-      stack: error.stack,
     });
 
     // Handle 404 - collection doesn't exist
@@ -262,10 +260,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ items: [] });
     }
 
+    // Safely serialize error details
+    const errorDetails = error.response?.data || error.data;
+    const safeDetails = errorDetails && process.env.NODE_ENV === 'development' 
+      ? safeSerializeErrorDetails(errorDetails)
+      : undefined;
+
     return NextResponse.json(
       {
         error: error.message || 'Failed to fetch items',
-        details: process.env.NODE_ENV === 'development' ? (error.response?.data || error.response) : undefined
+        ...(safeDetails && { details: safeDetails }),
       },
       { status: 500 }
     );

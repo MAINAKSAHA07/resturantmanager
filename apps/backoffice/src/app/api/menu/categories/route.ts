@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminPb } from '@/lib/server-utils';
+import { getAdminPb, safeSerializeErrorDetails } from '@/lib/server-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -121,14 +121,19 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Error fetching categories:', {
       message: error.message,
-      response: error.response?.data || error.response,
       status: error.status || error.response?.status,
-      stack: error.stack,
     });
+    
+    // Safely serialize error details
+    const errorDetails = error.response?.data || error.data;
+    const safeDetails = errorDetails && process.env.NODE_ENV === 'development' 
+      ? safeSerializeErrorDetails(errorDetails)
+      : undefined;
+    
     return NextResponse.json(
       {
         error: error.message || 'Failed to fetch categories',
-        details: process.env.NODE_ENV === 'development' ? (error.response?.data || error.response) : undefined
+        ...(safeDetails && { details: safeDetails }),
       },
       { status: 500 }
     );

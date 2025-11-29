@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getAdminPb } from '@/lib/server-utils';
+import { getAdminPb, safeSerializeErrorDetails } from '@/lib/server-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -73,11 +73,56 @@ export async function GET(request: NextRequest) {
       orderItemsMap.get(itemOrderId)!.push(item);
     });
 
+    // Fetch table information for orders that have tableId but no tableLabel
+    const tableIdsToFetch = new Set<string>();
+    filteredOrders.forEach((order: any) => {
+      if (order.tableId && !order.tableLabel) {
+        // Handle both string and array (relation field) formats
+        const tableId = Array.isArray(order.tableId) 
+          ? (order.tableId.length > 0 ? order.tableId[0] : null)
+          : order.tableId;
+        if (tableId && typeof tableId === 'string') {
+          tableIdsToFetch.add(tableId);
+        }
+      }
+    });
+
+    // Fetch tables in batch
+    const tableMap = new Map<string, string>(); // tableId -> tableName
+    if (tableIdsToFetch.size > 0) {
+      try {
+        const allTables = await pb.collection('tables').getList(1, 1000);
+        allTables.items.forEach((table: any) => {
+          if (tableIdsToFetch.has(table.id) && table.name) {
+            tableMap.set(table.id, table.name);
+          }
+        });
+        console.log(`Fetched ${tableMap.size} table names for orders missing tableLabel`);
+      } catch (e: any) {
+        console.error('Error fetching tables:', e.message);
+      }
+    }
+
     // Attach items to each order
     const ordersWithItems = filteredOrders.map((order: any) => {
       const orderItems = orderItemsMap.get(order.id) || [];
 
       console.log(`Order ${order.id.slice(0, 8)}: Found ${orderItems.length} items`);
+
+      // Get table label - use existing tableLabel or fetch from table if tableId exists
+      let tableLabel = order.tableLabel;
+      if (!tableLabel && order.tableId) {
+        // Handle both string and array (relation field) formats
+        const tableId = Array.isArray(order.tableId) 
+          ? (order.tableId.length > 0 ? order.tableId[0] : null)
+          : order.tableId;
+        if (tableId && typeof tableId === 'string') {
+          tableLabel = tableMap.get(tableId) || null;
+          if (tableLabel) {
+            console.log(`Order ${order.id.slice(0, 8)}: Fetched table name "${tableLabel}" from tableId ${tableId}`);
+          }
+        }
+      }
 
       return {
         id: order.id,
@@ -94,6 +139,7 @@ export async function GET(request: NextRequest) {
         tenantId: order.tenantId,
         locationId: order.locationId,
         tableId: order.tableId, // Include tableId for filtering
+        tableLabel: tableLabel, // Use fetched table name if available
         customerId: order.customerId,
         items: orderItems.map((item: any) => ({
           id: item.id,
@@ -110,13 +156,17 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Error fetching orders:', {
       message: error.message,
-      stack: error.stack,
-      response: error.response?.data,
     });
+    
+    // Safely serialize error details (stack is a string, so it's safe, but be consistent)
+    const errorDetails = process.env.NODE_ENV === 'development' 
+      ? { message: error.message, stack: error.stack }
+      : undefined;
+    
     return NextResponse.json(
       {
         error: error.message || 'Failed to fetch orders',
-        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        ...(errorDetails && { details: errorDetails }),
       },
       { status: 500 }
     );

@@ -13,6 +13,13 @@ interface DashboardStats {
   ordersByStatus?: OrdersByStatusData[];
 }
 
+interface TenantInfo {
+  id: string;
+  name: string;
+  key: string;
+  customerUrl: string;
+}
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({
     todayOrders: 0,
@@ -24,6 +31,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [timeRange, setTimeRange] = useState<'1d' | '7d' | '30d'>('30d'); // Default to 30d for charts
+  const [tenantInfo, setTenantInfo] = useState<TenantInfo | null>(null);
 
   const fetchStats = async (isRefresh = false) => {
     try {
@@ -48,8 +56,23 @@ export default function DashboardPage() {
     }
   };
 
+  const fetchTenantInfo = async () => {
+    try {
+      const response = await fetch('/api/tenant/current');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.tenant) {
+          setTenantInfo(data.tenant);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching tenant info:', error);
+    }
+  };
+
   useEffect(() => {
     fetchStats();
+    fetchTenantInfo();
   }, [timeRange]);
 
   // Initial loading state - only show full screen on first load
@@ -88,7 +111,11 @@ export default function DashboardPage() {
           subtitle="Monitor your restaurant's performance at a glance"
           actions={
             <div className="flex items-center gap-3">
-              <Tabs value={timeRange} onChange={(value) => setTimeRange(value as '1d' | '7d' | '30d')}>
+              <Tabs 
+                defaultValue={timeRange}
+                value={timeRange} 
+                onChange={(value) => setTimeRange(value as '1d' | '7d' | '30d')}
+              >
                 <TabsList className="bg-white border border-brand-200 shadow-sm">
                   <TabsTrigger value="1d">Today</TabsTrigger>
                   <TabsTrigger value="7d">7 Days</TabsTrigger>
@@ -155,6 +182,45 @@ export default function DashboardPage() {
             />
           </div>
         ) : null}
+
+        {/* Tenant Customer URL Card */}
+        {tenantInfo && (
+          <Card className="mb-6">
+            <h2 className="text-xl font-bold mb-4 text-brand-900">Customer Web App</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex-1">
+                <p className="text-sm text-brand-600 mb-2">Your customers can access the menu at:</p>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={tenantInfo.customerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-accent-600 hover:text-accent-700 font-mono text-sm break-all underline"
+                  >
+                    {tenantInfo.customerUrl}
+                  </a>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(tenantInfo.customerUrl)}
+                    className="p-1 text-brand-500 hover:text-brand-700 transition-colors"
+                    title="Copy URL"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <a
+                href={tenantInfo.customerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary px-4 py-2 text-sm whitespace-nowrap"
+              >
+                Open Customer Site →
+              </a>
+            </div>
+          </Card>
+        )}
 
         <Card>
           <h2 className="text-2xl font-bold mb-6 text-brand-900">Quick Actions</h2>
