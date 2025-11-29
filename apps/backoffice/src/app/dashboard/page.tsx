@@ -2,11 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { PageHeader, KPIStat, Card, Button, Tabs, TabsList, TabsTrigger, TabsContent } from '@restaurant/ui';
+import { DashboardCharts, DailySalesData, OrdersByStatusData } from '@/components/DashboardCharts';
 
 interface DashboardStats {
   todayOrders: number;
   totalRevenue: number;
   completedOrders: number;
+  dailySales?: DailySalesData[];
+  ordersByStatus?: OrdersByStatusData[];
 }
 
 export default function DashboardPage() {
@@ -14,9 +18,11 @@ export default function DashboardPage() {
     todayOrders: 0,
     totalRevenue: 0,
     completedOrders: 0,
+    dailySales: [],
+    ordersByStatus: [],
   });
   const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState<'1d' | '7d' | '30d'>('1d');
+  const [timeRange, setTimeRange] = useState<'1d' | '7d' | '30d'>('30d'); // Default to 30d for charts
 
   const fetchStats = async () => {
     try {
@@ -42,104 +48,107 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 to-accent-purple/5 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-brand-50 to-accent-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-blue mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-500 mx-auto mb-4"></div>
+          <p className="text-brand-600 font-medium">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
+  const timeRangeLabels = {
+    '1d': "Today's Orders",
+    '7d': 'Last 7 Days Orders',
+    '30d': 'Last 30 Days Orders',
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 via-accent-purple/5 to-accent-green/5 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">Dashboard</h1>
-
-          <div className="flex items-center gap-4">
-            <div className="bg-white rounded-xl shadow-md p-1 flex border border-accent-blue/20">
-              <button
-                onClick={() => setTimeRange('1d')}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${timeRange === '1d'
-                  ? 'bg-accent-blue text-white shadow-md'
-                  : 'text-gray-600 hover:bg-accent-purple/10'
-                  }`}
-              >
-                Today
-              </button>
-              <button
-                onClick={() => setTimeRange('7d')}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${timeRange === '7d'
-                  ? 'bg-accent-blue text-white shadow-md'
-                  : 'text-gray-600 hover:bg-accent-purple/10'
-                  }`}
-              >
-                7 Days
-              </button>
-              <button
-                onClick={() => setTimeRange('30d')}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${timeRange === '30d'
-                  ? 'bg-accent-blue text-white shadow-md'
-                  : 'text-gray-600 hover:bg-accent-purple/10'
-                  }`}
-              >
-                30 Days
-              </button>
+    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-accent-50/30 to-brand-100/50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+        <PageHeader
+          title="Dashboard"
+          subtitle="Monitor your restaurant's performance at a glance"
+          actions={
+            <div className="flex items-center gap-3">
+              <Tabs value={timeRange} onChange={(value) => setTimeRange(value as '1d' | '7d' | '30d')}>
+                <TabsList className="bg-white border border-brand-200 shadow-sm">
+                  <TabsTrigger value="1d">Today</TabsTrigger>
+                  <TabsTrigger value="7d">7 Days</TabsTrigger>
+                  <TabsTrigger value="30d">30 Days</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <Button onClick={fetchStats} size="sm" variant="secondary">
+                Refresh
+              </Button>
             </div>
+          }
+        />
 
-            <button
-              onClick={fetchStats}
-              className="btn-primary text-sm"
-            >
-              Refresh
-            </button>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
+          <KPIStat
+            label={timeRangeLabels[timeRange]}
+            value={stats.todayOrders}
+            accentColor="blue"
+            icon={
+              <svg className="h-8 w-8 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            }
+          />
+          <KPIStat
+            label="Total Revenue"
+            value={`₹${(stats.totalRevenue / 100).toFixed(2)}`}
+            accentColor="green"
+            icon={
+              <svg className="h-8 w-8 text-status-success-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+          />
+          <KPIStat
+            label="Completed Orders"
+            value={stats.completedOrders}
+            accentColor="purple"
+            icon={
+              <svg className="h-8 w-8 text-accent-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+          />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className="card-accent border-l-4 border-l-accent-blue">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-600 mb-2">
-              {timeRange === '1d' ? "Today's Orders" :
-                timeRange === '7d' ? "Last 7 Days Orders" : "Last 30 Days Orders"}
-            </h2>
-            <p className="text-3xl sm:text-4xl font-bold text-accent-blue">{stats.todayOrders}</p>
+        {/* Charts Section */}
+        {(stats.dailySales && stats.dailySales.length > 0) ||
+        (stats.ordersByStatus && stats.ordersByStatus.length > 0) ? (
+          <div className="mb-8">
+            <DashboardCharts
+              dailySales={stats.dailySales || []}
+              ordersByStatus={stats.ordersByStatus || []}
+            />
           </div>
+        ) : null}
 
-          <div className="card-accent border-l-4 border-l-accent-green">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-600 mb-2">Total Revenue</h2>
-            <p className="text-3xl sm:text-4xl font-bold text-accent-green">₹{(stats.totalRevenue / 100).toFixed(2)}</p>
-          </div>
-
-          <div className="card-accent border-l-4 border-l-accent-purple sm:col-span-2 lg:col-span-1">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-600 mb-2">Completed</h2>
-            <p className="text-3xl sm:text-4xl font-bold text-accent-purple">{stats.completedOrders}</p>
-          </div>
-        </div>
-
-        <div className="card">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">Quick Actions</h2>
+        <Card>
+          <h2 className="text-2xl font-bold mb-6 text-brand-900">Quick Actions</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Link
-              href="/menu"
-              className="btn-primary text-center"
-            >
-              Manage Menu
+            <Link href="/menu">
+              <Button variant="primary" className="w-full">
+                Manage Menu
+              </Button>
             </Link>
-            <Link
-              href="/orders"
-              className="btn-success text-center"
-            >
-              View Orders
+            <Link href="/orders">
+              <Button variant="success" className="w-full">
+                View Orders
+              </Button>
             </Link>
-            <Link
-              href="/kds"
-              className="btn-warning text-center"
-            >
-              Kitchen Display
+            <Link href="/kds">
+              <Button variant="secondary" className="w-full">
+                Kitchen Display
+              </Button>
             </Link>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

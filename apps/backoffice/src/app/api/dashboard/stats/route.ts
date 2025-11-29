@@ -59,10 +59,52 @@ export async function GET(request: NextRequest) {
     const totalRevenue = todayOrders.reduce((sum, order) => sum + (order.total || 0), 0);
     const completedOrders = todayOrders.filter((o) => o.status === 'completed').length;
 
+    // Calculate daily sales for the last 30 days
+    const dailySalesMap = new Map<string, number>();
+    const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
+    
+    // Initialize all days in range with 0
+    const daysToShow = range === '1d' ? 1 : range === '7d' ? 7 : 30;
+    for (let i = 0; i < daysToShow; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      date.setHours(0, 0, 0, 0);
+      const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
+      dailySalesMap.set(dateKey, 0);
+    }
+
+    // Aggregate sales by date
+    todayOrders.forEach((order: any) => {
+      const orderDate = new Date(order.created);
+      const dateKey = orderDate.toISOString().split('T')[0];
+      if (dailySalesMap.has(dateKey)) {
+        dailySalesMap.set(dateKey, (dailySalesMap.get(dateKey) || 0) + (order.total || 0));
+      }
+    });
+
+    // Convert to array and sort by date
+    const dailySales = Array.from(dailySalesMap.entries())
+      .map(([date, total]) => ({ date, total }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    // Calculate orders by status
+    const statusCounts = new Map<string, number>();
+    todayOrders.forEach((order: any) => {
+      const status = order.status || 'placed';
+      statusCounts.set(status, (statusCounts.get(status) || 0) + 1);
+    });
+
+    const ordersByStatus = Array.from(statusCounts.entries())
+      .map(([status, count]) => ({ status, count }))
+      .sort((a, b) => b.count - a.count); // Sort by count descending
+
     return NextResponse.json({
       todayOrders: todayOrders.length,
       totalRevenue,
       completedOrders,
+      dailySales,
+      ordersByStatus,
     });
   } catch (error: any) {
     console.error('Error fetching dashboard stats:', error);

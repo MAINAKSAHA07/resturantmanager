@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+const brandTokens = require('../../packages/ui/src/tailwind.brand.js');
+
 module.exports = {
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
@@ -9,16 +11,20 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        accent: {
-          green: '#7fc97f',
-          purple: '#beaed4',
-          orange: '#fdc086',
-          yellow: '#ffff99',
-          blue: '#386cb0',
-          pink: '#f0027f',
-          brown: '#bf5b17',
-          gray: '#666666',
-        },
+        // D3-based design tokens
+        brand: brandTokens.brand,
+        accent: brandTokens.accent,
+        status: brandTokens.status,
+        // Legacy accent colors for backward compatibility
+        'accent-green': '#7fc97f',
+        'accent-purple': '#beaed4',
+        'accent-orange': '#fdc086',
+        'accent-yellow': '#ffff99',
+        'accent-blue': '#386cb0',
+        'accent-pink': '#f0027f',
+        'accent-brown': '#bf5b17',
+        'accent-gray': '#666666',
+        // Legacy primary/secondary for backward compatibility
         primary: {
           50: '#e8f0f8',
           100: '#c5d9f0',

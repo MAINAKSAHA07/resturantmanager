@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ORDER_STATUSES } from '@restaurant/lib';
+import { PageHeader, Card, StatusPill, Select, Button, Tabs, TabsList, TabsTrigger } from '@restaurant/ui';
 
 interface OrderItem {
   id: string;
@@ -102,41 +103,74 @@ export default function OrdersPage() {
     });
   };
 
+  const getStatusType = (status: string): 'success' | 'warning' | 'danger' | 'info' | 'neutral' => {
+    switch (status) {
+      case 'completed':
+        return 'success';
+      case 'canceled':
+      case 'refunded':
+        return 'danger';
+      case 'ready':
+      case 'served':
+        return 'info';
+      case 'in_kitchen':
+        return 'warning';
+      default:
+        return 'neutral';
+    }
+  };
+
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-brand-50 to-accent-50/30 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-500 mx-auto mb-4"></div>
+          <p className="text-brand-600 font-medium">Loading orders...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 via-accent-purple/5 to-accent-green/5 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">Orders</h1>
+    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-accent-50/30 to-brand-100/50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+        <PageHeader
+          title="Orders"
+          subtitle="Manage and track all restaurant orders"
+          actions={
+            <Button onClick={fetchOrders} variant="secondary" size="sm">
+              Refresh
+            </Button>
+          }
+        />
 
-        <div className="mb-4">
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/20 transition-all duration-200 outline-none bg-white"
-          >
-            <option value="all">All Statuses</option>
-            {ORDER_STATUSES.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
+        <div className="mb-6">
+          <Tabs value={filterStatus} onChange={(value) => setFilterStatus(value)}>
+            <TabsList className="bg-white border border-brand-200 shadow-sm">
+              <TabsTrigger value="all">All</TabsTrigger>
+              {ORDER_STATUSES.map((status) => (
+                <TabsTrigger key={status} value={status}>
+                  {status.replace('_', ' ')}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
         </div>
 
         {orders.length === 0 && !loading && (
-          <div className="card text-center">
-            <p className="text-gray-600 mb-2 text-lg">No orders found.</p>
-            <p className="text-sm text-gray-500">Make sure you have selected a tenant and that orders exist for that tenant.</p>
-          </div>
+          <Card>
+            <div className="text-center py-8">
+              <p className="text-brand-600 mb-2 text-lg font-medium">No orders found.</p>
+              <p className="text-sm text-brand-500">Make sure you have selected a tenant and that orders exist for that tenant.</p>
+            </div>
+          </Card>
         )}
 
         {orders.length > 0 && (
-          <div className="card overflow-hidden overflow-x-auto">
-            <table className="w-full min-w-[640px]">
-              <thead className="bg-gradient-to-r from-accent-blue to-accent-purple text-white">
+          <Card padding="none" className="overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px]">
+                <thead className="bg-gradient-to-r from-accent-500 to-accent-600 text-on-accent-500">
                 <tr>
                   <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm">Order ID</th>
                   <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm">Status</th>
@@ -154,96 +188,94 @@ export default function OrdersPage() {
                   
                   return (
                     <>
-                      <tr key={order.id} className="border-t hover:bg-gray-50">
-                        <td className="px-4 py-3 font-mono text-sm">
+                      <tr key={order.id} className="border-t border-brand-200 hover:bg-brand-50 transition-colors">
+                        <td className="px-4 py-3 font-mono text-sm text-brand-700">
                           {order.id.slice(0, 8)}
                         </td>
                         <td className="px-4 py-3">
-                          <span className="px-3 py-1 bg-accent-blue/20 text-accent-blue rounded-full text-sm font-medium border border-accent-blue/30">
-                            {order.status}
-                          </span>
+                          <StatusPill status={getStatusType(order.status)} size="sm">
+                            {order.status.replace('_', ' ')}
+                          </StatusPill>
                         </td>
                         <td className="px-4 py-3">
                           {orderItems.length > 0 ? (
                             <div className="flex flex-col gap-1">
-                              <span className="text-sm font-medium text-gray-700">
+                              <span className="text-sm font-medium text-brand-700">
                                 {orderItems.length} item{orderItems.length !== 1 ? 's' : ''}
                               </span>
                               <button
                                 onClick={() => toggleOrderExpansion(order.id)}
-                                className="text-xs text-accent-blue hover:text-accent-purple font-medium transition-colors duration-200"
+                                className="text-xs text-accent-500 hover:text-accent-600 font-medium transition-colors duration-200"
                               >
                                 {isExpanded ? 'Hide details' : 'Show details'}
                               </button>
                               {!isExpanded && (
-                                <div className="text-xs text-gray-500 mt-1">
+                                <div className="text-xs text-brand-500 mt-1">
                                   {orderItems.slice(0, 2).map((item, idx) => (
                                     <div key={item.id}>
                                       {item.nameSnapshot} × {item.qty}
                                     </div>
                                   ))}
                                   {orderItems.length > 2 && (
-                                    <div className="text-gray-400">+{orderItems.length - 2} more</div>
+                                    <div className="text-brand-400">+{orderItems.length - 2} more</div>
                                   )}
                                 </div>
                               )}
                             </div>
                           ) : (
-                            <span className="text-sm text-gray-400 italic">No items</span>
+                            <span className="text-sm text-brand-400 italic">No items</span>
                           )}
                         </td>
-                        <td className="px-4 py-3">{order.channel}</td>
-                        <td className="px-4 py-3 font-semibold">
+                        <td className="px-4 py-3 text-brand-700">{order.channel}</td>
+                        <td className="px-4 py-3 font-semibold text-brand-900">
                           ₹{((order.total || 0) / 100).toFixed(2)}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
+                        <td className="px-4 py-3 text-sm text-brand-600">
                           {new Date(order.created).toLocaleString()}
                         </td>
                         <td className="px-4 py-3">
-                          <select
+                          <Select
                             value={order.status}
                             onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                            className="px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/20 transition-all duration-200 outline-none bg-white"
-                          >
-                            {ORDER_STATUSES.map((status) => (
-                              <option key={status} value={status}>
-                                {status}
-                              </option>
-                            ))}
-                          </select>
+                            options={ORDER_STATUSES.map((status) => ({
+                              value: status,
+                              label: status.replace('_', ' '),
+                            }))}
+                            className="text-sm min-w-[140px]"
+                          />
                         </td>
                       </tr>
                       {isExpanded && orderItems.length > 0 && (
-                        <tr key={`${order.id}-items`} className="bg-gray-50">
+                        <tr key={`${order.id}-items`} className="bg-brand-50">
                           <td colSpan={7} className="px-4 py-3">
                             <div className="ml-6">
-                              <h4 className="font-semibold mb-3 text-sm text-gray-800">Order Items Details ({orderItems.length}):</h4>
+                              <h4 className="font-semibold mb-3 text-sm text-brand-800">Order Items Details ({orderItems.length}):</h4>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {orderItems.map((item) => (
-                                  <div key={item.id} className="bg-white rounded-lg p-3 border border-gray-200">
+                                  <Card key={item.id} variant="outlined" padding="sm">
                                     <div className="flex justify-between items-start mb-2">
-                                      <span className="font-medium text-sm text-gray-800">
+                                      <span className="font-medium text-sm text-brand-800">
                                         {item.nameSnapshot}
                                       </span>
-                                      <span className="font-semibold text-sm text-gray-900">
+                                      <span className="font-semibold text-sm text-brand-900">
                                         ₹{((item.unitPrice * item.qty) / 100).toFixed(2)}
                                       </span>
                                     </div>
-                                    <div className="text-xs text-gray-600 space-y-1">
+                                    <div className="text-xs text-brand-600 space-y-1">
                                       <div>Quantity: {item.qty}</div>
                                       <div>Unit Price: ₹{(item.unitPrice / 100).toFixed(2)}</div>
                                       {item.optionsSnapshot && item.optionsSnapshot.length > 0 && (
-                                        <div className="mt-2 pt-2 border-t border-gray-100">
-                                          <div className="font-medium mb-1">Options:</div>
+                                        <div className="mt-2 pt-2 border-t border-brand-200">
+                                          <div className="font-medium mb-1 text-brand-700">Options:</div>
                                           {item.optionsSnapshot.map((opt: any, idx: number) => (
-                                            <div key={idx} className="text-gray-500">
+                                            <div key={idx} className="text-brand-500">
                                               {opt.groupId || 'Option'} - {Array.isArray(opt.valueIds) ? opt.valueIds.join(', ') : opt.valueIds}
                                             </div>
                                           ))}
                                         </div>
                                       )}
                                     </div>
-                                  </div>
+                                  </Card>
                                 ))}
                               </div>
                             </div>
@@ -251,9 +283,9 @@ export default function OrdersPage() {
                         </tr>
                       )}
                       {isExpanded && orderItems.length === 0 && (
-                        <tr key={`${order.id}-no-items`} className="bg-gray-50">
+                        <tr key={`${order.id}-no-items`} className="bg-brand-50">
                           <td colSpan={7} className="px-4 py-3">
-                            <div className="ml-6 text-sm text-gray-500 italic">
+                            <div className="ml-6 text-sm text-brand-500 italic">
                               No items found for this order
                             </div>
                           </td>
@@ -264,7 +296,8 @@ export default function OrdersPage() {
                 })}
               </tbody>
             </table>
-          </div>
+            </div>
+          </Card>
         )}
       </div>
     </div>

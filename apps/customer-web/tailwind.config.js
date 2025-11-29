@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+const brandTokens = require('../../packages/ui/src/tailwind.brand.js');
+
 module.exports = {
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
@@ -9,23 +11,26 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        accent: {
-          blue: '#4269D0',
-          red: '#FF6B6B',
-          teal: '#4ECDC4',
-          cyan: '#45B7D1',
-          salmon: '#FFA07A',
-          mint: '#98D8C8',
-          yellow: '#F7DC6F',
-          purple: '#BB8FCE',
-          sky: '#85C1E2',
-          orange: '#F8B739',
-          // Legacy names for backward compatibility
-          green: '#98D8C8', // mint
-          pink: '#FF6B6B', // red
-          brown: '#F8B739', // orange
-          gray: '#666666',
-        },
+        // D3-based design tokens
+        brand: brandTokens.brand,
+        accent: brandTokens.accent,
+        status: brandTokens.status,
+        // Legacy accent colors for backward compatibility
+        'accent-blue': '#4269D0',
+        'accent-red': '#FF6B6B',
+        'accent-teal': '#4ECDC4',
+        'accent-cyan': '#45B7D1',
+        'accent-salmon': '#FFA07A',
+        'accent-mint': '#98D8C8',
+        'accent-yellow': '#F7DC6F',
+        'accent-purple': '#BB8FCE',
+        'accent-sky': '#85C1E2',
+        'accent-orange': '#F8B739',
+        'accent-green': '#98D8C8', // mint
+        'accent-pink': '#FF6B6B', // red
+        'accent-brown': '#F8B739', // orange
+        'accent-gray': '#666666',
+        // Legacy primary/secondary for backward compatibility
         primary: {
           50: '#e8f0f8',
           100: '#c5d9f0',

@@ -47,7 +47,9 @@ export default function Navbar() {
       if (response.ok && data.user) {
         const role = data.user.role || 'staff';
         const userTenantIds = data.user.tenants || [];
-        const isMaster = data.user.isMaster === true || role === 'admin';
+        // Only users with isMaster === true are master users
+        // Admins are assigned to specific tenants and are not master users
+        const isMaster = data.user.isMaster === true;
         
         console.log('Navbar: User data received', {
           id: data.user.id,
@@ -126,9 +128,9 @@ export default function Navbar() {
           tenantIds: filteredTenants.map((t: Tenant) => ({ id: t.id, name: t.name })),
         });
 
-        // Master users (isMaster=true OR role='admin') should see all tenants
-        // Only filter for non-master users
-        if (!isMaster && role !== 'admin') {
+        // Master users (isMaster=true) should see all tenants
+        // Admins and other users only see their assigned tenants
+        if (!isMaster) {
           if (userTenantIds.length > 0) {
           filteredTenants = filteredTenants.filter((t: Tenant) =>
             userTenantIds.includes(t.id)
@@ -157,7 +159,7 @@ export default function Navbar() {
 
   const handleSwitchTenant = async (tenantId: string) => {
     try {
-      const isMaster = isMasterUser(user) || userRole === 'admin';
+      const isMaster = isMasterUser(user);
       console.log('Switching to tenant:', {
         tenantId,
         isMaster,
@@ -239,7 +241,7 @@ export default function Navbar() {
             <Link href="/users" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
               Users
             </Link>
-            {userLoaded && user && (user.isMaster === true || user.role === 'admin') && (
+            {userLoaded && user && user.isMaster === true && (
               <Link href="/tenants" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
                 Tenants
               </Link>
@@ -264,8 +266,8 @@ export default function Navbar() {
           <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
             {/* Show tenant selector based on user role and tenant availability */}
             {(() => {
-              // Check if user is master - use both user object and userRole as fallback
-              const isMaster = isMasterUser(user) || userRole === 'admin';
+              // Check if user is master - only isMaster flag, not admin role
+              const isMaster = isMasterUser(user);
               
               // For master users: always show selector (even if tenants are still loading)
               if (isMaster) {
@@ -387,7 +389,7 @@ export default function Navbar() {
               <Link href="/users" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
                 Users
               </Link>
-              {userLoaded && user && (user.isMaster === true || user.role === 'admin') && (
+              {userLoaded && user && user.isMaster === true && (
                 <Link href="/tenants" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
                   Tenants
                 </Link>

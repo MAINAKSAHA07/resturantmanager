@@ -16,11 +16,12 @@ export interface User {
 
 /**
  * Check if a user is a master user
- * Master users have isMaster=true OR role='admin'
+ * Master users have isMaster=true
+ * Note: Admins (role='admin') are NOT master users - they are assigned to specific tenants
  */
 export function isMasterUser(user: User | null | undefined): boolean {
   if (!user) return false;
-  return user.isMaster === true || user.role === 'admin';
+  return user.isMaster === true;
 }
 
 /**

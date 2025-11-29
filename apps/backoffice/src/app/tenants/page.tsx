@@ -49,10 +49,12 @@ export default function TenantsPage() {
       const data = await response.json();
       if (response.ok && data.user) {
         setCurrentUser(data.user);
-        const isMaster = data.user.isMaster === true || data.user.role === 'admin';
+        // Only master users (isMaster === true) can access tenant management
+        // Admins are assigned to specific tenants and cannot manage tenants
+        const isMaster = data.user.isMaster === true;
         setIsMasterUser(isMaster);
         
-        // Redirect non-master users immediately
+        // Redirect non-master users immediately (including admins)
         if (!isMaster) {
           // Redirect immediately without delay
           window.location.replace('/dashboard');

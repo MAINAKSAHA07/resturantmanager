@@ -1269,6 +1269,13 @@ export default function FloorPlanPage() {
         </div>
 
         <div className="card">
+          {/* Entrance Label at Top */}
+          <div className="mb-2 text-center">
+            <span className="inline-block px-4 py-2 bg-accent-500 text-white rounded-lg font-semibold text-sm shadow-md">
+              🚪 Entrance
+            </span>
+          </div>
+          
           <div
             className="relative w-full h-[600px] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 floor-plan-container"
             onClick={(e) => {
@@ -1352,6 +1359,30 @@ export default function FloorPlanPage() {
               </div>
               );
             })}
+            
+            {/* Direction Watermark (Compass) */}
+            <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg border-2 border-brand-200">
+              <div className="relative w-16 h-16">
+                {/* North Arrow */}
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2">
+                  <div className="text-brand-700 font-bold text-xs">N</div>
+                  <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-b-[10px] border-l-transparent border-r-transparent border-b-brand-700 mx-auto"></div>
+                </div>
+                {/* Center Circle */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-brand-100 rounded-full border-2 border-brand-300 flex items-center justify-center">
+                  <div className="w-2 h-2 bg-accent-500 rounded-full"></div>
+                </div>
+                {/* East */}
+                <div className="absolute top-1/2 right-0 transform translate-y-1/2 text-brand-600 font-semibold text-xs">E</div>
+                {/* South */}
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2">
+                  <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[10px] border-l-transparent border-r-transparent border-t-brand-700 mx-auto"></div>
+                  <div className="text-brand-700 font-bold text-xs mt-1">S</div>
+                </div>
+                {/* West */}
+                <div className="absolute top-1/2 left-0 transform -translate-y-1/2 text-brand-600 font-semibold text-xs">W</div>
+              </div>
+            </div>
           </div>
 
           <div className="mt-6 flex flex-wrap gap-4">

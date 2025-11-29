@@ -26,10 +26,17 @@
     "pb:check-duplicate-menu-aws": "node pocketbase/scripts/check-duplicate-menu-aws.js",
     "pb:create-coupon-collection": "node pocketbase/scripts/create-coupon-collection.js",
     "pb:add-coupon-fields-to-orders": "node pocketbase/scripts/add-coupon-fields-to-orders.js",
-    "pb:add-comment-to-orderitem": "node pocketbase/scripts/add-comment-field-to-orderitem.js"
+    "pb:add-comment-to-orderitem": "node pocketbase/scripts/add-comment-field-to-orderitem.js",
+    "design:tokens": "tsx scripts/generate-design-tokens.ts"
   },
   "devDependencies": {
+    "d3": "^7.9.0",
+    "d3-color": "^3.1.0",
+    "d3-interpolate": "^3.0.1",
+    "d3-scale": "^4.0.2",
+    "d3-scale-chromatic": "^3.1.0",
     "dotenv": "^17.2.3",
+    "tsx": "^4.20.6",
     "turbo": "2.6.1",
     "typescript": "^5.9.3"
   },
