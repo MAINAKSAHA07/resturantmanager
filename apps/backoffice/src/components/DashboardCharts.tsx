@@ -29,28 +29,42 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
   useEffect(() => {
     if (!salesRef.current) return;
     
-    // Show empty state if no data
-    if (dailySales.length === 0) {
+    const renderChart = () => {
+      if (!salesRef.current) return;
+      
+      // Show empty state if no data
+      if (dailySales.length === 0) {
+        const svg = d3.select(salesRef.current);
+        svg.selectAll('*').remove();
+        const containerWidth = salesRef.current?.parentElement?.clientWidth || 420;
+        const baseWidth = Math.max(320, Math.min(420, containerWidth - 32));
+        svg
+          .append('text')
+          .attr('x', baseWidth / 2)
+          .attr('y', 110)
+          .attr('text-anchor', 'middle')
+          .style('fill', 'currentColor')
+          .style('font-size', '14px')
+          .style('opacity', 0.5)
+          .text('No sales data available');
+        return;
+      }
+
       const svg = d3.select(salesRef.current);
-      svg.selectAll('*').remove();
-      svg
-        .append('text')
-        .attr('x', 210)
-        .attr('y', 110)
-        .attr('text-anchor', 'middle')
-        .style('fill', 'currentColor')
-        .style('font-size', '14px')
-        .style('opacity', 0.5)
-        .text('No sales data available');
-      return;
-    }
+      svg.selectAll('*').remove(); // Clear previous render
 
-    const svg = d3.select(salesRef.current);
-    svg.selectAll('*').remove(); // Clear previous render
-
-    const margin = { top: 20, right: 20, bottom: 40, left: 50 };
-    const width = 420 - margin.left - margin.right;
-    const height = 220 - margin.top - margin.bottom;
+      // Get container width for responsive sizing
+      const containerWidth = salesRef.current?.parentElement?.clientWidth || 420;
+      const baseWidth = Math.max(320, Math.min(420, containerWidth - 32)); // Min 320px, max 420px, account for padding
+      
+      const margin = { top: 20, right: 20, bottom: 40, left: 50 };
+      const width = baseWidth - margin.left - margin.right;
+      const height = 220 - margin.top - margin.bottom;
+      
+      // Set SVG dimensions
+      svg.attr('viewBox', `0 0 ${baseWidth} 220`)
+         .attr('width', '100%')
+         .attr('height', 220);
 
     const g = svg
       .append('g')
@@ -193,9 +207,25 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
         tooltip.transition().duration(200).style('opacity', 0);
       });
 
+    };
+    
+    // Initial render
+    renderChart();
+    
+    // Handle window resize
+    const handleResize = () => {
+      renderChart();
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
     // Cleanup
     return () => {
-      tooltip.remove();
+      window.removeEventListener('resize', handleResize);
+      const tooltip = d3.select('body').select('.chart-tooltip');
+      if (!tooltip.empty()) {
+        tooltip.remove();
+      }
     };
   }, [dailySales]);
 
@@ -203,29 +233,43 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
   useEffect(() => {
     if (!statusRef.current) return;
     
-    // Show empty state if no data
-    if (ordersByStatus.length === 0) {
+    const renderChart = () => {
+      if (!statusRef.current) return;
+      
+      // Show empty state if no data
+      if (ordersByStatus.length === 0) {
+        const svg = d3.select(statusRef.current);
+        svg.selectAll('*').remove();
+        const containerWidth = statusRef.current?.parentElement?.clientWidth || 420;
+        const baseWidth = Math.max(320, Math.min(420, containerWidth - 32));
+        svg
+          .append('text')
+          .attr('x', baseWidth / 2)
+          .attr('y', 140)
+          .attr('text-anchor', 'middle')
+          .style('fill', 'currentColor')
+          .style('font-size', '14px')
+          .style('opacity', 0.5)
+          .text('No order data available');
+        return;
+      }
+
       const svg = d3.select(statusRef.current);
-      svg.selectAll('*').remove();
-      svg
-        .append('text')
-        .attr('x', 210)
-        .attr('y', 140)
-        .attr('text-anchor', 'middle')
-        .style('fill', 'currentColor')
-        .style('font-size', '14px')
-        .style('opacity', 0.5)
-        .text('No order data available');
-      return;
-    }
+      svg.selectAll('*').remove(); // Clear previous render
 
-    const svg = d3.select(statusRef.current);
-    svg.selectAll('*').remove(); // Clear previous render
-
-    const chartHeight = 280; // Total SVG height
-    const margin = { top: 20, right: 20, bottom: 80, left: 50 }; // Increased bottom for rotated labels and legend
-    const width = 420 - margin.left - margin.right;
-    const height = chartHeight - margin.top - margin.bottom;
+      // Get container width for responsive sizing
+      const containerWidth = statusRef.current?.parentElement?.clientWidth || 420;
+      const baseWidth = Math.max(320, Math.min(420, containerWidth - 32)); // Min 320px, max 420px, account for padding
+      
+      const chartHeight = 280; // Total SVG height
+      const margin = { top: 20, right: 20, bottom: 80, left: 50 }; // Increased bottom for rotated labels and legend
+      const width = baseWidth - margin.left - margin.right;
+      const height = chartHeight - margin.top - margin.bottom;
+      
+      // Set SVG dimensions
+      svg.attr('viewBox', `0 0 ${baseWidth} ${chartHeight}`)
+         .attr('width', '100%')
+         .attr('height', chartHeight);
 
     const g = svg
       .append('g')
@@ -347,8 +391,8 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
       .attr('class', 'legend')
       .attr('transform', `translate(0,${height + 45})`); // Moved further down to avoid x-axis labels
 
-    // Calculate spacing to fit all items
-    const legendItemWidth = 70; // Width per legend item
+    // Calculate spacing to fit all items - responsive
+    const legendItemWidth = Math.min(70, width / Math.max(ordersByStatus.length, 1)); // Responsive width
     const totalLegendWidth = ordersByStatus.length * legendItemWidth;
     const legendStartX = Math.max(0, (width - totalLegendWidth) / 2); // Center the legend
 
@@ -369,41 +413,63 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
 
     legendItems
       .append('text')
-      .attr('x', 16)
+      .attr('x', 14)
       .attr('y', 9)
-      .style('font-size', '9px')
+      .style('font-size', baseWidth < 360 ? '8px' : '9px') // Smaller font on mobile
       .style('fill', 'currentColor')
-      .text((d) => d.status.replace('_', ' '));
+      .text((d) => {
+        // Truncate long status names on small screens
+        const status = d.status.replace('_', ' ');
+        return baseWidth < 360 && status.length > 8 ? status.substring(0, 7) + '...' : status;
+      });
+    };
+    
+    // Initial render
+    renderChart();
+    
+    // Handle window resize
+    const handleResize = () => {
+      renderChart();
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, [ordersByStatus]);
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2">
       {/* Daily Sales Line Chart */}
-      <div className="rounded-xl border border-brand-200 bg-white p-4 shadow-sm">
-        <h3 className="mb-2 text-sm font-semibold text-brand-900">
+      <div className="rounded-xl border border-brand-200 bg-white p-3 sm:p-4 shadow-sm">
+        <h3 className="mb-2 text-xs sm:text-sm font-semibold text-brand-900">
           Daily Sales (Last 30 Days)
         </h3>
-        <svg
-          ref={salesRef}
-          className="w-full"
-          style={{ height: '220px' }}
-          viewBox="0 0 420 220"
-          preserveAspectRatio="xMidYMid meet"
-        />
+        <div className="w-full overflow-x-auto -mx-1 px-1">
+          <svg
+            ref={salesRef}
+            className="w-full"
+            style={{ height: '220px', minWidth: '320px' }}
+            preserveAspectRatio="xMidYMid meet"
+          />
+        </div>
       </div>
 
       {/* Orders by Status Bar Chart */}
-      <div className="rounded-xl border border-brand-200 bg-white p-4 shadow-sm">
-        <h3 className="mb-2 text-sm font-semibold text-brand-900">
+      <div className="rounded-xl border border-brand-200 bg-white p-3 sm:p-4 shadow-sm">
+        <h3 className="mb-2 text-xs sm:text-sm font-semibold text-brand-900">
           Orders by Status
         </h3>
-        <svg
-          ref={statusRef}
-          className="w-full"
-          style={{ height: '280px' }} // Increased height to accommodate legend
-          viewBox="0 0 420 280"
-          preserveAspectRatio="xMidYMid meet"
-        />
+        <div className="w-full overflow-x-auto -mx-1 px-1">
+          <svg
+            ref={statusRef}
+            className="w-full"
+            style={{ height: '280px', minWidth: '320px' }} // Increased height to accommodate legend
+            preserveAspectRatio="xMidYMid meet"
+          />
+        </div>
       </div>
     </div>
   );

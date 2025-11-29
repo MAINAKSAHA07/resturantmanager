@@ -1242,17 +1242,17 @@ export default function FloorPlanPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 via-accent-purple/5 to-accent-green/5">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">
             Floor Plan
           </h1>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             {locations.length > 0 && (
               <select
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
-                className="px-4 py-2 border rounded-lg bg-white"
+                className="px-3 sm:px-4 py-2 border rounded-lg bg-white text-sm sm:text-base w-full sm:w-auto"
               >
                 {locations.map(loc => (
                   <option key={loc.id} value={loc.id}>{loc.name}</option>
@@ -1261,7 +1261,7 @@ export default function FloorPlanPage() {
             )}
             <button
               onClick={() => setShowAddTable(true)}
-              className="btn-primary px-4 py-2"
+              className="btn-primary px-3 sm:px-4 py-2 text-sm sm:text-base w-full sm:w-auto"
             >
               + Add Table
             </button>
@@ -1270,14 +1270,14 @@ export default function FloorPlanPage() {
 
         <div className="card">
           {/* Entrance Label at Top */}
-          <div className="mb-2 text-center">
-            <span className="inline-block px-4 py-2 bg-accent-500 text-white rounded-lg font-semibold text-sm shadow-md">
+          <div className="mb-2 sm:mb-3 text-center">
+            <span className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 bg-accent-500 text-white rounded-lg font-semibold text-xs sm:text-sm shadow-md">
               🚪 Entrance
             </span>
           </div>
           
           <div
-            className="relative w-full h-[600px] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 floor-plan-container"
+            className="relative w-full h-[400px] sm:h-[500px] md:h-[600px] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 floor-plan-container"
             onClick={(e) => {
               // Prevent clicks on the container itself from doing anything
               // Only allow clicks on tables
@@ -1331,7 +1331,7 @@ export default function FloorPlanPage() {
                     return;
                   }
                 }}
-                className={`absolute w-20 h-20 rounded-full flex flex-col items-center justify-center text-white cursor-pointer shadow-lg hover:scale-110 transition-transform ${getStatusColor(
+                className={`absolute w-16 h-16 sm:w-20 sm:h-20 rounded-full flex flex-col items-center justify-center text-white cursor-pointer shadow-lg hover:scale-110 transition-transform ${getStatusColor(
                   table.status
                 )} ${isActive ? 'z-50 scale-110 shadow-xl' : ''}`}
                 style={{
@@ -1346,41 +1346,41 @@ export default function FloorPlanPage() {
                 }}
                 title={`${table.name} - ${table.capacity} seats - ${table.status}`}
               >
-                <p className="font-bold text-sm">{table.name}</p>
-                  <p className="text-xs">({table.capacity})</p>
+                <p className="font-bold text-[10px] sm:text-sm">{table.name}</p>
+                  <p className="text-[9px] sm:text-xs">({table.capacity})</p>
                 {table.activeOrders && table.activeOrders > 0 && (
-                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] sm:text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
                     {table.activeOrders}
                 </div>
                 )}
                 {table.orderTotal && table.orderTotal > 0 && (
-                  <p className="text-xs mt-1">₹{(table.orderTotal / 100).toFixed(0)}</p>
+                  <p className="text-[9px] sm:text-xs mt-0.5 sm:mt-1">₹{(table.orderTotal / 100).toFixed(0)}</p>
                 )}
               </div>
               );
             })}
             
             {/* Direction Watermark (Compass) */}
-            <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg border-2 border-brand-200">
-              <div className="relative w-16 h-16">
+            <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-white/90 backdrop-blur-sm rounded-full p-2 sm:p-3 shadow-lg border-2 border-brand-200">
+              <div className="relative w-12 h-12 sm:w-16 sm:h-16">
                 {/* North Arrow */}
                 <div className="absolute top-0 left-1/2 transform -translate-x-1/2">
-                  <div className="text-brand-700 font-bold text-xs">N</div>
-                  <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-b-[10px] border-l-transparent border-r-transparent border-b-brand-700 mx-auto"></div>
+                  <div className="text-brand-700 font-bold text-[10px] sm:text-xs">N</div>
+                  <div className="w-0 h-0 border-l-[4px] sm:border-l-[6px] border-r-[4px] sm:border-r-[6px] border-b-[8px] sm:border-b-[10px] border-l-transparent border-r-transparent border-b-brand-700 mx-auto"></div>
                 </div>
                 {/* Center Circle */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-brand-100 rounded-full border-2 border-brand-300 flex items-center justify-center">
-                  <div className="w-2 h-2 bg-accent-500 rounded-full"></div>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 bg-brand-100 rounded-full border-2 border-brand-300 flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-accent-500 rounded-full"></div>
                 </div>
                 {/* East */}
-                <div className="absolute top-1/2 right-0 transform translate-y-1/2 text-brand-600 font-semibold text-xs">E</div>
+                <div className="absolute top-1/2 right-0 transform translate-y-1/2 text-brand-600 font-semibold text-[10px] sm:text-xs">E</div>
                 {/* South */}
                 <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2">
-                  <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[10px] border-l-transparent border-r-transparent border-t-brand-700 mx-auto"></div>
-                  <div className="text-brand-700 font-bold text-xs mt-1">S</div>
+                  <div className="w-0 h-0 border-l-[4px] sm:border-l-[6px] border-r-[4px] sm:border-r-[6px] border-t-[8px] sm:border-t-[10px] border-l-transparent border-r-transparent border-t-brand-700 mx-auto"></div>
+                  <div className="text-brand-700 font-bold text-[10px] sm:text-xs mt-0.5 sm:mt-1">S</div>
                 </div>
                 {/* West */}
-                <div className="absolute top-1/2 left-0 transform -translate-y-1/2 text-brand-600 font-semibold text-xs">W</div>
+                <div className="absolute top-1/2 left-0 transform -translate-y-1/2 text-brand-600 font-semibold text-[10px] sm:text-xs">W</div>
               </div>
             </div>
           </div>

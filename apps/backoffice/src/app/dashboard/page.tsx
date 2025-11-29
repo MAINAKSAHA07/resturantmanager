@@ -22,11 +22,16 @@ export default function DashboardPage() {
     ordersByStatus: [],
   });
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [timeRange, setTimeRange] = useState<'1d' | '7d' | '30d'>('30d'); // Default to 30d for charts
 
-  const fetchStats = async () => {
+  const fetchStats = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       const response = await fetch(`/api/dashboard/stats?range=${timeRange}`);
       const data = await response.json();
 
@@ -39,6 +44,7 @@ export default function DashboardPage() {
       console.error('Error fetching dashboard stats:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -46,9 +52,10 @@ export default function DashboardPage() {
     fetchStats();
   }, [timeRange]);
 
-  if (loading) {
+  // Initial loading state - only show full screen on first load
+  if (loading && stats.todayOrders === 0 && stats.totalRevenue === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-50 to-accent-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-brand-50 via-accent-50/30 to-brand-100/50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-500 mx-auto mb-4"></div>
           <p className="text-brand-600 font-medium">Loading dashboard...</p>
@@ -65,6 +72,16 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-50 via-accent-50/30 to-brand-100/50">
+      {/* Subtle loading overlay - only shows during refresh, not initial load */}
+      {refreshing && (
+        <div className="fixed inset-0 bg-brand-50/80 backdrop-blur-sm z-40 flex items-center justify-center pointer-events-none">
+          <div className="bg-white rounded-lg shadow-lg p-4 flex items-center gap-3">
+            <div className="animate-spin rounded-full h-5 w-5 border-2 border-accent-500 border-t-transparent"></div>
+            <p className="text-brand-700 text-sm font-medium">Updating data...</p>
+          </div>
+        </div>
+      )}
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
         <PageHeader
           title="Dashboard"
@@ -78,14 +95,24 @@ export default function DashboardPage() {
                   <TabsTrigger value="30d">30 Days</TabsTrigger>
                 </TabsList>
               </Tabs>
-              <Button onClick={fetchStats} size="sm" variant="secondary">
-                Refresh
+              <Button onClick={() => fetchStats(true)} size="sm" variant="secondary" disabled={refreshing}>
+                {refreshing ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Refreshing...
+                  </>
+                ) : (
+                  'Refresh'
+                )}
               </Button>
             </div>
           }
         />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 transition-opacity duration-200 ${refreshing ? 'opacity-60' : 'opacity-100'}`}>
           <KPIStat
             label={timeRangeLabels[timeRange]}
             value={stats.todayOrders}
@@ -121,7 +148,7 @@ export default function DashboardPage() {
         {/* Charts Section */}
         {(stats.dailySales && stats.dailySales.length > 0) ||
         (stats.ordersByStatus && stats.ordersByStatus.length > 0) ? (
-          <div className="mb-8">
+          <div className={`mb-8 transition-opacity duration-200 ${refreshing ? 'opacity-60' : 'opacity-100'}`}>
             <DashboardCharts
               dailySales={stats.dailySales || []}
               ordersByStatus={stats.ordersByStatus || []}
