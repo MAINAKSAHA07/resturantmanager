@@ -18,7 +18,7 @@ async function getMenu(brandKey: string) {
 
     const pb = new PocketBase(pbUrl);
     await pb.admins.authWithPassword(adminEmail, adminPassword);
-    
+
     // Get tenant by key
     const tenants = await pb.collection('tenant').getList(1, 10, {
       filter: `key = "${brandKey}"`,
@@ -29,12 +29,12 @@ async function getMenu(brandKey: string) {
     }
 
     const tenant = tenants.items[0];
-    
+
     // Get all locations and filter client-side to handle relation fields
     const allLocations = await pb.collection('location').getList(1, 100, {
       expand: 'tenantId',
     });
-    
+
     // Filter by tenant (handle relation fields which may be arrays)
     const locations = allLocations.items.filter(loc => {
       const locTenantId = Array.isArray(loc.tenantId) ? loc.tenantId[0] : loc.tenantId;
@@ -54,7 +54,7 @@ async function getMenu(brandKey: string) {
       sort: 'sort',
       expand: 'tenantId,locationId',
     });
-    
+
     // Filter by tenant and location (handle relation fields)
     const filteredCategories = allCategories.items.filter(cat => {
       const catTenantId = Array.isArray(cat.tenantId) ? cat.tenantId[0] : cat.tenantId;
@@ -91,7 +91,7 @@ async function getMenu(brandKey: string) {
     const allItems = await pb.collection('menuItem').getList(1, 500, {
       expand: 'categoryId,tenantId,locationId',
     });
-    
+
     // Filter by tenant, location, and availability status
     // Only show items that are "available" to customers
     // Also remove duplicates by ID first, then by name+category
@@ -99,7 +99,7 @@ async function getMenu(brandKey: string) {
     const filteredItems = allItems.items.filter(item => {
       const itemTenantId = Array.isArray(item.tenantId) ? item.tenantId[0] : item.tenantId;
       const itemLocationId = Array.isArray(item.locationId) ? item.locationId[0] : item.locationId;
-      
+
       // Check availability: prioritize availability field, fallback to isActive only if availability is undefined
       let isAvailable = false;
       if (item.availability !== undefined) {
@@ -108,7 +108,7 @@ async function getMenu(brandKey: string) {
         // Fallback to isActive only if availability is not set
         isAvailable = item.isActive !== false;
       }
-      
+
       return itemTenantId === tenant.id && locationIds.includes(itemLocationId) && isAvailable;
     });
 
@@ -150,15 +150,15 @@ async function getTenants() {
     const pbUrl = process.env.POCKETBASE_URL || process.env.AWS_POCKETBASE_URL || 'http://localhost:8090';
     const adminEmail = process.env.PB_ADMIN_EMAIL;
     const adminPassword = process.env.PB_ADMIN_PASSWORD;
-    
+
     if (!adminEmail || !adminPassword) {
       console.error('PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set');
       return [];
     }
-    
+
     const pb = new PocketBase(pbUrl);
     await pb.admins.authWithPassword(adminEmail, adminPassword);
-    
+
     const tenants = await pb.collection('tenant').getList(1, 100, {
       sort: 'name',
     });
@@ -177,7 +177,7 @@ export default async function HomePage({
   const headersList = headers();
   const cookieStore = cookies();
   const hostname = headersList.get('host') || '';
-  
+
   // Check for tenant in query params first, then cookie, then subdomain
   const params = await searchParams;
   const tenantParam = params?.tenant;
@@ -190,7 +190,7 @@ export default async function HomePage({
     const { redirect } = await import('next/navigation');
     redirect('/tenants');
   }
-  
+
   // Use the selected tenant (query param takes precedence, then cookie, then subdomain)
   const selectedTenant = brandKey || 'saffron';
 
@@ -212,9 +212,9 @@ export default async function HomePage({
   return (
     <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 via-accent-purple/5 to-accent-green/5 bg-white">
       <TenantSelector />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        {/* Tenant Selector */}
-        {tenants.length > 1 && (
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+        {/* Tenant Selector - Only show if not at a specific table */}
+        {!tableContext && tenants.length > 1 && (
           <div className="mb-4 sm:mb-6 card border-2 border-accent-blue/20">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex-1">
@@ -224,11 +224,10 @@ export default async function HomePage({
                     <Link
                       key={tenant.id}
                       href={`/?tenant=${tenant.key}`}
-                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
-                        tenant.key === brandKey
+                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${tenant.key === brandKey
                           ? 'bg-accent-blue text-white shadow-md'
                           : 'bg-gray-100 text-gray-700 hover:bg-accent-purple/20 hover:border-2 hover:border-accent-purple/30'
-                      }`}
+                        }`}
                     >
                       {tenant.name}
                     </Link>
@@ -268,8 +267,8 @@ export default async function HomePage({
         ) : (
           categories.map((category) => {
             const categoryItems = items.filter((item) => {
-              const itemCategoryId = Array.isArray(item.categoryId) 
-                ? item.categoryId[0] 
+              const itemCategoryId = Array.isArray(item.categoryId)
+                ? item.categoryId[0]
                 : item.categoryId;
               return itemCategoryId === category.id;
             });

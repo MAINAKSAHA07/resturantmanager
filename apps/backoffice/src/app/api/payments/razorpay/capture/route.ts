@@ -83,16 +83,16 @@ export async function POST(request: NextRequest) {
         const adminEmail = process.env.PB_ADMIN_EMAIL;
         const adminPassword = process.env.PB_ADMIN_PASSWORD;
 
-    if (!adminEmail || !adminPassword) {
-      return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
-    }
+        if (!adminEmail || !adminPassword) {
+            return NextResponse.json({ error: 'PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set' }, { status: 500 });
+        }
 
-    const pb = new PocketBase(pbUrl);
+        const pb = new PocketBase(pbUrl);
         await pb.admins.authWithPassword(adminEmail, adminPassword);
 
         // Get current order to preserve existing timestamps
         const currentOrder = await pb.collection('orders').getOne(orderId);
-        
+
         await pb.collection('orders').update(orderId, {
             razorpayOrderId: razorpay_order_id,
             razorpayPaymentId: razorpay_payment_id,
@@ -102,7 +102,24 @@ export async function POST(request: NextRequest) {
                 completedAt: new Date().toISOString(),
             },
         });
-        
+
+        // Update table status to 'available' if order has tableId
+        const tableId = Array.isArray(currentOrder.tableId)
+            ? currentOrder.tableId[0]
+            : currentOrder.tableId;
+
+        if (tableId) {
+            try {
+                await pb.collection('tables').update(tableId, {
+                    status: 'available'
+                });
+                console.log(`✅ Table ${tableId} marked as available after payment`);
+            } catch (tableError: any) {
+                console.error(`❌ Failed to update table status to available:`, tableError.message);
+                // Don't fail the payment if table update fails
+            }
+        }
+
         console.log(`✅ Order ${orderId} marked as completed after payment`);
 
         // Mark as processed

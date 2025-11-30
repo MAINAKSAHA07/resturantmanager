@@ -7,7 +7,8 @@ export async function GET(request: NextRequest) {
     const pb = await getAdminPb();
 
     const searchParams = request.nextUrl.searchParams;
-    const filterStatus = searchParams.get('status') || 'all';
+    const filterChannel = searchParams.get('channel') || 'all';
+    const filterStatus = searchParams.get('status') || 'all'; // Keep status filter for backward compatibility
 
     // Get selected tenant from cookies
     const cookieStore = cookies();
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('Selected tenant ID:', tenantId);
+    console.log('Filter channel:', filterChannel);
     console.log('Filter status:', filterStatus);
 
     // Fetch all orders and filter client-side because PocketBase relation filters don't work reliably
@@ -30,21 +32,22 @@ export async function GET(request: NextRequest) {
 
     console.log(`Fetched ${allOrders.items.length} total orders from database`);
 
-    // Filter client-side by tenant and status
+    // Filter client-side by tenant, channel, and status
     const filteredOrders = allOrders.items.filter((order: any) => {
       // Handle tenantId - it might be a string or an array (relation field)
       const orderTenantId = Array.isArray(order.tenantId) ? order.tenantId[0] : order.tenantId;
       const matchesTenant = orderTenantId === tenantId;
+      const matchesChannel = filterChannel === 'all' || order.channel === filterChannel;
       const matchesStatus = filterStatus === 'all' || order.status === filterStatus;
 
       if (!matchesTenant) {
         console.log(`Order ${order.id.slice(0, 8)}: tenant mismatch - order has ${orderTenantId}, looking for ${tenantId}`);
       }
 
-      return matchesTenant && matchesStatus;
+      return matchesTenant && matchesChannel && matchesStatus;
     });
 
-    console.log(`Found ${filteredOrders.length} orders for tenant ${tenantId} with status ${filterStatus}`);
+    console.log(`Found ${filteredOrders.length} orders for tenant ${tenantId} with channel ${filterChannel} and status ${filterStatus}`);
     if (filteredOrders.length > 0) {
       console.log('Order IDs:', filteredOrders.map((o: any) => o.id.slice(0, 8)));
     }
@@ -107,7 +110,27 @@ export async function GET(request: NextRequest) {
     const ordersWithItems = filteredOrders.map((order: any) => {
       const orderItems = orderItemsMap.get(order.id) || [];
 
-      console.log(`Order ${order.id.slice(0, 8)}: Found ${orderItems.length} items`);
+      if (orderItems.length === 0) {
+        console.warn(`⚠️  Order ${order.id.slice(0, 8)} has no items! Order details:`, {
+          id: order.id,
+          status: order.status,
+          total: order.total,
+          created: order.created,
+          channel: order.channel,
+        });
+        
+        // Check if there are any order items in the database that might have a different orderId format
+        const allMatchingItems = allOrderItems.filter((item: any) => {
+          const itemOrderId = Array.isArray(item.orderId) ? item.orderId[0] : item.orderId;
+          return itemOrderId === order.id;
+        });
+        
+        if (allMatchingItems.length > 0) {
+          console.warn(`⚠️  Found ${allMatchingItems.length} items with different format for order ${order.id.slice(0, 8)}`);
+        }
+      } else {
+        console.log(`Order ${order.id.slice(0, 8)}: Found ${orderItems.length} items`);
+      }
 
       // Get table label - use existing tableLabel or fetch from table if tableId exists
       let tableLabel = order.tableLabel;

@@ -28,19 +28,19 @@ interface Order {
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterChannel, setFilterChannel] = useState<string>('dine_in'); // Default to Dine In
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterStatus]);
+  }, [filterChannel]);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const url = filterStatus !== 'all' 
-        ? `/api/orders?status=${filterStatus}`
+      const url = filterChannel !== 'all' 
+        ? `/api/orders?channel=${filterChannel}`
         : '/api/orders';
       
       console.log('Fetching orders from:', url);
@@ -56,16 +56,35 @@ export default function OrdersPage() {
       const ordersData = data.orders || [];
       console.log('Setting orders:', ordersData.length, 'orders');
       
-      // Log order items for debugging
+      // Log order items for debugging and filter out invalid orders
+      const validOrders: Order[] = [];
       ordersData.forEach((order: Order) => {
         const itemCount = order.items?.length || 0;
-        console.log(`Order ${order.id.slice(0, 8)}: ${itemCount} items`, order.items);
         if (itemCount === 0) {
-          console.warn(`⚠️  Order ${order.id.slice(0, 8)} has no items!`);
+          console.warn(`⚠️  Order ${order.id.slice(0, 8)} has no items! This order will be hidden from the list.`, {
+            orderId: order.id,
+            status: order.status,
+            total: order.total,
+            created: order.created,
+          });
+          // Don't add orders with no items to the list
+          // This prevents UI issues and indicates a data integrity problem
+        } else {
+          console.log(`Order ${order.id.slice(0, 8)}: ${itemCount} items`, order.items);
+          validOrders.push(order);
         }
       });
       
-      setOrders(ordersData);
+      // Use only valid orders (with items)
+      const finalOrders = validOrders.length < ordersData.length 
+        ? validOrders 
+        : ordersData;
+      
+      if (validOrders.length < ordersData.length) {
+        console.warn(`⚠️  Filtered out ${ordersData.length - validOrders.length} orders with no items`);
+      }
+      
+      setOrders(finalOrders);
     } catch (error: any) {
       console.error('Error fetching orders:', error);
       alert(error.message || 'Failed to fetch orders. Please ensure a tenant is selected.');
@@ -138,36 +157,67 @@ export default function OrdersPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
         <PageHeader
           title="Orders"
-          subtitle="Manage and track all restaurant orders"
+          subtitle={`Manage and track ${filterChannel === 'dine_in' ? 'dine-in' : filterChannel === 'pickup' ? 'delivery' : 'all'} orders`}
           actions={
-            <Button onClick={fetchOrders} variant="secondary" size="sm">
-              Refresh
+            <Button onClick={fetchOrders} variant="secondary" size="sm" disabled={loading}>
+              {loading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 inline" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Loading...
+                </>
+              ) : (
+                'Refresh'
+              )}
             </Button>
           }
         />
 
         <div className="mb-6">
           <Tabs 
-            defaultValue={filterStatus}
-            value={filterStatus} 
-            onChange={(value) => setFilterStatus(value)}
+            defaultValue={filterChannel}
+            value={filterChannel} 
+            onChange={(value) => setFilterChannel(value)}
           >
-            <TabsList className="bg-white border border-brand-200 shadow-sm">
-              <TabsTrigger value="all">All</TabsTrigger>
-              {ORDER_STATUSES.map((status) => (
-                <TabsTrigger key={status} value={status}>
-                  {status.replace('_', ' ')}
-                </TabsTrigger>
-              ))}
+            <TabsList className="bg-white border border-brand-200 shadow-sm rounded-lg p-1.5">
+              <TabsTrigger value="all">All Orders</TabsTrigger>
+              <TabsTrigger value="dine_in">Dine In</TabsTrigger>
+              <TabsTrigger value="pickup">Delivery</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
 
         {orders.length === 0 && !loading && (
           <Card>
-            <div className="text-center py-8">
-              <p className="text-brand-600 mb-2 text-lg font-medium">No orders found.</p>
-              <p className="text-sm text-brand-500">Make sure you have selected a tenant and that orders exist for that tenant.</p>
+            <div className="text-center py-12">
+              <div className="mb-4">
+                <svg
+                  className="mx-auto h-16 w-16 text-brand-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+              </div>
+              <p className="text-brand-700 mb-2 text-xl font-semibold">No orders found</p>
+              <p className="text-sm text-brand-500 mb-4">
+                {filterChannel === 'dine_in' 
+                  ? 'No dine-in orders for the selected tenant.'
+                  : filterChannel === 'pickup'
+                  ? 'No delivery/pickup orders for the selected tenant.'
+                  : 'Make sure you have selected a tenant and that orders exist for that tenant.'}
+              </p>
+              <Button onClick={fetchOrders} variant="secondary" size="sm">
+                Refresh
+              </Button>
             </div>
           </Card>
         )}

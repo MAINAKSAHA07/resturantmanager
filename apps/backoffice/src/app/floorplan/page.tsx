@@ -43,12 +43,12 @@ export default function FloorPlanPage() {
   const [dragStartPos, setDragStartPos] = useState<{ x: number; y: number } | null>(null);
   const [initialTablePos, setInitialTablePos] = useState<{ x: number; y: number } | null>(null);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
-  
+
   // Use refs to avoid stale closures in event handlers
   const isDraggingRef = React.useRef(false);
   const activeTableIdRef = React.useRef<string | null>(null);
   const tablesRef = React.useRef<Table[]>([]);
-  
+
   // Keep refs in sync with state
   React.useEffect(() => {
     isDraggingRef.current = isDragging;
@@ -82,6 +82,15 @@ export default function FloorPlanPage() {
   useEffect(() => {
     fetchData();
     fetchTenantDomain();
+
+    // Poll for updates every 30 seconds
+    const intervalId = setInterval(() => {
+      // Only fetch tables to update status and orders
+      // No need to re-fetch locations or menu items constantly
+      fetchTables().catch(err => console.error('Error polling tables:', err));
+    }, 30000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const fetchTenantDomain = async () => {
@@ -89,7 +98,7 @@ export default function FloorPlanPage() {
       const cookieStore = document.cookie.split(';');
       const tenantIdCookie = cookieStore.find(c => c.trim().startsWith('selected_tenant_id='));
       if (!tenantIdCookie) return;
-      
+
       const tenantId = tenantIdCookie.split('=')[1];
       const response = await fetch(`/api/tenants/${tenantId}`);
       const data = await response.json();
@@ -161,7 +170,7 @@ export default function FloorPlanPage() {
             }
             return t;
           });
-          
+
           // Debug: log if we find duplicates
           const duplicateCount = updatedTables.filter(t => t.id === currentActiveTableId).length;
           if (duplicateCount > 1) {
@@ -177,7 +186,7 @@ export default function FloorPlanPage() {
               return true;
             });
           }
-          
+
           return updatedTables;
         });
 
@@ -195,7 +204,7 @@ export default function FloorPlanPage() {
     const handleMouseUp = async (e: MouseEvent) => {
       const currentActiveTableId = activeTableIdRef.current;
       const wasDragging = isDraggingRef.current;
-      
+
       if (!currentActiveTableId) return;
 
       e.preventDefault();
@@ -275,7 +284,7 @@ export default function FloorPlanPage() {
         setTables(prevTables => {
           // If we're currently dragging, preserve the dragged table's position
           const currentlyDraggingId = activeTableIdRef.current;
-          
+
           // Create a map of current positions for tables being dragged
           const currentPositions = new Map<string, { x: number; y: number }>();
           if (currentlyDraggingId) {
@@ -284,12 +293,12 @@ export default function FloorPlanPage() {
               currentPositions.set(currentlyDraggingId, { x: draggedTable.x, y: draggedTable.y });
             }
           }
-          
+
           // Merge fetched tables with current state, preserving dragged positions
           const mergedTables: Table[] = data.tables.map((fetchedTable: any) => {
             const tableId = fetchedTable.id;
             const currentPos = currentPositions.get(tableId);
-            
+
             // If this table is being dragged, use its current position
             if (currentPos) {
               return {
@@ -298,7 +307,7 @@ export default function FloorPlanPage() {
                 y: currentPos.y,
               } as Table;
             }
-            
+
             // Otherwise, check if we have this table in current state with a more recent position
             const existingTable = prevTables.find((t: Table) => t.id === tableId);
             if (existingTable && currentlyDraggingId !== tableId) {
@@ -309,18 +318,18 @@ export default function FloorPlanPage() {
                 y: existingTable.y,
               } as Table;
             }
-            
+
             return fetchedTable as Table;
           });
-          
+
           // Remove any duplicates by ID
           const uniqueTables: Table[] = Array.from(
             new Map(mergedTables.map((t: Table) => [t.id, t])).values()
           ) as Table[];
-          
+
           return uniqueTables;
         });
-        
+
         if (data.tables.length > 0 && !selectedLocation) {
           // Get locationId from first table (handle array format)
           const firstTable = data.tables[0];
@@ -407,13 +416,13 @@ export default function FloorPlanPage() {
         const tableLocationId = Array.isArray(data.table.locationId)
           ? data.table.locationId[0]
           : data.table.locationId;
-        
+
         // Ensure location is selected before adding table
         if (tableLocationId && tableLocationId !== selectedLocation) {
           console.log(`[FloorPlan] Setting location to ${tableLocationId} for new table`);
           setSelectedLocation(tableLocationId);
         }
-        
+
         // Create new table object with proper locationId
         const newTable: Table = {
           id: data.table.id,
@@ -426,14 +435,14 @@ export default function FloorPlanPage() {
           activeOrders: 0,
           orderTotal: 0,
         };
-        
+
         console.log('[FloorPlan] Adding new table to state:', {
           id: newTable.id,
           name: newTable.name,
           locationId: newTable.locationId,
           selectedLocation: selectedLocation,
         });
-        
+
         // Add to local state immediately - use functional update to ensure we have latest state
         setTables(prevTables => {
           // Check if table already exists (prevent duplicates)
@@ -444,7 +453,7 @@ export default function FloorPlanPage() {
           }
           return [...prevTables, newTable];
         });
-        
+
         setShowAddTable(false);
         setNewTableName('');
         setNewTableCapacity(4);
@@ -493,12 +502,12 @@ export default function FloorPlanPage() {
         t.id === tableId ? { ...t, status } : t
       )
     );
-    
+
     // Also update selectedTable if it's the one being updated
     if (selectedTable && selectedTable.id === tableId) {
       setSelectedTable({ ...selectedTable, status });
     }
-    
+
     try {
       const response = await fetch('/api/tables', {
         method: 'PATCH',
@@ -550,7 +559,7 @@ export default function FloorPlanPage() {
   const handleMouseDown = (e: React.MouseEvent, table: Table) => {
     // Only handle left mouse button
     if (e.button !== 0) return;
-    
+
     e.preventDefault(); // Prevent text selection
     e.stopPropagation();
 
@@ -571,7 +580,7 @@ export default function FloorPlanPage() {
     // Reset drag state
     setIsDragging(false);
     isDraggingRef.current = false;
-    
+
     setActiveTableId(table.id);
     activeTableIdRef.current = table.id;
     setDragStartPos({ x: e.clientX, y: e.clientY });
@@ -624,28 +633,28 @@ export default function FloorPlanPage() {
       console.log(`[fetchTableOrders] Fetching all orders for table ${tableId}`);
       const response = await fetch('/api/orders');
       const data = await response.json();
-      
+
       if (!response.ok) {
         console.error('[fetchTableOrders] API error:', data);
         return [];
       }
-      
+
       if (data.orders) {
         console.log(`[fetchTableOrders] Found ${data.orders.length} total orders`);
-        
+
         // Find ALL active orders for this table
         // Active orders are: placed, accepted, in_kitchen, ready, served (not completed or canceled)
         const tableOrders = data.orders.filter((order: any) => {
           const orderTableId = Array.isArray(order.tableId) ? order.tableId[0] : order.tableId;
           const matchesTable = orderTableId === tableId;
-          const isActive = order.status !== 'completed' && 
-                          order.status !== 'canceled' && 
-                          order.status !== 'refunded';
-          
+          const isActive = order.status !== 'completed' &&
+            order.status !== 'canceled' &&
+            order.status !== 'refunded';
+
           if (matchesTable) {
             console.log(`[fetchTableOrders] Order ${order.id.slice(0, 8)}: tableId=${orderTableId}, status=${order.status}, isActive=${isActive}`);
           }
-          
+
           return matchesTable && isActive;
         });
 
@@ -682,7 +691,7 @@ export default function FloorPlanPage() {
           setAllTableOrders(ordersWithItems);
           setCurrentOrder(ordersWithItems[0]);
           console.log(`[fetchTableOrders] Set ${ordersWithItems.length} orders, current order: ${ordersWithItems[0].id.slice(0, 8)}`);
-          
+
           return ordersWithItems;
         } else {
           console.warn(`[fetchTableOrders] No active orders found for table ${tableId}`);
@@ -720,18 +729,18 @@ export default function FloorPlanPage() {
         comment: item.comment || '',
         ...(item.options && { options: item.options }),
       }));
-      
+
       // Log orderItems before sending to verify comments are included
       console.log('[FloorPlan] Creating order with items:', normalizedItems.map(item => ({
         menuItemId: item.menuItemId,
         quantity: item.quantity,
         comment: item.comment || '(no comment)',
       })));
-      
+
       const response = await fetch(`/api/tables/${selectedTable.id}/order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           items: normalizedItems,
           couponCode: appliedCoupon?.code || null,
           comment: orderComment.trim() || null,
@@ -751,7 +760,7 @@ export default function FloorPlanPage() {
           );
           setSelectedTable({ ...selectedTable, status: 'seated' });
         }
-        
+
         // Fetch the created order details
         if (data.order) {
           // Fetch order items
@@ -765,13 +774,13 @@ export default function FloorPlanPage() {
             console.error('Error fetching order items:', e);
           }
           setCurrentOrder(data.order);
-    }
+        }
 
         // Switch to ongoing tab instead of closing
         console.log('[FloorPlan] Order created, switching to ongoing tab. Order:', data.order);
         setActiveTab('ongoing');
         setOrderItems([]);
-        
+
         // Refresh tables in background to sync activeOrders and orderTotal
         fetchTables().catch(err => {
           console.error('Error refreshing after order creation:', err);
@@ -848,23 +857,23 @@ export default function FloorPlanPage() {
       }
       return total;
     }, 0);
-    
+
     // Calculate tax (simplified - using default 5% GST for now)
     // In a real scenario, we'd need to get tax rate from menu items and location state code
     const taxRate = 5; // Default 5% GST
     const taxInPaise = Math.round((subtotalInPaise * taxRate) / 100);
     const totalWithTax = subtotalInPaise + taxInPaise;
-    
+
     // Apply coupon discount if available
     let finalTotal = totalWithTax;
     if (appliedCoupon && appliedCoupon.discountAmount) {
       finalTotal = Math.max(0, totalWithTax - appliedCoupon.discountAmount); // discountAmount is in paise
     }
-    
+
     // Convert to rupees for display
     return (finalTotal / 100).toFixed(2);
   };
-  
+
   const getOrderBreakdown = () => {
     // Calculate subtotal in paise
     const subtotalInPaise = orderItems.reduce((total, item) => {
@@ -874,19 +883,19 @@ export default function FloorPlanPage() {
       }
       return total;
     }, 0);
-    
+
     // Calculate tax (simplified - using default 5% GST)
     const taxRate = 5;
     const taxInPaise = Math.round((subtotalInPaise * taxRate) / 100);
     const totalWithTax = subtotalInPaise + taxInPaise;
-    
+
     // Apply coupon discount if available
     let finalTotal = totalWithTax;
     const discountAmount = appliedCoupon?.discountAmount || 0;
     if (discountAmount > 0) {
       finalTotal = Math.max(0, totalWithTax - discountAmount);
     }
-    
+
     return {
       subtotal: subtotalInPaise,
       tax: taxInPaise,
@@ -910,14 +919,14 @@ export default function FloorPlanPage() {
         comment: item.comment || '',
         ...(item.options && { options: item.options }),
       }));
-      
+
       // Log orderItems before sending to verify comments are included
       console.log('[FloorPlan] Adding items to existing order:', normalizedItems.map(item => ({
         menuItemId: item.menuItemId,
         quantity: item.quantity,
         comment: item.comment || '(no comment)',
       })));
-      
+
       // Add items to existing order
       const response = await fetch(`/api/orders/${currentOrder.id}/items`, {
         method: 'POST',
@@ -951,17 +960,17 @@ export default function FloorPlanPage() {
             setCurrentOrder(refreshedOrder);
           }
         }
-        
+
         // Clear the new items list
         setOrderItems([]);
         setMenuSearchQuery('');
-        
+
         // Switch to ongoing tab to show the updated order
         setActiveTab('ongoing');
-        
+
         // Refresh tables to update order counts
         await fetchTables();
-        
+
         console.log('[FloorPlan] Items added to order successfully');
       } else {
         throw new Error(data.error || 'Failed to add items to order');
@@ -1012,7 +1021,7 @@ export default function FloorPlanPage() {
             setCurrentOrder(refreshedOrder);
           }
         }
-        
+
         setEditingItemId(null);
         await fetchTables();
       }
@@ -1062,7 +1071,7 @@ export default function FloorPlanPage() {
             setCurrentOrder(refreshedOrder);
           }
         }
-        
+
         await fetchTables();
       }
     } catch (error: any) {
@@ -1083,9 +1092,9 @@ export default function FloorPlanPage() {
     try {
       // Update all active orders status to completed
       const ordersToComplete = allTableOrders.length > 0 ? allTableOrders : (currentOrder ? [currentOrder] : []);
-      
+
       await Promise.all(
-        ordersToComplete.map(order => 
+        ordersToComplete.map(order =>
           fetch('/api/orders', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -1093,16 +1102,16 @@ export default function FloorPlanPage() {
           })
         )
       );
-      
+
       console.log(`✅ Marked ${ordersToComplete.length} orders as completed (cash payment)`);
-      
+
       alert(`Cash payment received! ${ordersToComplete.length > 1 ? `All ${ordersToComplete.length} orders have been completed.` : 'Order completed.'}`);
-      
+
       // Update table status to available
       if (selectedTable) {
         await handleUpdateTableStatus(selectedTable.id, 'available');
       }
-      
+
       setShowOrderModal(false);
       setCurrentOrder(null);
       setAllTableOrders([]);
@@ -1122,7 +1131,7 @@ export default function FloorPlanPage() {
       const combinedTotal = allTableOrders.length > 0
         ? allTableOrders.reduce((sum, order) => sum + (order.total || 0), 0)
         : (currentOrder?.total || 0);
-      
+
       const amount = combinedTotal; // Amount in paise
       if (!amount || amount === 0) {
         alert('Invalid order amount');
@@ -1143,13 +1152,13 @@ export default function FloorPlanPage() {
 
       // Use the most recent order ID for Razorpay description, but process all orders
       const primaryOrderId = currentOrder?.id || (allTableOrders.length > 0 ? allTableOrders[0].id : '');
-      
+
       const options = {
         key: orderData.key,
         amount: amount,
         currency: 'INR',
         name: 'Restaurant Manager',
-        description: allTableOrders.length > 1 
+        description: allTableOrders.length > 1
           ? `Payment for ${allTableOrders.length} orders on ${selectedTable?.name || 'Table'}`
           : `Payment for order on ${selectedTable?.name || 'Table'}`,
         order_id: orderData.razorpay_order_id,
@@ -1173,7 +1182,7 @@ export default function FloorPlanPage() {
               // Update all active orders status to completed
               try {
                 await Promise.all(
-                  allTableOrders.map(order => 
+                  allTableOrders.map(order =>
                     fetch('/api/orders', {
                       method: 'PATCH',
                       headers: { 'Content-Type': 'application/json' },
@@ -1185,7 +1194,7 @@ export default function FloorPlanPage() {
               } catch (e) {
                 console.error('Error updating order statuses:', e);
               }
-              
+
               alert(`Payment successful! ${allTableOrders.length > 1 ? `All ${allTableOrders.length} orders have been completed.` : 'Order completed.'}`);
               // Update table status to available
               if (selectedTable) {
@@ -1242,7 +1251,7 @@ export default function FloorPlanPage() {
     });
     return Array.from(seen.values());
   }, [tables, activeTableId]);
-  
+
   const filteredTables = selectedLocation
     ? uniqueTables.filter(t => {
       const tableLocationId = Array.isArray(t.locationId) ? t.locationId[0] : t.locationId;
@@ -1254,7 +1263,7 @@ export default function FloorPlanPage() {
       return matches;
     })
     : uniqueTables;
-  
+
   // Debug: log filtered results and check for duplicates
   React.useEffect(() => {
     const duplicateIds = new Set<string>();
@@ -1266,11 +1275,11 @@ export default function FloorPlanPage() {
         seenIds.add(t.id);
       }
     });
-    
+
     if (duplicateIds.size > 0) {
       console.warn(`[FloorPlan] WARNING: Found duplicate table IDs:`, Array.from(duplicateIds));
     }
-    
+
     console.log(`[FloorPlan] Filtered tables: ${filteredTables.length} of ${uniqueTables.length} unique tables (selectedLocation: ${selectedLocation})`);
   }, [filteredTables.length, uniqueTables.length, tables.length, selectedLocation]);
 
@@ -1320,7 +1329,7 @@ export default function FloorPlanPage() {
               🚪 Entrance
             </span>
           </div>
-          
+
           <div
             className="relative w-full h-[400px] sm:h-[500px] md:h-[600px] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 floor-plan-container"
             onClick={(e) => {
@@ -1353,58 +1362,58 @@ export default function FloorPlanPage() {
               // Ensure we don't render duplicates - use a unique key
               const isActive = activeTableId === table.id;
               const isBeingDragged = isActive && isDragging;
-              
+
               return (
-              <div
-                key={`table-${table.id}`}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleMouseDown(e, table);
-                }}
-                onClick={(e) => {
-                  // Prevent click if we just finished dragging or are currently dragging
-                  if (isDraggingRef.current || isDragging) {
+                <div
+                  key={`table-${table.id}`}
+                  onMouseDown={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    return;
-                  }
-                  // Also prevent if this was a drag operation
-                  if (activeTableId === table.id && dragStartPos) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return;
-                  }
-                }}
-                className={`absolute w-16 h-16 sm:w-20 sm:h-20 rounded-full flex flex-col items-center justify-center text-white cursor-pointer shadow-lg hover:scale-110 transition-transform ${getStatusColor(
-                  table.status
-                )} ${isActive ? 'z-50 scale-110 shadow-xl' : ''}`}
-                style={{
-                  left: `${table.x || 0}px`,
-                  top: `${table.y || 0}px`,
-                  cursor: isBeingDragged ? 'grabbing' : 'grab',
-                  pointerEvents: 'auto',
-                  // Ensure the dragged table is always on top
-                  zIndex: isActive ? 1000 : 'auto',
-                  // Prevent transition during drag for smoother movement
-                  transition: isBeingDragged ? 'none' : 'transform 0.2s',
-                }}
-                title={`${table.name} - ${table.capacity} seats - ${table.status}`}
-              >
-                <p className="font-bold text-[10px] sm:text-sm">{table.name}</p>
+                    handleMouseDown(e, table);
+                  }}
+                  onClick={(e) => {
+                    // Prevent click if we just finished dragging or are currently dragging
+                    if (isDraggingRef.current || isDragging) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      return;
+                    }
+                    // Also prevent if this was a drag operation
+                    if (activeTableId === table.id && dragStartPos) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      return;
+                    }
+                  }}
+                  className={`absolute w-16 h-16 sm:w-20 sm:h-20 rounded-full flex flex-col items-center justify-center text-white cursor-pointer shadow-lg hover:scale-110 transition-transform ${getStatusColor(
+                    table.status
+                  )} ${isActive ? 'z-50 scale-110 shadow-xl' : ''}`}
+                  style={{
+                    left: `${table.x || 0}px`,
+                    top: `${table.y || 0}px`,
+                    cursor: isBeingDragged ? 'grabbing' : 'grab',
+                    pointerEvents: 'auto',
+                    // Ensure the dragged table is always on top
+                    zIndex: isActive ? 1000 : 'auto',
+                    // Prevent transition during drag for smoother movement
+                    transition: isBeingDragged ? 'none' : 'transform 0.2s',
+                  }}
+                  title={`${table.name} - ${table.capacity} seats - ${table.status}`}
+                >
+                  <p className="font-bold text-[10px] sm:text-sm">{table.name}</p>
                   <p className="text-[9px] sm:text-xs">({table.capacity})</p>
-                {table.activeOrders && table.activeOrders > 0 && (
-                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] sm:text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
-                    {table.activeOrders}
+                  {table.activeOrders && table.activeOrders > 0 && (
+                    <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] sm:text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
+                      {table.activeOrders}
+                    </div>
+                  )}
+                  {table.orderTotal && table.orderTotal > 0 && (
+                    <p className="text-[9px] sm:text-xs mt-0.5 sm:mt-1">₹{(table.orderTotal / 100).toFixed(0)}</p>
+                  )}
                 </div>
-                )}
-                {table.orderTotal && table.orderTotal > 0 && (
-                  <p className="text-[9px] sm:text-xs mt-0.5 sm:mt-1">₹{(table.orderTotal / 100).toFixed(0)}</p>
-                )}
-              </div>
               );
             })}
-            
+
             {/* Direction Watermark (Compass) */}
             <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-white/90 backdrop-blur-sm rounded-full p-2 sm:p-3 shadow-lg border-2 border-brand-200">
               <div className="relative w-12 h-12 sm:w-16 sm:h-16">
@@ -1431,21 +1440,21 @@ export default function FloorPlanPage() {
           </div>
 
           <div className="mt-6 flex flex-wrap gap-4">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-accent-green rounded-full"></div>
-                <span>Available</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-red-500 rounded-full"></div>
-                <span>Seated</span>
-              </div>
-              <div className="flex items-center gap-2">
+              <span>Available</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-red-500 rounded-full"></div>
+              <span>Seated</span>
+            </div>
+            <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
-                <span>Cleaning</span>
-              </div>
-              <div className="flex items-center gap-2">
+              <span>Cleaning</span>
+            </div>
+            <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-accent-blue rounded-full"></div>
-                <span>Held</span>
+              <span>Held</span>
             </div>
           </div>
         </div>
@@ -1879,7 +1888,7 @@ export default function FloorPlanPage() {
                         Add More Items
                       </button>
                     </div>
-                    
+
                     {/* Order Selector - Show if multiple orders */}
                     {allTableOrders.length > 1 && (
                       <div className="mb-4">
@@ -1902,17 +1911,16 @@ export default function FloorPlanPage() {
                         </select>
                       </div>
                     )}
-                    
+
                     {/* Current Order Status Badge */}
                     {currentOrder && (
                       <div className="mb-4">
-                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                          currentOrder.status === 'accepted' ? 'bg-blue-100 text-blue-800' :
-                          currentOrder.status === 'in_kitchen' ? 'bg-orange-100 text-orange-800' :
-                          currentOrder.status === 'ready' ? 'bg-yellow-100 text-yellow-800' :
-                          currentOrder.status === 'served' ? 'bg-green-100 text-green-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${currentOrder.status === 'accepted' ? 'bg-blue-100 text-blue-800' :
+                            currentOrder.status === 'in_kitchen' ? 'bg-orange-100 text-orange-800' :
+                              currentOrder.status === 'ready' ? 'bg-yellow-100 text-yellow-800' :
+                                currentOrder.status === 'served' ? 'bg-green-100 text-green-800' :
+                                  'bg-gray-100 text-gray-800'
+                          }`}>
                           Status: {currentOrder.status}
                         </span>
                       </div>
@@ -2019,7 +2027,7 @@ export default function FloorPlanPage() {
                         const combinedTaxIgst = allTableOrders.reduce((sum, order) => sum + (order.taxIgst || 0), 0);
                         const combinedDiscount = allTableOrders.reduce((sum, order) => sum + (order.discountAmount || 0), 0);
                         const combinedTotal = allTableOrders.reduce((sum, order) => sum + (order.total || 0), 0);
-                        
+
                         return (
                           <>
                             <div className="flex justify-between">

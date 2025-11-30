@@ -21,10 +21,14 @@ export interface User {
  */
 export function isMasterUser(user: User | null | undefined): boolean {
   if (!user) return false;
+  
   // Users with isMaster=true are master users
   if (user.isMaster === true) return true;
+  
   // Users with role='admin' are also treated as master users
+  // Check both string comparison and ensure it's not undefined/null
   if (user.role === 'admin') return true;
+  
   return false;
 }
 

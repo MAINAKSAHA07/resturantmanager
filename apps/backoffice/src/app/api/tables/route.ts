@@ -44,14 +44,14 @@ export async function GET(request: NextRequest) {
         const ordersResponse = await pb.collection('orders').getList(1, 500, {
           filter: '(status = "placed" || status = "accepted" || status = "in_kitchen" || status = "ready" || status = "served")',
         });
-        
+
         // Filter to only orders for our tables
         const tableIds = new Set(filteredTables.map((t: any) => t.id));
         activeOrders = ordersResponse.items.filter((order: any) => {
           const orderTableId = Array.isArray(order.tableId) ? order.tableId[0] : order.tableId;
           return orderTableId && tableIds.has(orderTableId);
         });
-        
+
         console.log(`[Tables API] Found ${activeOrders.length} active orders for ${filteredTables.length} tables`);
       } catch (error: any) {
         console.warn('Error fetching orders for tables:', error.message);
@@ -65,8 +65,15 @@ export async function GET(request: NextRequest) {
         const orderTableId = Array.isArray(order.tableId) ? order.tableId[0] : order.tableId;
         return orderTableId === table.id;
       });
+      // Auto-correct status: If table has active orders but is marked available, show as seated
+      let status = table.status;
+      if (tableOrders.length > 0 && status === 'available') {
+        status = 'seated';
+      }
+
       return {
         ...table,
+        status,
         activeOrders: tableOrders.length,
         orderTotal: tableOrders.reduce((sum: number, o: any) => sum + (o.total || 0), 0),
       };

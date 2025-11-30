@@ -18,8 +18,18 @@ export async function GET(
       );
     }
 
+    // Debug logging
+    console.log('[GET Tenant] User check:', {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      isMaster: user.isMaster,
+      isMasterUserResult: isMasterUser(user)
+    });
+
     // Only master users can view tenant details
     if (!isMasterUser(user)) {
+      console.log('[GET Tenant] Access denied - not a master user');
       return NextResponse.json(
         { error: 'Forbidden: Only master users can view tenant details' },
         { status: 403 }
@@ -72,8 +82,18 @@ export async function PUT(
       );
     }
 
+    // Debug logging
+    console.log('[PUT Tenant] User check:', {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      isMaster: user.isMaster,
+      isMasterUserResult: isMasterUser(user)
+    });
+
     // Only master users can edit tenants
     if (!isMasterUser(user)) {
+      console.log('[PUT Tenant] Access denied - not a master user');
       return NextResponse.json(
         { error: 'Forbidden: Only master users can edit tenants' },
         { status: 403 }
@@ -228,8 +248,18 @@ export async function DELETE(
       );
     }
 
+    // Debug logging
+    console.log('[DELETE Tenant] User check:', {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      isMaster: user.isMaster,
+      isMasterUserResult: isMasterUser(user)
+    });
+
     // Only master users can delete tenants
     if (!isMasterUser(user)) {
+      console.log('[DELETE Tenant] Access denied - not a master user');
       return NextResponse.json(
         { error: 'Forbidden: Only master users can delete tenants' },
         { status: 403 }

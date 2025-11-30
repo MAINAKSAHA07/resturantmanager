@@ -14,7 +14,7 @@ async function getTenantByKey(tenantKey: string) {
 
     const pb = new PocketBase(pbUrl);
     await pb.admins.authWithPassword(adminEmail, adminPassword);
-    
+
     const tenants = await pb.collection('tenant').getList(1, 1, {
       filter: `key = "${tenantKey}"`,
     });
@@ -36,13 +36,13 @@ export default async function TenantRedirectPage({
   params: Promise<{ tenantKey: string }>;
 }) {
   const { tenantKey } = await params;
-  
+
   if (!tenantKey) {
     redirect('/tenants');
   }
 
   const tenant = await getTenantByKey(tenantKey);
-  
+
   if (!tenant) {
     // Tenant not found, redirect to tenant selection
     redirect('/tenants');
@@ -57,6 +57,6 @@ export default async function TenantRedirectPage({
   });
 
   // Redirect to menu page
-  redirect('/');
+  redirect(`/?tenant=${tenantKey}`);
 }
 

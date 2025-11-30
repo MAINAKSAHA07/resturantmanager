@@ -120,26 +120,26 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <nav className="bg-gradient-to-r from-accent-blue to-accent-purple shadow-lg sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="text-xl sm:text-2xl font-bold text-white hover:text-accent-yellow transition-colors duration-200">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-accent-blue to-accent-purple shadow-lg">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+        <div className="flex justify-between items-center gap-4">
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <Link href="/" className="text-xl sm:text-2xl font-bold text-white hover:text-accent-yellow transition-colors duration-200 whitespace-nowrap">
               Restaurant
             </Link>
             {tableContext && (
-              <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-md bg-white/20 text-white text-xs sm:text-sm font-medium">
+              <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-md bg-white/20 text-white text-xs sm:text-sm font-medium whitespace-nowrap">
                 🪑 Table: {tableContext.tableName}
               </span>
             )}
           </div>
           
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-4 lg:space-x-6">
+          <div className="hidden lg:flex gap-1 xl:gap-2 2xl:gap-3 items-center flex-1 min-w-0 justify-center">
             <Link
               href="/"
-              className={`text-white hover:text-accent-yellow transition-colors duration-200 px-2 lg:px-3 py-2 rounded-lg hover:bg-white/20 text-sm lg:text-base ${
-                pathname === '/' ? 'font-semibold bg-white/20' : ''
+              className={`text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap ${
+                pathname === '/' ? 'bg-white/20' : ''
               }`}
             >
               Menu
@@ -147,8 +147,8 @@ export default function Navbar() {
             {isLoggedIn && (
               <Link
                 href="/my-orders"
-                className={`text-white hover:text-accent-yellow transition-colors duration-200 px-2 lg:px-3 py-2 rounded-lg hover:bg-white/20 text-sm lg:text-base ${
-                  pathname === '/my-orders' ? 'font-semibold bg-white/20' : ''
+                className={`text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap ${
+                  pathname === '/my-orders' ? 'bg-white/20' : ''
                 }`}
               >
                 My Orders
@@ -156,8 +156,8 @@ export default function Navbar() {
             )}
             <Link
               href="/reservations"
-              className={`text-white hover:text-accent-yellow transition-colors duration-200 px-2 lg:px-3 py-2 rounded-lg hover:bg-white/20 text-sm lg:text-base ${
-                pathname === '/reservations' ? 'font-semibold bg-white/20' : ''
+              className={`text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap ${
+                pathname === '/reservations' ? 'bg-white/20' : ''
               }`}
             >
               Reservations
@@ -167,7 +167,7 @@ export default function Navbar() {
               className="relative text-white hover:text-accent-yellow transition-colors duration-200 p-2"
             >
               <svg
-                className="w-5 h-5 lg:w-6 lg:h-6"
+                className="w-5 h-5 xl:w-6 xl:h-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -185,17 +185,20 @@ export default function Navbar() {
                 </span>
               )}
             </Link>
+          </div>
+
+          <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
             {isLoggedIn ? (
-              <div className="flex items-center space-x-2 lg:space-x-4">
+              <div className="hidden lg:flex items-center gap-2 xl:gap-3">
                 <Link
                   href="/profile"
-                  className="text-xs lg:text-sm text-white hover:text-accent-yellow transition-colors duration-200 px-2 lg:px-3 py-1 rounded-lg hover:bg-white/20"
+                  className="text-xs xl:text-sm text-white hover:text-accent-yellow transition-colors duration-200 px-2 xl:px-3 py-1 rounded-lg hover:bg-white/20 whitespace-nowrap"
                 >
                   {customerName ? `Hi, ${customerName.split(' ')[0]}` : 'Profile'}
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="text-xs lg:text-sm text-white hover:text-accent-yellow font-medium px-2 lg:px-3 py-1 rounded-lg hover:bg-white/20 transition-all duration-200"
+                  className="text-xs xl:text-sm text-white hover:text-accent-yellow font-medium px-2 xl:px-3 py-1 rounded-lg hover:bg-white/20 transition-all duration-200 whitespace-nowrap"
                 >
                   Logout
                 </button>
@@ -203,129 +206,131 @@ export default function Navbar() {
             ) : (
               <Link
                 href="/login"
-                className="text-xs lg:text-sm text-white hover:text-accent-yellow font-medium px-2 lg:px-3 py-1 rounded-lg hover:bg-white/20 transition-all duration-200"
+                className="hidden lg:block text-xs xl:text-sm text-white hover:text-accent-yellow font-medium px-2 xl:px-3 py-1 rounded-lg hover:bg-white/20 transition-all duration-200 whitespace-nowrap"
               >
                 Login
               </Link>
             )}
-          </div>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center space-x-2">
-            <Link
-              href="/cart"
-              className="relative text-white hover:text-accent-yellow transition-colors duration-200 p-2"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            {/* Mobile Menu Button */}
+            <div className="lg:hidden flex items-center gap-2">
+              <Link
+                href="/cart"
+                className="relative text-white hover:text-accent-yellow transition-colors duration-200 p-2"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-accent-pink text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-white p-2 rounded-lg hover:bg-white/20 transition-colors duration-200"
-              aria-label="Toggle menu"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                {isMobileMenuOpen ? (
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                   />
-                ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
+                </svg>
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-accent-pink text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg">
+                    {cartCount}
+                  </span>
                 )}
-              </svg>
-            </button>
+              </Link>
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="text-white p-2 rounded-lg hover:bg-white/20 transition-colors duration-200"
+                aria-label="Toggle menu"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  {isMobileMenuOpen ? (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  ) : (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  )}
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-white/20 py-4 space-y-2">
-            <Link
-              href="/"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={`block text-white hover:text-accent-yellow transition-colors duration-200 px-4 py-2 rounded-lg hover:bg-white/20 ${
-                pathname === '/' ? 'font-semibold bg-white/20' : ''
-              }`}
-            >
-              Menu
-            </Link>
-            {isLoggedIn && (
+          <div className="lg:hidden mt-4 pb-4 border-t border-white/20">
+            <div className="flex flex-col gap-1 pt-4">
               <Link
-                href="/my-orders"
+                href="/"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`block text-white hover:text-accent-yellow transition-colors duration-200 px-4 py-2 rounded-lg hover:bg-white/20 ${
-                  pathname === '/my-orders' ? 'font-semibold bg-white/20' : ''
+                className={`text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm ${
+                  pathname === '/' ? 'bg-white/20' : ''
                 }`}
               >
-                My Orders
+                Menu
               </Link>
-            )}
-            <Link
-              href="/reservations"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={`block text-white hover:text-accent-yellow transition-colors duration-200 px-4 py-2 rounded-lg hover:bg-white/20 ${
-                pathname === '/reservations' ? 'font-semibold bg-white/20' : ''
-              }`}
-            >
-              Reservations
-            </Link>
-            {isLoggedIn ? (
-              <>
+              {isLoggedIn && (
                 <Link
-                  href="/profile"
+                  href="/my-orders"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="block text-white hover:text-accent-yellow transition-colors duration-200 px-4 py-2 rounded-lg hover:bg-white/20"
+                  className={`text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm ${
+                    pathname === '/my-orders' ? 'bg-white/20' : ''
+                  }`}
                 >
-                  {customerName ? `Hi, ${customerName}` : 'Profile'}
+                  My Orders
                 </Link>
-                <button
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    handleLogout();
-                  }}
-                  className="w-full text-left text-white hover:text-accent-yellow font-medium px-4 py-2 rounded-lg hover:bg-white/20 transition-all duration-200"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
+              )}
               <Link
-                href="/login"
+                href="/reservations"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="block text-white hover:text-accent-yellow font-medium px-4 py-2 rounded-lg hover:bg-white/20 transition-all duration-200"
+                className={`text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm ${
+                  pathname === '/reservations' ? 'bg-white/20' : ''
+                }`}
               >
-                Login
+                Reservations
               </Link>
-            )}
+              {isLoggedIn ? (
+                <>
+                  <Link
+                    href="/profile"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm"
+                  >
+                    {customerName ? `Hi, ${customerName}` : 'Profile'}
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full text-left text-white hover:text-accent-yellow font-medium px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-200 text-sm"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-white hover:text-accent-yellow font-medium px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-200 text-sm"
+                >
+                  Login
+                </Link>
+              )}
+            </div>
           </div>
         )}
       </div>

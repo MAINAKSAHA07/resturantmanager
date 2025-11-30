@@ -102,7 +102,7 @@ export default function ReservationsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 to-accent-purple/5 bg-white">
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
         <h1 className="text-3xl font-bold mb-6">Make a Reservation</h1>
 
         {error && (

@@ -19,6 +19,7 @@ export default function CheckoutPage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'cod'>('cod');
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [comment, setComment] = useState('');
 
   useEffect(() => {
     // Check authentication
@@ -52,7 +53,7 @@ export default function CheckoutPage() {
     setLoading(true);
     try {
       const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      
+
       // Get auth token
       const token = localStorage.getItem('customer_auth_token');
       if (!token) {
@@ -87,9 +88,10 @@ export default function CheckoutPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           items: cart,
           couponCode: couponCodeToSend,
+          comment: comment.trim() || null,
           // Pass table context explicitly in body as fallback
           tableContext: tableContextFromCookie,
         }),
@@ -106,17 +108,17 @@ export default function CheckoutPage() {
       }
 
       const orderData = await orderResponse.json();
-      
+
       // Warn if coupon was sent but discount is 0
       if (couponCodeToSend && (!orderData.discountAmount || orderData.discountAmount === 0)) {
         console.warn('[Checkout] Coupon was sent but discount is 0');
       }
-      
+
       if (!orderData.orderId) {
         const errorMsg = orderData.error || 'Failed to create order';
         throw new Error(errorMsg);
       }
-      
+
       const { orderId, amount } = orderData;
 
       // If Cash on Delivery, skip payment and redirect
@@ -264,6 +266,21 @@ export default function CheckoutPage() {
           </div>
         )}
 
+        {/* Order Comments */}
+        <div className="mb-6">
+          <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-2">
+            Order Comments / Instructions
+          </label>
+          <textarea
+            id="comment"
+            rows={3}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+            placeholder="E.g., No onions, extra spicy, allergy info..."
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+          />
+        </div>
+
         {/* Payment Method Selection */}
         <div className="mb-6 space-y-3">
           <label className="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
@@ -302,10 +319,10 @@ export default function CheckoutPage() {
           disabled={loading || (paymentMethod === 'razorpay' && !razorpayLoaded)}
           className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
         >
-          {loading 
-            ? 'Processing...' 
-            : paymentMethod === 'razorpay' 
-              ? 'Pay with Razorpay' 
+          {loading
+            ? 'Processing...'
+            : paymentMethod === 'razorpay'
+              ? 'Pay with Razorpay'
               : 'Place Order'}
         </button>
         <Link

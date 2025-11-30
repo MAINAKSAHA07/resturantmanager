@@ -11,6 +11,7 @@ export interface DailySalesData {
 export interface OrdersByStatusData {
   status: string;
   count: number;
+  total: number; // in paise (smallest currency unit)
 }
 
 export interface DashboardChartsProps {
@@ -346,6 +347,21 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
       .style('stroke-opacity', 0.1)
       .style('stroke-dasharray', '2,2');
 
+    // Tooltip container
+    const tooltip = d3
+      .select('body')
+      .append('div')
+      .attr('class', 'chart-tooltip')
+      .style('opacity', 0)
+      .style('position', 'absolute')
+      .style('background', 'rgba(0, 0, 0, 0.8)')
+      .style('color', 'white')
+      .style('padding', '8px 12px')
+      .style('border-radius', '6px')
+      .style('font-size', '12px')
+      .style('pointer-events', 'none')
+      .style('z-index', '1000');
+
     // Bars
     g.selectAll('.bar')
       .data(ordersByStatus)
@@ -358,7 +374,40 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
       .attr('height', (d) => height - yScale(d.count))
       .attr('fill', (d) => colorScale(d.status))
       .attr('rx', 4)
-      .attr('ry', 4);
+      .attr('ry', 4)
+      .on('mouseover', function (event: MouseEvent, d) {
+        // Highlight bar
+        d3.select(this)
+          .attr('opacity', 0.8)
+          .attr('stroke', 'white')
+          .attr('stroke-width', 2);
+        
+        // Show tooltip
+        const totalInRupees = (d.total || 0) / 100;
+        const statusLabel = d.status.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+        tooltip
+          .transition()
+          .duration(200)
+          .style('opacity', 1);
+        tooltip
+          .html(
+            `<strong>${statusLabel}</strong><br/>` +
+            `Orders: ${d.count}<br/>` +
+            `Total Value: ₹${totalInRupees.toFixed(2)}`
+          )
+          .style('left', `${event.pageX + 10}px`)
+          .style('top', `${event.pageY - 10}px`);
+      })
+      .on('mouseout', function () {
+        // Reset bar
+        d3.select(this)
+          .attr('opacity', 1)
+          .attr('stroke', 'none')
+          .attr('stroke-width', 0);
+        
+        // Hide tooltip
+        tooltip.transition().duration(200).style('opacity', 0);
+      });
 
     // Labels on bars - only show if bar is tall enough
     g.selectAll('.bar-label')
@@ -437,6 +486,10 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
     // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
+      const tooltip = d3.select('body').select('.chart-tooltip');
+      if (!tooltip.empty()) {
+        tooltip.remove();
+      }
     };
   }, [ordersByStatus]);
 

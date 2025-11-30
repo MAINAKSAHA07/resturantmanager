@@ -111,7 +111,7 @@ export default async function ItemPage({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 to-accent-purple/5 bg-white">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
         <Link
           href="/"
           className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4 sm:mb-6 text-sm sm:text-base"

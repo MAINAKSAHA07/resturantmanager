@@ -169,3 +169,6 @@ The menu page (`apps/customer-web/src/app/page.tsx`) resolves tenant in this ord
 - Order creation failure → Shows error, keeps cart
 - Network errors → Graceful degradation
 
+
+
+

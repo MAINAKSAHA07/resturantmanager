@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/Navbar';
+import FloatingFoodEmojis from '@/components/FloatingFoodEmojis';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -18,8 +19,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        <FloatingFoodEmojis />
         <Navbar />
-        {children}
+        <div className="pt-16 sm:pt-20">
+          {children}
+        </div>
       </body>
     </html>
   );

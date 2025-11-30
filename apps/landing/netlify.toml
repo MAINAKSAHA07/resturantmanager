@@ -1,0 +1,14 @@
+[build]
+  base = "apps/landing"
+  command = "cd ../.. && npm install --legacy-peer-deps && npx turbo run build --filter=@restaurant/landing"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# Next.js plugin handles routing automatically
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+

@@ -14,8 +14,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
-    const { items, couponCode, tableContext: tableContextFromBody } = body;
+
+    const { items, couponCode, comment, tableContext: tableContextFromBody } = body;
 
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     // If not found, try case-insensitive search
     if (tenants.items.length === 0) {
       const allTenants = await pb.collection('tenant').getList(1, 100);
-      const matchingTenant = allTenants.items.find((t: any) => 
+      const matchingTenant = allTenants.items.find((t: any) =>
         t.key?.toLowerCase() === brandKey.toLowerCase()
       );
       if (matchingTenant) {
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         };
       }
     }
-    
+
     if (tenants.items.length === 0) {
       console.error('[Order Create] Tenant not found:', {
         brandKey,
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
 
         // Find and validate coupon
         const couponCodeUpper = couponCode.toUpperCase().trim();
-        
+
         // Try robust filter first (handles relation fields)
         let coupons;
         try {
@@ -190,133 +190,133 @@ export async function POST(request: NextRequest) {
         }
 
         if (coupons.items.length > 0) {
-            const coupon = coupons.items[0];
-            const now = new Date();
-            const validFrom = new Date(coupon.validFrom);
-            const validUntil = new Date(coupon.validUntil);
+          const coupon = coupons.items[0];
+          const now = new Date();
+          const validFrom = new Date(coupon.validFrom);
+          const validUntil = new Date(coupon.validUntil);
 
-            // Validate coupon
-            const isActive = coupon.isActive;
-            const isValidDate = now >= validFrom && now <= validUntil;
-            const hasUsageLimit = !!coupon.usageLimit;
-            const usageLimitReached = hasUsageLimit && (coupon.usedCount || 0) >= coupon.usageLimit;
+          // Validate coupon
+          const isActive = coupon.isActive;
+          const isValidDate = now >= validFrom && now <= validUntil;
+          const hasUsageLimit = !!coupon.usageLimit;
+          const usageLimitReached = hasUsageLimit && (coupon.usedCount || 0) >= coupon.usageLimit;
 
-            // Check minimum order amount (should be on subtotal + tax, not just subtotal)
-            const orderTotalForValidation = subtotal + totalTax;
-            const minOrderMet = orderTotalForValidation >= (coupon.minOrderAmount || 0);
+          // Check minimum order amount (should be on subtotal + tax, not just subtotal)
+          const orderTotalForValidation = subtotal + totalTax;
+          const minOrderMet = orderTotalForValidation >= (coupon.minOrderAmount || 0);
 
-            if (isActive && isValidDate && !usageLimitReached && minOrderMet) {
-              // Calculate discount on total (subtotal + tax)
-              const totalBeforeDiscount = total;
-              if (coupon.discountType === 'percentage') {
-                // discountValue is stored as percentage * 100 (e.g., 10% = 1000)
-                discountAmount = Math.round((total * coupon.discountValue) / 10000);
-                if (coupon.maxDiscountAmount && discountAmount > coupon.maxDiscountAmount) {
-                  discountAmount = coupon.maxDiscountAmount;
-                }
-              } else {
-                // Fixed discount - already in paise
-                discountAmount = coupon.discountValue;
-              }
-
-              // Don't exceed order total
-              if (discountAmount > total) {
-                discountAmount = total;
-              }
-
-              total = Math.max(0, total - discountAmount);
-              couponId = coupon.id;
-
-
-              // Increment used count safely
-              try {
-                // First, check if usedCount field exists in the coupon schema
-                let usedCountFieldExists = true;
-                try {
-                  const couponCollection = await pb.collections.getOne('coupon');
-                  usedCountFieldExists = couponCollection.schema.some((field: any) => field.name === 'usedCount');
-                } catch (schemaError: any) {
-                  // Assume field exists if we can't check
-                }
-
-                if (!usedCountFieldExists) {
-                  console.error('❌ CRITICAL: usedCount field does not exist in coupon collection!');
-                  console.error('[Order Create] Cannot update coupon usage count - field missing from schema');
-                  couponDebug = { 
-                    error: 'usedCount field does not exist in coupon collection',
-                    action: 'Please add usedCount field to coupon collection schema',
-                  };
-                } else {
-                  const currentCount = Number(coupon.usedCount) || 0;
-                  const newCount = currentCount + 1;
-
-                  const updatedCoupon = await pb.collection('coupon').update(coupon.id, {
-                    usedCount: newCount,
-                  });
-
-                  // Verify the update succeeded
-                  const savedCount = Number(updatedCoupon.usedCount) || 0;
-                  
-                  // Verify by fetching the coupon again
-                  try {
-                    const verifiedCoupon = await pb.collection('coupon').getOne(coupon.id);
-                    const dbCount = Number(verifiedCoupon.usedCount) || 0;
-                    
-                    if (dbCount !== newCount) {
-                      console.error('❌ Coupon usedCount was not saved to database', {
-                        couponId: coupon.id,
-                        expected: newCount,
-                        dbValue: dbCount,
-                      });
-                      couponDebug = {
-                        error: 'usedCount not saved to database',
-                        expected: newCount,
-                        dbValue: dbCount,
-                      };
-                    }
-                  } catch (verifyError: any) {
-                    // Only log if update response doesn't match
-                    if (savedCount !== newCount) {
-                      console.error('⚠️ Coupon usedCount update may have failed', {
-                        couponId: coupon.id,
-                        expected: newCount,
-                        saved: savedCount,
-                      });
-                    }
-                  }
-                }
-              } catch (updateError: any) {
-                console.error('Failed to update coupon usage count:', updateError.message);
-                // Don't fail the order if usage count update fails
-                couponDebug = { 
-                  error: 'Failed to update usage count', 
-                  details: updateError.message,
-                };
+          if (isActive && isValidDate && !usageLimitReached && minOrderMet) {
+            // Calculate discount on total (subtotal + tax)
+            const totalBeforeDiscount = total;
+            if (coupon.discountType === 'percentage') {
+              // discountValue is stored as percentage * 100 (e.g., 10% = 1000)
+              discountAmount = Math.round((total * coupon.discountValue) / 10000);
+              if (coupon.maxDiscountAmount && discountAmount > coupon.maxDiscountAmount) {
+                discountAmount = coupon.maxDiscountAmount;
               }
             } else {
-              console.warn('[Order Create] Coupon validation failed:', coupon.code);
-              couponDebug = {
-                validationFailed: true,
-                reasons: { 
-                  isActive, 
-                  isValidDate, 
-                  usageLimitReached, 
-                  minOrderMet,
+              // Fixed discount - already in paise
+              discountAmount = coupon.discountValue;
+            }
+
+            // Don't exceed order total
+            if (discountAmount > total) {
+              discountAmount = total;
+            }
+
+            total = Math.max(0, total - discountAmount);
+            couponId = coupon.id;
+
+
+            // Increment used count safely
+            try {
+              // First, check if usedCount field exists in the coupon schema
+              let usedCountFieldExists = true;
+              try {
+                const couponCollection = await pb.collections.getOne('coupon');
+                usedCountFieldExists = couponCollection.schema.some((field: any) => field.name === 'usedCount');
+              } catch (schemaError: any) {
+                // Assume field exists if we can't check
+              }
+
+              if (!usedCountFieldExists) {
+                console.error('❌ CRITICAL: usedCount field does not exist in coupon collection!');
+                console.error('[Order Create] Cannot update coupon usage count - field missing from schema');
+                couponDebug = {
+                  error: 'usedCount field does not exist in coupon collection',
+                  action: 'Please add usedCount field to coupon collection schema',
+                };
+              } else {
+                const currentCount = Number(coupon.usedCount) || 0;
+                const newCount = currentCount + 1;
+
+                const updatedCoupon = await pb.collection('coupon').update(coupon.id, {
+                  usedCount: newCount,
+                });
+
+                // Verify the update succeeded
+                const savedCount = Number(updatedCoupon.usedCount) || 0;
+
+                // Verify by fetching the coupon again
+                try {
+                  const verifiedCoupon = await pb.collection('coupon').getOne(coupon.id);
+                  const dbCount = Number(verifiedCoupon.usedCount) || 0;
+
+                  if (dbCount !== newCount) {
+                    console.error('❌ Coupon usedCount was not saved to database', {
+                      couponId: coupon.id,
+                      expected: newCount,
+                      dbValue: dbCount,
+                    });
+                    couponDebug = {
+                      error: 'usedCount not saved to database',
+                      expected: newCount,
+                      dbValue: dbCount,
+                    };
+                  }
+                } catch (verifyError: any) {
+                  // Only log if update response doesn't match
+                  if (savedCount !== newCount) {
+                    console.error('⚠️ Coupon usedCount update may have failed', {
+                      couponId: coupon.id,
+                      expected: newCount,
+                      saved: savedCount,
+                    });
+                  }
                 }
+              }
+            } catch (updateError: any) {
+              console.error('Failed to update coupon usage count:', updateError.message);
+              // Don't fail the order if usage count update fails
+              couponDebug = {
+                error: 'Failed to update usage count',
+                details: updateError.message,
               };
             }
           } else {
-            console.error('[Order Create] Coupon not found:', couponCodeUpper);
-            couponDebug = { 
-              notFound: true, 
-              code: couponCodeUpper,
-              tenantId,
-              message: `Coupon "${couponCodeUpper}" not found for tenant ${tenantId}`,
+            console.warn('[Order Create] Coupon validation failed:', coupon.code);
+            couponDebug = {
+              validationFailed: true,
+              reasons: {
+                isActive,
+                isValidDate,
+                usageLimitReached,
+                minOrderMet,
+              }
             };
           }
+        } else {
+          console.error('[Order Create] Coupon not found:', couponCodeUpper);
+          couponDebug = {
+            notFound: true,
+            code: couponCodeUpper,
+            tenantId,
+            message: `Coupon "${couponCodeUpper}" not found for tenant ${tenantId}`,
+          };
+        }
       } catch (couponError: any) {
         console.error('[Order Create] Error applying coupon:', couponError.message);
-        couponDebug = { 
+        couponDebug = {
           error: couponError.message,
           code: couponCode,
         };
@@ -382,7 +382,7 @@ export async function POST(request: NextRequest) {
       // Fallback to cookie
       const tableContextCookie = cookies.get('tableContext')?.value;
       console.log('[Order Create] Table context cookie:', tableContextCookie ? 'Found' : 'Not found');
-      
+
       if (tableContextCookie) {
         try {
           tableContext = JSON.parse(decodeURIComponent(tableContextCookie));
@@ -392,11 +392,11 @@ export async function POST(request: NextRequest) {
         }
       }
     }
-    
+
     if (tableContext && tableContext.tableId && tableContext.tableName) {
       // Verify table belongs to current tenant and location
-      const tableTenantId = Array.isArray(tableContext.tenantId) 
-        ? tableContext.tenantId[0] 
+      const tableTenantId = Array.isArray(tableContext.tenantId)
+        ? tableContext.tenantId[0]
         : tableContext.tenantId;
       const tableLocationId = Array.isArray(tableContext.locationId)
         ? tableContext.locationId[0]
@@ -436,6 +436,7 @@ export async function POST(request: NextRequest) {
       timestamps: {
         placedAt: new Date().toISOString(),
       },
+      comment: comment || null,
     };
 
     // Set couponId - only include if it exists (PocketBase relation fields)
@@ -457,7 +458,7 @@ export async function POST(request: NextRequest) {
       orderData.tableLabel = tableLabel;
       console.log('[Order Create] ✅ Added tableLabel to order:', tableLabel);
     }
-    
+
     console.log('[Order Create] Final order data:', {
       channel: orderData.channel,
       tableId: orderData.tableId || 'none',
@@ -487,7 +488,7 @@ export async function POST(request: NextRequest) {
     // CRITICAL: Final verification and setting of discountAmount and couponId
     // Do this AFTER all other modifications to ensure values are correct
     orderData.discountAmount = Math.round(finalDiscountAmount);
-    
+
     // Always set couponId explicitly - use null if no coupon (PocketBase relation fields)
     if (finalCouponId) {
       orderData.couponId = String(finalCouponId);
@@ -495,7 +496,7 @@ export async function POST(request: NextRequest) {
       // Explicitly set to null to prevent PocketBase from defaulting to empty array
       orderData.couponId = null;
     }
-    
+
 
 
 
@@ -514,7 +515,7 @@ export async function POST(request: NextRequest) {
         exists: discountAmountFieldExists,
         fieldNames: ordersCollection.schema.map((f: any) => f.name),
       });
-      
+
       if (!discountAmountFieldExists) {
         console.warn('[Order Create] ⚠️  WARNING: discountAmount field does not exist in orders collection!');
         console.warn('[Order Create] Run: node pocketbase/scripts/add-coupon-fields-to-orders.js');
@@ -525,218 +526,330 @@ export async function POST(request: NextRequest) {
       console.warn('[Order Create] Could not check schema, assuming discountAmount exists:', schemaError.message);
     }
 
-    let order;
-    try {
-      order = await pb.collection('orders').create(orderData);
-
-      // Verify what was actually saved
-      const savedDiscount = order.discountAmount || 0;
-      const savedCoupon = Array.isArray(order.couponId) ? order.couponId[0] : order.couponId;
-
-
-      // Warn if discount wasn't saved correctly
-      if (finalDiscountAmount > 0) {
-        if (!discountAmountFieldExists) {
-          console.error('❌ CRITICAL: Discount amount field does not exist in database!', {
-            expected: finalDiscountAmount,
-            saved: savedDiscount,
-            couponCode: couponCode || 'NONE',
-            action: 'Run: node pocketbase/scripts/add-coupon-fields-to-orders.js',
-          });
-        } else if (savedDiscount !== finalDiscountAmount) {
-          console.error('⚠️  WARNING: Discount amount was not saved correctly!', {
-            expected: finalDiscountAmount,
-            saved: savedDiscount,
-            difference: finalDiscountAmount - savedDiscount,
-            couponCode: couponCode || 'NONE',
-          });
-        }
-      }
-
-      if (finalCouponId && savedCoupon !== finalCouponId) {
-        console.error('⚠️  WARNING: Coupon ID was not saved correctly!', {
-          expected: finalCouponId,
-          saved: savedCoupon,
-          couponCode: couponCode || 'NONE',
+    // Check for existing active order for this table
+    let existingOrder = null;
+    if (tableId) {
+      try {
+        const activeOrders = await pb.collection('orders').getList(1, 1, {
+          filter: `tableId = "${tableId}" && (status = "placed" || status = "accepted" || status = "in_kitchen" || status = "ready" || status = "served")`,
+          sort: '-created',
         });
-      }
 
-      // FORCE UPDATE: If values were not saved correctly, try to update them explicitly
-      const needsUpdate = (finalDiscountAmount > 0 && savedDiscount !== finalDiscountAmount) ||
-        (finalCouponId && savedCoupon !== finalCouponId) ||
-        (Array.isArray(order.couponId) && order.couponId.length === 0 && finalCouponId);
-      
-      if (needsUpdate) {
-        
-        try {
-          const updateData: any = {
-            discountAmount: finalDiscountAmount, // Always update discountAmount
-          };
-          
-          // Only set couponId if we have one, otherwise explicitly set to null
-          if (finalCouponId) {
-            updateData.couponId = finalCouponId;
-          } else {
-            // Explicitly set to null to clear empty array
-            updateData.couponId = null;
-          }
-
-          await pb.collection('orders').update(order.id, updateData);
-          // Re-fetch the order to get updated values
-          const updatedOrder = await pb.collection('orders').getOne(order.id);
-          order.discountAmount = updatedOrder.discountAmount || 0;
-          order.couponId = Array.isArray(updatedOrder.couponId) 
-            ? (updatedOrder.couponId.length > 0 ? updatedOrder.couponId[0] : null)
-            : (updatedOrder.couponId || null);
-        } catch (updateError: any) {
-          console.error('[Order Create] ❌ Force update failed:', {
-            error: updateError.message,
-            status: updateError.status,
-            data: updateError.response?.data,
-          });
+        if (activeOrders.items.length > 0) {
+          existingOrder = activeOrders.items[0];
+          console.log('[Order Create] Found existing active order for table:', existingOrder.id);
         }
+      } catch (e) {
+        console.warn('[Order Create] Error checking for existing order:', e);
       }
-    } catch (error: any) {
-      // PocketBase ClientResponseError structure:
-      // error.response.data.data = { fieldName: { code: "...", message: "..." } }
-      // error.response.data.message = "Something went wrong..."
-      // error.status = 400
-
-      console.error('PocketBase error caught:', {
-        errorType: error.constructor?.name,
-        errorKeys: Object.keys(error),
-        message: error.message,
-        status: error.status,
-        code: error.code,
-        response: error.response,
-        data: error.data,
-        responseData: error.response?.data,
-        responseDataData: error.response?.data?.data,
-        fullError: error,
-      });
-
-      // Try to extract validation errors from various possible locations
-      let errorData: any = {};
-      if (error.response?.data?.data) {
-        errorData = error.response.data.data;
-      } else if (error.data?.data) {
-        errorData = error.data.data;
-      } else if (error.data) {
-        errorData = error.data;
-      }
-
-      console.error('Extracted errorData:', JSON.stringify(errorData, null, 2));
-      console.error('Order data being sent:', JSON.stringify(orderData, null, 2));
-
-      // Extract validation errors
-      let errorMessages: string[] = [];
-      if (errorData && typeof errorData === 'object') {
-        Object.entries(errorData).forEach(([field, err]: [string, any]) => {
-          if (err) {
-            if (typeof err === 'object') {
-              if (err.message) {
-                errorMessages.push(`${field}: ${err.message}`);
-              } else if (err.code) {
-                errorMessages.push(`${field}: ${err.code}`);
-              } else {
-                errorMessages.push(`${field}: ${JSON.stringify(err)}`);
-              }
-            } else {
-              errorMessages.push(`${field}: ${err}`);
-            }
-          }
-        });
-      }
-
-      const errorMsg = errorMessages.length > 0
-        ? `Validation failed: ${errorMessages.join('; ')}`
-        : (error.response?.data?.message || error.message || 'Order creation failed');
-
-      console.error('[Order Create] Full error details:', {
-        errorMsg,
-        errorMessages,
-        orderData: JSON.stringify(orderData, null, 2),
-        errorResponse: error.response?.data,
-        errorStatus: error.status,
-        tenantId: orderData.tenantId,
-        locationId: orderData.locationId,
-        hasRequiredFields: {
-          tenantId: !!orderData.tenantId,
-          locationId: !!orderData.locationId,
-          channel: !!orderData.channel,
-          status: !!orderData.status,
-          subtotal: orderData.subtotal !== undefined,
-          taxIgst: orderData.taxIgst !== undefined,
-          total: orderData.total !== undefined,
-        },
-      });
-
-      // Re-throw with better error message
-      const enhancedError = new Error(errorMsg);
-      (enhancedError as any).status = error.status || 400;
-      (enhancedError as any).originalError = error;
-      throw enhancedError;
     }
 
-    // Create order items
+    let order;
 
-    const createdItems = [];
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      try {
+    if (existingOrder) {
+      // APPEND TO EXISTING ORDER
+      order = existingOrder;
 
-        const menuItem = await pb.collection('menuItem').getOne(item.menuItemId);
-        let unitPrice = Number(menuItem.basePrice) || 0;
+      // Create new order items linked to existing order
+      const createdItems = [];
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        try {
+          const menuItem = await pb.collection('menuItem').getOne(item.menuItemId);
+          let unitPrice = Number(menuItem.basePrice) || 0;
 
-        // Add option prices
-        if (item.options && Array.isArray(item.options)) {
-          for (const option of item.options) {
-            if (option.valueIds && Array.isArray(option.valueIds)) {
-              for (const valueId of option.valueIds) {
-                try {
-                  const optionValue = await pb.collection('optionValue').getOne(valueId);
-                  unitPrice += Number(optionValue.priceDelta) || 0;
-                } catch (error) {
-                  console.warn(`Option value ${valueId} not found, skipping`);
+          // Add option prices
+          if (item.options && Array.isArray(item.options)) {
+            for (const option of item.options) {
+              if (option.valueIds && Array.isArray(option.valueIds)) {
+                for (const valueId of option.valueIds) {
+                  try {
+                    const optionValue = await pb.collection('optionValue').getOne(valueId);
+                    unitPrice += Number(optionValue.priceDelta) || 0;
+                  } catch (error) {
+                    console.warn(`Option value ${valueId} not found, skipping`);
+                  }
                 }
               }
             }
           }
+
+          const orderItemData = {
+            orderId: order.id,
+            menuItemId: item.menuItemId,
+            nameSnapshot: menuItem.name,
+            qty: Number(item.quantity) || 1,
+            unitPrice: Math.round(unitPrice),
+            optionsSnapshot: item.options || [],
+          };
+
+          const createdItem = await pb.collection('orderItem').create(orderItemData);
+          createdItems.push(createdItem.id);
+        } catch (itemError: any) {
+          console.error(`❌ Error creating order item ${i + 1}:`, {
+            menuItemId: item.menuItemId,
+            error: itemError.message,
+          });
+        }
+      }
+
+      // Update order totals
+      const currentSubtotal = Number(order.subtotal) || 0;
+      const currentTaxCgst = Number(order.taxCgst) || 0;
+      const currentTaxSgst = Number(order.taxSgst) || 0;
+      const currentTaxIgst = Number(order.taxIgst) || 0;
+      const currentTotal = Number(order.total) || 0;
+
+      // Calculate new totals
+      const newSubtotal = currentSubtotal + finalSubtotal;
+      const newTaxCgst = currentTaxCgst + finalTaxCgst;
+      const newTaxSgst = currentTaxSgst + finalTaxSgst;
+      const newTaxIgst = currentTaxIgst + finalTaxIgst;
+
+      // For total, we need to be careful about discounts
+      // If there was a discount, it was applied to the previous total
+      // We should probably re-calculate discount if it's percentage based, but that's complex
+      // For now, let's just add the new total (which has no discount applied yet) to the existing total
+      // NOTE: This means the coupon only applies to the FIRST batch of items, which is a reasonable limitation for now
+      // OR we could try to re-apply the coupon logic, but that requires fetching the coupon again
+
+      const newTotal = currentTotal + finalTotal;
+
+      await pb.collection('orders').update(order.id, {
+        subtotal: newSubtotal,
+        taxCgst: newTaxCgst,
+        taxSgst: newTaxSgst,
+        taxIgst: newTaxIgst,
+        total: newTotal,
+        updated: new Date().toISOString(),
+      });
+
+      // Refresh order object
+      order = await pb.collection('orders').getOne(order.id);
+
+    } else {
+      // CREATE NEW ORDER
+      try {
+        order = await pb.collection('orders').create(orderData);
+
+        // Verify what was actually saved
+        const savedDiscount = order.discountAmount || 0;
+        const savedCoupon = Array.isArray(order.couponId) ? order.couponId[0] : order.couponId;
+
+        // Warn if discount wasn't saved correctly
+        if (finalDiscountAmount > 0) {
+          if (!discountAmountFieldExists) {
+            console.error('❌ CRITICAL: Discount amount field does not exist in database!', {
+              expected: finalDiscountAmount,
+              saved: savedDiscount,
+              couponCode: couponCode || 'NONE',
+              action: 'Run: node pocketbase/scripts/add-coupon-fields-to-orders.js',
+            });
+          } else if (savedDiscount !== finalDiscountAmount) {
+            console.error('⚠️  WARNING: Discount amount was not saved correctly!', {
+              expected: finalDiscountAmount,
+              saved: savedDiscount,
+              difference: finalDiscountAmount - savedDiscount,
+              couponCode: couponCode || 'NONE',
+            });
+          }
         }
 
-        const orderItemData = {
-          orderId: order.id,
-          menuItemId: item.menuItemId,
-          nameSnapshot: menuItem.name,
-          qty: Number(item.quantity) || 1,
-          unitPrice: Math.round(unitPrice),
-          optionsSnapshot: item.options || [],
-        };
+        if (finalCouponId && savedCoupon !== finalCouponId) {
+          console.error('⚠️  WARNING: Coupon ID was not saved correctly!', {
+            expected: finalCouponId,
+            saved: savedCoupon,
+            couponCode: couponCode || 'NONE',
+          });
+        }
 
-        const createdItem = await pb.collection('orderItem').create(orderItemData);
-        createdItems.push(createdItem.id);
-      } catch (itemError: any) {
-        console.error(`❌ Error creating order item ${i + 1}:`, {
-          menuItemId: item.menuItemId,
-          error: itemError.message,
-          status: itemError.status,
-          response: itemError.response?.data,
+        // FORCE UPDATE: If values were not saved correctly, try to update them explicitly
+        const needsUpdate = (finalDiscountAmount > 0 && savedDiscount !== finalDiscountAmount) ||
+          (finalCouponId && savedCoupon !== finalCouponId) ||
+          (Array.isArray(order.couponId) && order.couponId.length === 0 && finalCouponId);
+
+        if (needsUpdate) {
+          try {
+            const updateData: any = {
+              discountAmount: finalDiscountAmount, // Always update discountAmount
+            };
+
+            // Only set couponId if we have one, otherwise explicitly set to null
+            if (finalCouponId) {
+              updateData.couponId = finalCouponId;
+            } else {
+              // Explicitly set to null to clear empty array
+              updateData.couponId = null;
+            }
+
+            await pb.collection('orders').update(order.id, updateData);
+            // Re-fetch the order to get updated values
+            const updatedOrder = await pb.collection('orders').getOne(order.id);
+            order.discountAmount = updatedOrder.discountAmount || 0;
+            order.couponId = Array.isArray(updatedOrder.couponId)
+              ? (updatedOrder.couponId.length > 0 ? updatedOrder.couponId[0] : null)
+              : (updatedOrder.couponId || null);
+          } catch (updateError: any) {
+            console.error('[Order Create] ❌ Force update failed:', {
+              error: updateError.message,
+              status: updateError.status,
+              data: updateError.response?.data,
+            });
+          }
+        }
+
+        // Update table status to 'seated' if tableId is present
+        if (tableId) {
+          try {
+            await pb.collection('tables').update(tableId, {
+              status: 'seated'
+            });
+            console.log(`[Order Create] ✅ Table ${tableId} marked as seated`);
+          } catch (tableError: any) {
+            console.error(`[Order Create] ❌ Failed to update table status to seated:`, tableError.message);
+            // Don't fail the order if table update fails
+          }
+        }
+      } catch (error: any) {
+        // PocketBase ClientResponseError structure:
+        // error.response.data.data = { fieldName: { code: "...", message: "..." } }
+        // error.response.data.message = "Something went wrong..."
+        // error.status = 400
+
+        console.error('PocketBase error caught:', {
+          errorType: error.constructor?.name,
+          errorKeys: Object.keys(error),
+          message: error.message,
+          status: error.status,
+          code: error.code,
+          response: error.response,
+          data: error.data,
+          responseData: error.response?.data,
+          responseDataData: error.response?.data?.data,
+          fullError: error,
         });
-        // Continue with other items even if one fails
+
+        // Try to extract validation errors from various possible locations
+        let errorData: any = {};
+        if (error.response?.data?.data) {
+          errorData = error.response.data.data;
+        } else if (error.data?.data) {
+          errorData = error.data.data;
+        } else if (error.data) {
+          errorData = error.data;
+        }
+
+        console.error('Extracted errorData:', JSON.stringify(errorData, null, 2));
+        console.error('Order data being sent:', JSON.stringify(orderData, null, 2));
+
+        // Extract validation errors
+        let errorMessages: string[] = [];
+        if (errorData && typeof errorData === 'object') {
+          Object.entries(errorData).forEach(([field, err]: [string, any]) => {
+            if (err) {
+              if (typeof err === 'object') {
+                if (err.message) {
+                  errorMessages.push(`${field}: ${err.message}`);
+                } else if (err.code) {
+                  errorMessages.push(`${field}: ${err.code}`);
+                } else {
+                  errorMessages.push(`${field}: ${JSON.stringify(err)}`);
+                }
+              } else {
+                errorMessages.push(`${field}: ${err}`);
+              }
+            }
+          });
+        }
+
+        const errorMsg = errorMessages.length > 0
+          ? `Validation failed: ${errorMessages.join('; ')}`
+          : (error.response?.data?.message || error.message || 'Order creation failed');
+
+        console.error('[Order Create] Full error details:', {
+          errorMsg,
+          errorMessages,
+          orderData: JSON.stringify(orderData, null, 2),
+          errorResponse: error.response?.data,
+          errorStatus: error.status,
+          tenantId: orderData.tenantId,
+          locationId: orderData.locationId,
+          hasRequiredFields: {
+            tenantId: !!orderData.tenantId,
+            locationId: !!orderData.locationId,
+            channel: !!orderData.channel,
+            status: !!orderData.status,
+            subtotal: orderData.subtotal !== undefined,
+            taxIgst: orderData.taxIgst !== undefined,
+            total: orderData.total !== undefined,
+          },
+        });
+
+        // Re-throw with better error message
+        const enhancedError = new Error(errorMsg);
+        (enhancedError as any).status = error.status || 400;
+        (enhancedError as any).originalError = error;
+        throw enhancedError;
       }
-    }
 
+      // Create order items
+      const createdItems = [];
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        try {
 
-    if (createdItems.length === 0 && items.length > 0) {
-      console.error('⚠️  WARNING: No order items were created!');
+          const menuItem = await pb.collection('menuItem').getOne(item.menuItemId);
+          let unitPrice = Number(menuItem.basePrice) || 0;
+
+          // Add option prices
+          if (item.options && Array.isArray(item.options)) {
+            for (const option of item.options) {
+              if (option.valueIds && Array.isArray(option.valueIds)) {
+                for (const valueId of option.valueIds) {
+                  try {
+                    const optionValue = await pb.collection('optionValue').getOne(valueId);
+                    unitPrice += Number(optionValue.priceDelta) || 0;
+                  } catch (error) {
+                    console.warn(`Option value ${valueId} not found, skipping`);
+                  }
+                }
+              }
+            }
+          }
+
+          const orderItemData = {
+            orderId: order.id,
+            menuItemId: item.menuItemId,
+            nameSnapshot: menuItem.name,
+            qty: Number(item.quantity) || 1,
+            unitPrice: Math.round(unitPrice),
+            optionsSnapshot: item.options || [],
+          };
+
+          const createdItem = await pb.collection('orderItem').create(orderItemData);
+          createdItems.push(createdItem.id);
+        } catch (itemError: any) {
+          console.error(`❌ Error creating order item ${i + 1}:`, {
+            menuItemId: item.menuItemId,
+            error: itemError.message,
+            status: itemError.status,
+            response: itemError.response?.data,
+          });
+          // Continue with other items even if one fails
+        }
+      }
+
+      if (createdItems.length === 0 && items.length > 0) {
+        console.error('⚠️  WARNING: No order items were created!');
+      }
     }
 
     // Get final saved values from order
     const finalSavedDiscount = order.discountAmount || 0;
-    const finalSavedCoupon = Array.isArray(order.couponId) 
+    const finalSavedCoupon = Array.isArray(order.couponId)
       ? (order.couponId.length > 0 ? order.couponId[0] : null)
       : (order.couponId || null);
-    
+
     return NextResponse.json({
       orderId: order.id,
       total: order.total,
@@ -753,7 +866,7 @@ export async function POST(request: NextRequest) {
       if (obj === null || obj === undefined) return null;
       if (typeof obj !== 'object') return obj;
       if (obj instanceof Error) return { message: obj.message, name: obj.name };
-      
+
       try {
         // Try to serialize, but catch circular references
         const seen = new WeakSet();
@@ -764,7 +877,7 @@ export async function POST(request: NextRequest) {
           if (val instanceof Error) return { message: val.message, name: val.name };
           if (val instanceof Date) return val.toISOString();
           if (Array.isArray(val)) return val.map(serialize);
-          
+
           seen.add(val);
           const result: any = {};
           for (const key in val) {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import LogoutButton from './LogoutButton';
 import { isMasterUser, type User } from '../lib/user-utils';
 
@@ -14,6 +14,7 @@ interface Tenant {
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
   const [showTenantSelector, setShowTenantSelector] = useState(false);
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -208,91 +209,229 @@ export default function Navbar() {
     }
   };
 
+  const isActive = (path: string) => pathname === path;
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-accent-blue to-accent-purple shadow-lg">
-      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-        <div className="flex justify-between items-center gap-4">
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex gap-1 xl:gap-2 2xl:gap-3 items-center flex-1 min-w-0">
-            <Link href="/dashboard" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
-              Dashboard
-            </Link>
-            <Link href="/menu" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
-              Menu
-            </Link>
-            <Link href="/orders" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
-              Orders
-            </Link>
-            <Link href="/kds" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
-              KDS
-            </Link>
-            <Link href="/reservations" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
-              Reservations
-            </Link>
-            <Link href="/floorplan" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
-              Floor Plan
-            </Link>
-            <Link href="/locations" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
-              Locations
-            </Link>
-            <Link href="/coupons" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
-              Coupons
-            </Link>
-            <Link href="/users" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
-              Users
-            </Link>
-            {userLoaded && user && user.isMaster === true && (
-              <Link href="/tenants" className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 xl:px-4 py-2 rounded-lg hover:bg-white/20 text-sm xl:text-base whitespace-nowrap">
-                Tenants
-              </Link>
-            )}
+    <>
+      {/* Mobile Menu Button - Fixed Top */}
+      <button
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 bg-gradient-to-r from-accent-blue to-accent-purple text-white p-3 rounded-lg shadow-lg hover:bg-opacity-90 transition-all duration-200"
+        aria-label="Toggle menu"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {mobileMenuOpen ? (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          ) : (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          )}
+        </svg>
+      </button>
+
+      {/* Sidebar */}
+      <aside className={`fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-accent-blue to-accent-purple shadow-xl z-40 transition-transform duration-300 ease-in-out ${
+        mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      }`}>
+        <div className="flex flex-col h-full">
+          {/* Logo Section */}
+          <div className="p-6 border-b border-white/20">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">🍽️</span>
+              </div>
+              <div>
+                <h1 className="text-white font-bold text-lg">Restaurant</h1>
+                <p className="text-white/80 text-xs">Manager</p>
+              </div>
+            </div>
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden text-white p-2 rounded-lg hover:bg-white/20 transition-colors"
-            aria-label="Toggle menu"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {mobileMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
+          {/* Navigation Links */}
+          <nav className="flex-1 overflow-y-auto py-4 px-3">
+            <div className="space-y-1">
+              <Link 
+                href="/dashboard" 
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
+                  isActive('/dashboard')
+                    ? 'bg-white/20 text-white shadow-md'
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span>Dashboard</span>
+              </Link>
 
-          <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
-            {/* Show tenant selector based on user role and tenant availability */}
+              <Link 
+                href="/menu" 
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
+                  isActive('/menu')
+                    ? 'bg-white/20 text-white shadow-md'
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Menu</span>
+              </Link>
+
+              <Link 
+                href="/orders" 
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
+                  isActive('/orders')
+                    ? 'bg-white/20 text-white shadow-md'
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                <span>Orders</span>
+              </Link>
+
+              <Link 
+                href="/kds" 
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
+                  isActive('/kds')
+                    ? 'bg-white/20 text-white shadow-md'
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                </svg>
+                <span>KDS</span>
+              </Link>
+
+              <Link 
+                href="/reservations" 
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
+                  isActive('/reservations')
+                    ? 'bg-white/20 text-white shadow-md'
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>Reservations</span>
+              </Link>
+
+              <Link 
+                href="/floorplan" 
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
+                  isActive('/floorplan')
+                    ? 'bg-white/20 text-white shadow-md'
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
+                </svg>
+                <span>Floor Plan</span>
+              </Link>
+
+              <Link 
+                href="/locations" 
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
+                  isActive('/locations')
+                    ? 'bg-white/20 text-white shadow-md'
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>Locations</span>
+              </Link>
+
+              <Link 
+                href="/coupons" 
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
+                  isActive('/coupons')
+                    ? 'bg-white/20 text-white shadow-md'
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Coupons</span>
+              </Link>
+
+              <Link 
+                href="/users" 
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
+                  isActive('/users')
+                    ? 'bg-white/20 text-white shadow-md'
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <span>Users</span>
+              </Link>
+
+              {userLoaded && user && user.isMaster === true && (
+                <Link 
+                  href="/tenants" 
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
+                    isActive('/tenants')
+                      ? 'bg-white/20 text-white shadow-md'
+                      : 'text-white/80 hover:bg-white/10 hover:text-white'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                  <span>Tenants</span>
+                </Link>
+              )}
+            </div>
+          </nav>
+
+          {/* Bottom Section - Tenant Selector & Logout */}
+          <div className="p-4 border-t border-white/20 space-y-3">
+            {/* Tenant Selector */}
             {(() => {
-              // Check if user is master - only isMaster flag, not admin role
               const isMaster = isMasterUser(user);
               
-              // For master users: always show selector (even if tenants are still loading)
               if (isMaster) {
                 return (
                   <div className="relative">
                     <button
                       onClick={() => setShowTenantSelector(!showTenantSelector)}
-                      className="px-2 sm:px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 font-medium text-xs sm:text-sm backdrop-blur-sm transition-all duration-200 truncate max-w-[120px] sm:max-w-none"
+                      className="w-full px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 font-medium text-sm backdrop-blur-sm transition-all duration-200 text-left flex items-center justify-between"
                     >
-                      {currentTenant 
-                        ? <span className="hidden sm:inline">{currentTenant.name} ▼</span>
-                        : tenants.length > 0 
-                          ? <span className="hidden sm:inline">Select Restaurant ({tenants.length}) ▼</span>
-                          : <span className="hidden sm:inline">Select Restaurant ▼</span>}
-                      <span className="sm:hidden">Restaurant ▼</span>
+                      <span className="truncate">
+                        {currentTenant ? currentTenant.name : tenants.length > 0 ? `Select Restaurant (${tenants.length})` : 'Select Restaurant'}
+                      </span>
+                      <span>▼</span>
                     </button>
                     {showTenantSelector && tenants.length > 0 && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                      <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-48 overflow-y-auto">
                         <div className="py-2">
                           {tenants.map((tenant) => (
                             <button
                               key={tenant.id}
                               onClick={() => handleSwitchTenant(tenant.id)}
-                              className={`w-full text-left px-4 py-2 hover:bg-accent-purple/20 transition-colors duration-200 ${tenant.id === currentTenant?.id ? 'bg-accent-blue/20 text-accent-blue font-medium' : 'text-gray-700'
-                                }`}
+                              className={`w-full text-left px-4 py-2 hover:bg-accent-purple/20 transition-colors duration-200 ${
+                                tenant.id === currentTenant?.id ? 'bg-accent-blue/20 text-accent-blue font-medium' : 'text-gray-700'
+                              }`}
                             >
                               {tenant.name}
                             </button>
@@ -300,37 +439,30 @@ export default function Navbar() {
                         </div>
                       </div>
                     )}
-                    {showTenantSelector && tenants.length === 0 && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                        <div className="py-2 px-4 text-sm text-gray-500">
-                          Loading restaurants...
-                        </div>
-                      </div>
-                    )}
                   </div>
                 );
               }
               
-              // For non-master users: show selector only if they have multiple tenants
               if (!isMaster && tenants.length > 1 && currentTenant) {
                 return (
                   <div className="relative">
                     <button
                       onClick={() => setShowTenantSelector(!showTenantSelector)}
-                      className="px-2 sm:px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 font-medium text-xs sm:text-sm backdrop-blur-sm transition-all duration-200 truncate max-w-[120px] sm:max-w-none"
+                      className="w-full px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 font-medium text-sm backdrop-blur-sm transition-all duration-200 text-left flex items-center justify-between"
                     >
-                      <span className="hidden sm:inline">{currentTenant.name} ▼</span>
-                      <span className="sm:hidden">Restaurant ▼</span>
+                      <span className="truncate">{currentTenant.name}</span>
+                      <span>▼</span>
                     </button>
                     {showTenantSelector && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                      <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-48 overflow-y-auto">
                         <div className="py-2">
                           {tenants.map((tenant) => (
                             <button
                               key={tenant.id}
                               onClick={() => handleSwitchTenant(tenant.id)}
-                              className={`w-full text-left px-4 py-2 hover:bg-accent-purple/20 transition-colors duration-200 ${tenant.id === currentTenant?.id ? 'bg-accent-blue/20 text-accent-blue font-medium' : 'text-gray-700'
-                                }`}
+                              className={`w-full text-left px-4 py-2 hover:bg-accent-purple/20 transition-colors duration-200 ${
+                                tenant.id === currentTenant?.id ? 'bg-accent-blue/20 text-accent-blue font-medium' : 'text-gray-700'
+                              }`}
                             >
                               {tenant.name}
                             </button>
@@ -342,63 +474,32 @@ export default function Navbar() {
                 );
               }
               
-              // Show static badge if user has only one tenant
               if (currentTenant) {
                 return (
-                  <div className="px-2 sm:px-4 py-2 bg-white/20 text-white rounded-lg font-medium text-xs sm:text-sm backdrop-blur-sm truncate max-w-[120px] sm:max-w-none">
-                    <span className="hidden sm:inline">{currentTenant.name}</span>
-                    <span className="sm:hidden">Restaurant</span>
+                  <div className="w-full px-4 py-2 bg-white/20 text-white rounded-lg font-medium text-sm backdrop-blur-sm truncate">
+                    {currentTenant.name}
                   </div>
                 );
               }
               
               return null;
             })()}
-            <LogoutButton />
-          </div>
-        </div>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden mt-4 pb-4 border-t border-white/20">
-            <div className="flex flex-col gap-1 pt-4">
-              <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
-                Dashboard
-              </Link>
-              <Link href="/menu" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
-                Menu
-              </Link>
-              <Link href="/orders" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
-                Orders
-              </Link>
-              <Link href="/kds" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
-                KDS
-              </Link>
-              <Link href="/reservations" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
-                Reservations
-              </Link>
-              <Link href="/floorplan" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
-                Floor Plan
-              </Link>
-              <Link href="/locations" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
-                Locations
-              </Link>
-              <Link href="/coupons" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
-                Coupons
-              </Link>
-              <Link href="/users" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
-                Users
-              </Link>
-              {userLoaded && user && user.isMaster === true && (
-                <Link href="/tenants" onClick={() => setMobileMenuOpen(false)} className="text-white hover:text-accent-yellow font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-white/20 text-sm">
-                  Tenants
-                </Link>
-              )}
+            {/* Logout Button */}
+            <div className="w-full">
+              <LogoutButton />
             </div>
           </div>
-        )}
-      </div>
-    </nav>
+        </div>
+      </aside>
+
+      {/* Mobile Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 z-30"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+    </>
   );
 }
-

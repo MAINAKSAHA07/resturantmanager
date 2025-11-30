@@ -22,3 +22,6 @@ export function QRTableCode({ url, size = 256, className = '' }: QRTableCodeProp
   );
 }
 
+
+
+

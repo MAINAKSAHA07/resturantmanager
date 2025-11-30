@@ -54,13 +54,13 @@ export default function QRTablePage() {
 
         // Also set tenant cookie for consistency
         document.cookie = `selected_tenant=${data.tenantKey}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
-        
+
         // Dispatch event to update navbar
         window.dispatchEvent(new Event('tableContextUpdated'));
 
         // Redirect to tenant-specific URL or menu with tenant in URL
         // Try to use tenant-specific route first, fallback to query param
-        window.location.href = `/${data.tenantKey}`;
+        window.location.href = `/?tenant=${data.tenantKey}`;
       } catch (err: any) {
         console.error('Error resolving table:', err);
         setError(err.message || 'Failed to load table information');

@@ -2,9 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Script from 'next/script';
 import Link from 'next/link';
 import { getCustomerSession } from '@/lib/auth';
 import { generateOrderSummaryPDF } from '@/lib/pdf-generator';
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 interface OrderItem {
   id: string;
@@ -40,6 +47,8 @@ export default function OrderTrackingPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState(false);
 
   useEffect(() => {
     // Check authentication
@@ -59,11 +68,11 @@ export default function OrderTrackingPage() {
           },
         });
         const data = await response.json();
-        
+
         if (!response.ok) {
           throw new Error(data.error || 'Failed to fetch order');
         }
-        
+
         // Always update to ensure latest data is shown
         setOrder(data.order);
         console.log(`[Order Details] Order ${orderId} fetched:`, {
@@ -93,10 +102,95 @@ export default function OrderTrackingPage() {
       fetchOrder();
     }, 3000);
 
+    // Check if Razorpay is already loaded
+    if (typeof window !== 'undefined' && window.Razorpay) {
+      setRazorpayLoaded(true);
+    }
+
     return () => {
       clearInterval(interval);
     };
   }, [orderId, router]);
+
+  const handlePayment = async () => {
+    if (!order) return;
+
+    setProcessingPayment(true);
+    try {
+      // Create Razorpay order
+      const paymentResponse = await fetch('/api/payments/razorpay/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: order.total, orderId: order.id }),
+      });
+
+      if (!paymentResponse.ok) {
+        const errorData = await paymentResponse.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to create payment order');
+      }
+
+      const { razorpay_order_id, key } = await paymentResponse.json();
+
+      // Initialize Razorpay
+      if (!window.Razorpay) {
+        throw new Error('Razorpay SDK not loaded');
+      }
+
+      const options = {
+        key,
+        amount: order.total,
+        currency: 'INR',
+        name: 'Restaurant',
+        description: 'Order Payment',
+        order_id: razorpay_order_id,
+        handler: async function (response: any) {
+          try {
+            // Capture payment
+            const captureResponse = await fetch('/api/payments/razorpay/capture', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                orderId: order.id,
+              }),
+            });
+
+            if (captureResponse.ok) {
+              alert('Payment successful! Thank you for dining with us.');
+              // Refresh order data immediately
+              const res = await fetch(`/api/orders/${orderId}?t=${Date.now()}`, { cache: 'no-store' });
+              const data = await res.json();
+              if (res.ok) {
+                setOrder(data.order);
+              }
+            } else {
+              throw new Error('Payment capture failed');
+            }
+          } catch (error) {
+            console.error('Payment error:', error);
+            alert('Payment failed. Please try again.');
+          }
+        },
+        prefill: {
+          email: '',
+          contact: '',
+        },
+        theme: {
+          color: '#3399cc',
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    } catch (error: any) {
+      console.error('Payment initiation error:', error);
+      alert(error.message || 'Failed to initiate payment');
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -140,8 +234,13 @@ export default function OrderTrackingPage() {
   const orderItems = order.expand?.orderItem || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 to-accent-purple/5 bg-white py-12">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-accent-blue/5 to-accent-purple/5 bg-white">
+      <Script
+        src="https://checkout.razorpay.com/v1/checkout.js"
+        onLoad={() => setRazorpayLoaded(true)}
+      />
+
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
         <div className="mb-6">
           <Link
             href="/my-orders"
@@ -183,7 +282,7 @@ export default function OrderTrackingPage() {
               <p className="text-sm font-bold">{order.status.replace('_', ' ').toUpperCase()}</p>
             </div>
           </div>
-          
+
           {orderItems.length > 0 && (
             <div className="border-t pt-4 mt-4">
               <h3 className="font-semibold mb-3 text-lg">Order Items ({orderItems.length})</h3>
@@ -257,6 +356,26 @@ export default function OrderTrackingPage() {
               <span className="text-accent-blue">₹{(order.total / 100).toFixed(2)}</span>
             </div>
           </div>
+
+          {/* Payment Button for Served Orders */}
+          {order.status === 'served' && (
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <button
+                onClick={handlePayment}
+                disabled={!razorpayLoaded || processingPayment}
+                className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg shadow-md transition-all transform hover:scale-[1.02]"
+              >
+                {processingPayment
+                  ? 'Processing Payment...'
+                  : !razorpayLoaded
+                    ? 'Loading Payment System...'
+                    : 'Pay & Complete Order'}
+              </button>
+              <p className="text-center text-sm text-gray-500 mt-2">
+                Secure payment via Razorpay
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6">
@@ -269,11 +388,10 @@ export default function OrderTrackingPage() {
               return (
                 <div key={step.key} className="flex items-center space-x-4">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      isCompleted
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-200 text-gray-600'
-                    }`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center ${isCompleted
+                      ? 'bg-green-500 text-white'
+                      : 'bg-gray-200 text-gray-600'
+                      }`}
                   >
                     {isCompleted ? '✓' : index + 1}
                   </div>

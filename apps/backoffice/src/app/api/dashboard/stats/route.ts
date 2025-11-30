@@ -88,15 +88,21 @@ export async function GET(request: NextRequest) {
       .map(([date, total]) => ({ date, total }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
-    // Calculate orders by status
+    // Calculate orders by status (count and total value)
     const statusCounts = new Map<string, number>();
+    const statusTotals = new Map<string, number>();
     todayOrders.forEach((order: any) => {
       const status = order.status || 'placed';
       statusCounts.set(status, (statusCounts.get(status) || 0) + 1);
+      statusTotals.set(status, (statusTotals.get(status) || 0) + (order.total || 0));
     });
 
     const ordersByStatus = Array.from(statusCounts.entries())
-      .map(([status, count]) => ({ status, count }))
+      .map(([status, count]) => ({ 
+        status, 
+        count,
+        total: statusTotals.get(status) || 0
+      }))
       .sort((a, b) => b.count - a.count); // Sort by count descending
 
     return NextResponse.json({

@@ -227,16 +227,19 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <Link href="/menu">
               <Button variant="primary" className="w-full">
+                <span className="mr-2">📋</span>
                 Manage Menu
               </Button>
             </Link>
             <Link href="/orders">
               <Button variant="success" className="w-full">
+                <span className="mr-2">📦</span>
                 View Orders
               </Button>
             </Link>
             <Link href="/kds">
               <Button variant="secondary" className="w-full">
+                <span className="mr-2">👨‍🍳</span>
                 Kitchen Display
               </Button>
             </Link>
